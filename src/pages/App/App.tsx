@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Box } from "@chakra-ui/react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, Route, Routes, useLocation } from "react-router-dom";
 import AppFooter from "components/Sections/AppFooter";
 import AppHeader from "components/Sections/AppHeader";
 import AppSettings from "components/UtilComps/AppSettings";
@@ -17,7 +17,6 @@ import { TradeData } from "../AdvertiseData/TradeData";
 
 function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
   const [, setMenuItem] = useState(MENU.LANDING);
-  const navigate = useNavigate();
   const [rfKeys] = useState({
     tools: 0,
     sellData: 0,
@@ -56,7 +55,6 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
     if (isSolLoggedIn) {
       onShowConnectWalletModal("no-auth");
       await disconnectSolWallet();
-      // navigate("/");
 
       // do a hard reload instead of a simple SPA redirect so we clear the state of app
       window.location.replace("/");

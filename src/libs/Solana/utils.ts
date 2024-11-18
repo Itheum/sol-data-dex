@@ -19,7 +19,7 @@ enum RewardsState {
 export const MAX_PERCENT = 10000;
 export const SLOTS_IN_YEAR = 78840000; // solana slots in a year; Approx. 0.4 seconds per  slot
 
-export const ITHEUM_TOKEN_ADDRESS = import.meta.env.VITE_ENV_ITHEUM_TOKEN_ADDRESS;
+export const ITHEUM_SOL_TOKEN_ADDRESS = import.meta.env.VITE_ENV_ITHEUM_SOL_TOKEN_ADDRESS;
 //contractsForChain(IS_DEVNET ? SolEnvEnum.devnet : SolEnvEnum.mainnet).itheumToken;
 export const DIVISION_SAFETY_CONST = 10 ** 9;
 
@@ -222,8 +222,8 @@ export async function createBondTransaction(
     const bondPda = PublicKey.findProgramAddressSync([Buffer.from("bond"), userPublicKey.toBuffer(), new BN(bondId).toBuffer("le", 2)], program.programId)[0];
     const assetUsagePda = PublicKey.findProgramAddressSync([new PublicKey(assetId).toBuffer()], program.programId)[0];
     const vaultConfigPda = PublicKey.findProgramAddressSync([Buffer.from("vault_config")], programId)[0];
-    const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_TOKEN_ADDRESS), vaultConfigPda, true);
-    const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_TOKEN_ADDRESS), userPublicKey, true);
+    const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), vaultConfigPda, true);
+    const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), userPublicKey, true);
 
     const bondConfigPda = await PublicKey.findProgramAddressSync([Buffer.from("bond_config"), Buffer.from([BOND_CONFIG_INDEX])], program.programId)[0];
     const bondConfigData = await program.account.bondConfig.fetch(bondConfigPda).then((data: any) => {
@@ -243,7 +243,7 @@ export async function createBondTransaction(
         rewardsConfig: rewardsConfigPda,
         vaultConfig: vaultConfigPda,
         vault: vaultAta,
-        mintOfTokenSent: new PublicKey(ITHEUM_TOKEN_ADDRESS),
+        mintOfTokenSent: new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS),
         authority: userPublicKey,
         merkleTree: bondConfigData.merkleTree,
         authorityTokenAccount: userItheumAta,

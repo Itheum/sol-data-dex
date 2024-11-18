@@ -36,7 +36,7 @@ import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { BOND_CONFIG_INDEX, BONDING_PROGRAM_ID, SOLANA_EXPLORER_URL } from "libs/Solana/config";
 import { CoreSolBondStakeSc, IDL } from "libs/Solana/CoreSolBondStakeSc";
 import { Bond } from "libs/Solana/types";
-import { computeAddressClaimableAmount, computeBondScore, ITHEUM_TOKEN_ADDRESS, retrieveBondsAndNftMeIdVault, SLOTS_IN_YEAR } from "libs/Solana/utils";
+import { computeAddressClaimableAmount, computeBondScore, ITHEUM_SOL_TOKEN_ADDRESS, retrieveBondsAndNftMeIdVault, SLOTS_IN_YEAR } from "libs/Solana/utils";
 import { formatNumberToShort, isValidNumericCharacter, sleep } from "libs/utils";
 import { useAccountStore } from "store";
 import { useNftsStore } from "store/nfts";
@@ -489,8 +489,8 @@ export const LivelinessStakingSol: React.FC = () => {
         programSol!.programId
       )[0];
 
-      const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_TOKEN_ADDRESS), vaultConfigPda!, true);
-      const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_TOKEN_ADDRESS), userPublicKey!, true);
+      const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), vaultConfigPda!, true);
+      const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), userPublicKey!, true);
       const amountToSend: BN = new BN(amount).mul(BN10_9);
 
       const transaction = await programSol!.methods
@@ -499,7 +499,7 @@ export const LivelinessStakingSol: React.FC = () => {
           addressBondsRewards: addressBondsRewardsPda,
           bondConfig: bondConfigPda,
           rewardsConfig: rewardsConfigPda,
-          mintOfTokenSent: new PublicKey(ITHEUM_TOKEN_ADDRESS),
+          mintOfTokenSent: new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS),
           bond: bondIdPda,
           vaultConfig: vaultConfigPda,
           vault: vaultAta,
@@ -530,8 +530,8 @@ export const LivelinessStakingSol: React.FC = () => {
   async function handleClaimRewardsClick(vault_bond_id: number) {
     try {
       if (!programSol || !userPublicKey) return;
-      const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_TOKEN_ADDRESS), vaultConfigPda!, true);
-      const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_TOKEN_ADDRESS), userPublicKey!, true);
+      const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), vaultConfigPda!, true);
+      const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), userPublicKey!, true);
       const bondPda = PublicKey.findProgramAddressSync(
         [Buffer.from("bond"), userPublicKey.toBuffer(), new BN(vault_bond_id).toBuffer("le", 2)],
         programSol.programId
@@ -543,7 +543,7 @@ export const LivelinessStakingSol: React.FC = () => {
           addressBondsRewards: addressBondsRewardsPda,
           bondConfig: bondConfigPda,
           rewardsConfig: rewardsConfigPda,
-          mintOfTokenToReceive: new PublicKey(ITHEUM_TOKEN_ADDRESS),
+          mintOfTokenToReceive: new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS),
           vaultConfig: vaultConfigPda,
           vault: vaultAta,
           bond: bondPda,
@@ -602,8 +602,8 @@ export const LivelinessStakingSol: React.FC = () => {
         [Buffer.from("bond"), userPublicKey.toBuffer(), new BN(bondId).toBuffer("le", 2)],
         programSol.programId
       )[0];
-      const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_TOKEN_ADDRESS), vaultConfigPda!, true);
-      const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_TOKEN_ADDRESS), userPublicKey!, true);
+      const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), vaultConfigPda!, true);
+      const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), userPublicKey!, true);
 
       const transaction = await programSol.methods
         .withdraw(BOND_CONFIG_INDEX, bondId)
@@ -611,7 +611,7 @@ export const LivelinessStakingSol: React.FC = () => {
           addressBondsRewards: addressBondsRewardsPda,
           bondConfig: bondConfigPda,
           rewardsConfig: rewardsConfigPda,
-          mintOfTokenToReceive: new PublicKey(ITHEUM_TOKEN_ADDRESS),
+          mintOfTokenToReceive: new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS),
           bond: bondIdPda,
           vaultConfig: vaultConfigPda,
           vault: vaultAta,

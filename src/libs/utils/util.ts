@@ -83,7 +83,7 @@ export const getSentryProfile = () => {
   }
 
   // we cannot set ENV for our cicd stg build, so we do this manually
-  if (location?.host?.toLowerCase() === "stg.datadex.itheum.io") {
+  if (location?.host?.toLowerCase() === "stg.datadex-sol.itheum.io") {
     profile = "stage";
   }
 

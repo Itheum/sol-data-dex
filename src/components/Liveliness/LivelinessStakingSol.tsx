@@ -17,11 +17,13 @@ import {
   VStack,
   Spinner,
   Card,
-  useColorMode,
   UnorderedList,
   ListItem,
-  useToast,
   Link,
+  Alert,
+  AlertIcon,
+  useColorMode,
+  useToast,
 } from "@chakra-ui/react";
 import { Program, BN } from "@coral-xyz/anchor";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
@@ -243,10 +245,11 @@ export const LivelinessStakingSol: React.FC = () => {
 
       if (data.vaultBondId == 0) {
         toast({
-          title: "Vault Warning",
-          description: "Your vault bond is not set, please set it to be able to claim rewards",
-          status: "warning",
-          duration: 5000,
+          title: "NFMe ID Vault Warning",
+          description: "You have not set a NFMe ID as your 'vault' yet",
+          status: "info",
+          duration: 15000,
+          isClosable: true,
         });
       }
 
@@ -262,7 +265,8 @@ export const LivelinessStakingSol: React.FC = () => {
             title: "Vault Warning",
             description: "Your vault bond is inactive, please change it to able to claim rewards",
             status: "warning",
-            duration: 5000,
+            duration: 15000,
+            isClosable: true,
           });
         }
         setVaultBondData(vaultBond);
@@ -824,22 +828,57 @@ export const LivelinessStakingSol: React.FC = () => {
                     <Text m={{ base: "auto", md: "initial" }} mt={{ base: "10", md: "auto" }} fontSize="lg">
                       Est. Cumulative Annual Rewards: {formatNumberToShort(estCombinedAnnualRewards / 10 ** 9)} $ITHEUM
                     </Text>
+                    {vaultBondId === 0 && (
+                      <Alert status="info" mt={2} rounded="md">
+                        <AlertIcon />
+                        <Box>
+                          <Text fontWeight="bold">Got an NFMe ID? 🚀</Text>
+
+                          <Text fontWeight="bold" mt={2}>
+                            But you haven’t set one as your {`"Vault"`} yet!
+                          </Text>
+
+                          <Text mt={2}>Pick an NFMe ID from the Liveliness Bonds list below and hit {`"Set as Vault"`} to unlock cool perks:</Text>
+
+                          <Text mt={2}>
+                            <ul>
+                              <li>- Claim/reinvest rewards</li>
+                              <li>- Top up bonus $ITHEUM</li>
+                              <li>- Boost staking rewards</li>
+                            </ul>
+                          </Text>
+
+                          <Text mt={2}>{`It’s`} quick and easy—get started now!</Text>
+                        </Box>
+                      </Alert>
+                    )}
                   </>
                 ) : (
                   <>
-                    <Box w="90%" mt="10">
-                      <Text fontWeight="bold">You do not seem to have an NFMe ID Vault yet.</Text>
-                      <Text mt="1">If you did, you can bond $ITHEUM tokens, build your Vault Liveliness and earn staking rewards. </Text>
-                      <Button
-                        colorScheme="teal"
-                        borderRadius="12px"
-                        variant="outline"
-                        size="lg"
-                        mt="5"
-                        onClick={() => navigate("/mintdata?launchTemplate=nfmeidvault")}>
-                        <Text px={2}>Mint NFMe ID Vault</Text>
-                      </Button>
-                    </Box>
+                    <Alert status="info" mt={2} rounded="md">
+                      <AlertIcon />
+                      <Box>
+                        <Text fontWeight="bold">No NFMe ID yet?</Text>
+                        <Text mt="1">Mint one now to:</Text>
+                        <Text mt={2}>
+                          <ul>
+                            <li>- Get a cool, unique NFMe ID Data NFT Avatar</li>
+                            <li>- Bond $ITHEUM tokens</li>
+                            <li>- Build your Liveliness</li>
+                            <li>- Earn awesome staking rewards</li>
+                          </ul>
+                        </Text>
+                        <Button
+                          colorScheme="teal"
+                          borderRadius="12px"
+                          variant="outline"
+                          size="lg"
+                          mt="5"
+                          onClick={() => navigate("/mintdata?launchTemplate=nfmeidvault")}>
+                          <Text px={2}>Mint NFMe ID</Text>
+                        </Button>
+                      </Box>
+                    </Alert>
                   </>
                 )}
               </>
@@ -850,7 +889,7 @@ export const LivelinessStakingSol: React.FC = () => {
 
       <Flex width="100%" flexWrap="wrap" gap={7} px={{ base: 0, md: 12 }} mt={10}>
         <Heading fontSize="1.5rem" fontFamily="Clash-Medium" color="teal.200" textAlign={{ base: "center", md: "left" }}>
-          Your Data NFT Liveliness Bonds
+          Your NFMe ID Liveliness Bonds
         </Heading>
 
         {allInfoLoading ? (

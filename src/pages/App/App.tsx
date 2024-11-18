@@ -4,6 +4,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import AppFooter from "components/Sections/AppFooter";
 import AppHeader from "components/Sections/AppHeader";
+import AppSettings from "components/UtilComps/AppSettings";
 import { consoleNotice, MENU, PATHS } from "libs/config";
 import { clearAppSessionsLaunchMode, gtagGo } from "libs/utils";
 import MyDataNFTs from "pages/DataNFT/MyDataNFTs";
@@ -77,6 +78,8 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
         </Route>
 
         <Route path="liveliness" element={<MyLiveliness />} />
+
+        <Route path="settings" element={<AppSettings />} />
       </>
     );
   }

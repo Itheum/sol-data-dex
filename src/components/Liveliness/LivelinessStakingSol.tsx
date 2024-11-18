@@ -28,6 +28,7 @@ import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Commitment, PublicKey, Transaction, TransactionConfirmationStrategy } from "@solana/web3.js";
+import { useNavigate } from "react-router-dom";
 import NftMediaComponent from "components/NftMediaComponent";
 import { NoDataHere } from "components/Sections/NoDataHere";
 import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
@@ -45,6 +46,7 @@ import { LivelinessScore } from "./LivelinessScore";
 const BN10_9 = new BN(10 ** 9);
 
 export const LivelinessStakingSol: React.FC = () => {
+  const navigate = useNavigate();
   const { connection } = useConnection();
   const { publicKey: userPublicKey, sendTransaction } = useWallet();
   const itheumBalance = useAccountStore((state) => state.itheumBalance);
@@ -739,75 +741,107 @@ export const LivelinessStakingSol: React.FC = () => {
               </Flex>
             ) : (
               <>
-                <Text fontSize="3xl">Vault Liveliness: {vaultLiveliness}% </Text>
-                <Progress hasStripe isAnimated value={vaultLiveliness} rounded="base" colorScheme="teal" width={"100%"} />
-                <Text fontSize="xl">Combined Bonds Staked: {formatNumberToShort(combinedBondsStaked.toNumber() / 10 ** 9)} $ITHEUM</Text>
-                <Text fontSize="xl">Global Total Bonded: {formatNumberToShort(globalTotalBond.div(BN10_9).toNumber())} $ITHEUM</Text>
-                <Text fontSize="xl">Current Staking APR: {isNaN(rewardApr) ? 0 : rewardApr}%</Text>
-                {maxApr > 0 && <Text fontSize="xl">Max APR: {maxApr}%</Text>}
-                <Text fontSize="xl">
-                  Current Accumulated Rewards: {formatNumberToShort(vaultLiveliness >= 95 ? claimableAmount : (vaultLiveliness * claimableAmount) / 100)}{" "}
-                  $ITHEUM
-                </Text>
-                <Text fontSize="xl">Potential Rewards If Combined Liveliness &gt;95%: {formatNumberToShort(claimableAmount)} $ITHEUM</Text>
-                <HStack mt={5} justifyContent={{ base: "center", md: "start" }} alignItems="flex-start" width="100%">
-                  <Flex flexDirection={{ base: "column", md: "row" }}>
-                    <VStack mb={{ base: 5, md: 0 }}>
-                      <Tooltip
-                        hasArrow
-                        shouldWrapChildren
-                        isDisabled={!(!userPublicKey || claimableAmount < 1 || vaultLiveliness === 0)}
-                        label={"Rewards claiming is disabled if liveliness is 0, rewards amount is lower than 1 or there are transactions pending"}>
-                        <Button
-                          fontSize="lg"
-                          colorScheme="teal"
-                          px={6}
-                          width="180px"
-                          onClick={() => {
-                            if (
-                              computeBondScore(bondConfigData.lockPeriod.toNumber(), Math.floor(Date.now() / 1000), vaultBondData.unbondTimestamp.toNumber())
-                            ) {
-                              handleClaimRewardsClick(vaultBondId!);
-                            } else {
-                              setClaimRewardsConfirmationWorkflow(true);
-                            }
-                          }}
-                          isDisabled={!userPublicKey || claimableAmount < 1 || vaultLiveliness === 0 || hasPendingTransaction || vaultBondId == 0}>
-                          Claim Rewards
-                        </Button>
-                      </Tooltip>
-                    </VStack>
-                    <VStack>
-                      <Tooltip
-                        hasArrow
-                        shouldWrapChildren
-                        isDisabled={!(!userPublicKey || nftMeId === undefined || claimableAmount < 1 || vaultLiveliness === 0)}
-                        label={
-                          "Rewards reinvesting is disabled if you have no NFT as a Primary NFMe ID, liveliness is 0, rewards amount is lower than 1 or there are transactions pending"
-                        }>
-                        <Button
-                          fontSize="lg"
-                          colorScheme="teal"
-                          px={6}
-                          width="180px"
-                          isDisabled={
-                            !userPublicKey || nftMeId === undefined || claimableAmount < 1 || vaultLiveliness === 0 || hasPendingTransaction || vaultBondId == 0
-                          }
-                          onClick={() => {
-                            setReinvestRewardsConfirmationWorkflow(true);
-                          }}>
-                          Reinvest Rewards
-                        </Button>
-                      </Tooltip>
-                      <Text fontSize="sm" color="grey" ml={{ md: "55px" }}>
-                        Reinvesting rewards will also renew bond
-                      </Text>
-                    </VStack>
-                  </Flex>{" "}
-                </HStack>{" "}
-                <Text m={{ base: "auto", md: "initial" }} mt={{ base: "10", md: "auto" }} fontSize="lg">
-                  Est. Cumulative Annual Rewards: {formatNumberToShort(estCombinedAnnualRewards / 10 ** 9)} $ITHEUM
-                </Text>
+                <>
+                  <Text fontSize="3xl">Vault Liveliness: {vaultLiveliness}% </Text>
+                  <Progress hasStripe isAnimated value={vaultLiveliness} rounded="base" colorScheme="teal" width="100%" />
+                </>
+
+                {numberOfBonds ? (
+                  <>
+                    <Text fontSize="xl">Combined Bonds Staked: {formatNumberToShort(combinedBondsStaked.toNumber() / 10 ** 9)} $ITHEUM</Text>
+                    <Text fontSize="xl">Global Total Bonded: {formatNumberToShort(globalTotalBond.div(BN10_9).toNumber())} $ITHEUM</Text>
+                    <Text fontSize="xl">Current Staking APR: {isNaN(rewardApr) ? 0 : rewardApr}%</Text>
+                    {maxApr > 0 && <Text fontSize="xl">Max APR: {maxApr}%</Text>}
+                    <Text fontSize="xl">
+                      Current Accumulated Rewards: {formatNumberToShort(vaultLiveliness >= 95 ? claimableAmount : (vaultLiveliness * claimableAmount) / 100)}{" "}
+                      $ITHEUM
+                    </Text>
+                    <Text fontSize="xl">Potential Rewards If Combined Liveliness &gt;95%: {formatNumberToShort(claimableAmount)} $ITHEUM</Text>
+                    <HStack mt={5} justifyContent={{ base: "center", md: "start" }} alignItems="flex-start" width="100%">
+                      <Flex flexDirection={{ base: "column", md: "row" }}>
+                        <VStack mb={{ base: 5, md: 0 }}>
+                          <Tooltip
+                            hasArrow
+                            shouldWrapChildren
+                            isDisabled={!(!userPublicKey || claimableAmount < 1 || vaultLiveliness === 0)}
+                            label={"Rewards claiming is disabled if liveliness is 0, rewards amount is lower than 1 or there are transactions pending"}>
+                            <Button
+                              fontSize="lg"
+                              colorScheme="teal"
+                              px={6}
+                              width="180px"
+                              onClick={() => {
+                                if (
+                                  computeBondScore(
+                                    bondConfigData.lockPeriod.toNumber(),
+                                    Math.floor(Date.now() / 1000),
+                                    vaultBondData.unbondTimestamp.toNumber()
+                                  )
+                                ) {
+                                  handleClaimRewardsClick(vaultBondId!);
+                                } else {
+                                  setClaimRewardsConfirmationWorkflow(true);
+                                }
+                              }}
+                              isDisabled={!userPublicKey || claimableAmount < 1 || vaultLiveliness === 0 || hasPendingTransaction || vaultBondId == 0}>
+                              Claim Rewards
+                            </Button>
+                          </Tooltip>
+                        </VStack>
+                        <VStack>
+                          <Tooltip
+                            hasArrow
+                            shouldWrapChildren
+                            isDisabled={!(!userPublicKey || nftMeId === undefined || claimableAmount < 1 || vaultLiveliness === 0)}
+                            label={
+                              "Rewards reinvesting is disabled if you have no NFT as a Primary NFMe ID, liveliness is 0, rewards amount is lower than 1 or there are transactions pending"
+                            }>
+                            <Button
+                              fontSize="lg"
+                              colorScheme="teal"
+                              px={6}
+                              width="180px"
+                              isDisabled={
+                                !userPublicKey ||
+                                nftMeId === undefined ||
+                                claimableAmount < 1 ||
+                                vaultLiveliness === 0 ||
+                                hasPendingTransaction ||
+                                vaultBondId == 0
+                              }
+                              onClick={() => {
+                                setReinvestRewardsConfirmationWorkflow(true);
+                              }}>
+                              Reinvest Rewards
+                            </Button>
+                          </Tooltip>
+                          <Text fontSize="sm" color="grey" ml={{ md: "55px" }}>
+                            Reinvesting rewards will also renew bond
+                          </Text>
+                        </VStack>
+                      </Flex>{" "}
+                    </HStack>{" "}
+                    <Text m={{ base: "auto", md: "initial" }} mt={{ base: "10", md: "auto" }} fontSize="lg">
+                      Est. Cumulative Annual Rewards: {formatNumberToShort(estCombinedAnnualRewards / 10 ** 9)} $ITHEUM
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Box w="90%" mt="10">
+                      <Text fontWeight="bold">You do not seem to have an NFMe ID Vault yet.</Text>
+                      <Text mt="1">If you did, you can bond $ITHEUM tokens, build your Vault Liveliness and earn staking rewards. </Text>
+                      <Button
+                        colorScheme="teal"
+                        borderRadius="12px"
+                        variant="outline"
+                        size="lg"
+                        mt="5"
+                        onClick={() => navigate("/mintdata?launchTemplate=nfmeidvault")}>
+                        <Text px={2}>Mint NFMe ID Vault</Text>
+                      </Button>
+                    </Box>
+                  </>
+                )}
               </>
             )}
           </VStack>

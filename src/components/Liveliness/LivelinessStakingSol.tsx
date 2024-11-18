@@ -798,7 +798,7 @@ export const LivelinessStakingSol: React.FC = () => {
                             shouldWrapChildren
                             isDisabled={!(!userPublicKey || nftMeId === undefined || claimableAmount < 1 || vaultLiveliness === 0)}
                             label={
-                              "Rewards reinvesting is disabled if you have no NFT as a Primary NFMe ID, liveliness is 0, rewards amount is lower than 1 or there are transactions pending"
+                              "Rewards reinvesting is disabled if you have no NFT as a NFMe ID Vault set, liveliness is 0, rewards amount is lower than 1 or there are transactions pending"
                             }>
                             <Button
                               fontSize="lg"
@@ -1004,11 +1004,11 @@ export const LivelinessStakingSol: React.FC = () => {
                                 onClick={() => {
                                   updateVaultBond(currentBond.bondId, dataNft.compression.leaf_id);
                                 }}>
-                                Set as Primary NFMe ID
+                                Set as NFMe ID Vault
                               </Button>
                             ) : (
                               <Text fontSize="md" w="200px" m="auto">
-                                ✅ Currently set as your Primary NFMe ID
+                                ✅ Currently set as your NFMe ID Vault
                               </Text>
                             )}
                           </Box>

@@ -838,7 +838,7 @@ export const LivelinessStakingSol: React.FC = () => {
                             But you haven’t set one as your {`"Vault"`} yet!
                           </Text>
 
-                          <Text mt={2}>Pick an NFMe ID from the Liveliness Bonds list below and hit {`"Set as Vault"`} to unlock cool perks:</Text>
+                          <Text mt={2}>Pick an NFMe ID from the Liveliness Bonds list below and hit {`"Set as NFMe ID Vault"`} to unlock cool perks:</Text>
 
                           <Text mt={2}>
                             <ul>

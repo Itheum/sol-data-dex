@@ -118,10 +118,10 @@ const ClaimCTAs = ({ onShowConnectWalletModal }: { onShowConnectWalletModal?: an
             if (connectedSolWallet) {
               navigate("/mintdata?launchTemplate=nfmeidvault");
             } else {
-              window.open("https://docs.google.com/forms/d/e/1FAIpQLScpguzOBjyQBj2iDzaI2E0wN9SIAQGoS92FPDM9qkk8B-rzFA/viewform");
+              onShowConnectWalletModal();
             }
           }}>
-          {connectedSolWallet ? "Mint NFMe ID" : "Claim NFMe ID NFT Whitelist"}
+          {connectedSolWallet ? "Mint NFMe ID" : "Connect Wallet to Start"}
         </Button>
       </Flex>
     </Flex>

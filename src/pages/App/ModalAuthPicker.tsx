@@ -57,8 +57,10 @@ function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
         console.log("==== User JUST logged in with addressSol = ", addressSol);
 
         // redirect user to the dashboard if there are from home or other certain routes
-        if (pathname === "/" || pathname === "/NFMeID") {
+        if (pathname === "/") {
           navigate("/dashboard");
+        } else if (pathname === "/NFMeID") {
+          navigate("/liveliness");
         }
 
         const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SOL_ENV_ENUM.devnet : SOL_ENV_ENUM.mainnet;

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { Box, Flex, Progress, Text, Link } from "@chakra-ui/react";
 import moment from "moment/moment";
-import { settingLivelinessScore } from "libs/utils";
+import { sleep, settingLivelinessScore } from "libs/utils";
 
 type LivelinessScoreProp = {
   unbondTimestamp?: number;
@@ -19,6 +19,7 @@ export const LivelinessScore: React.FC<LivelinessScoreProp> = (props) => {
   useEffect(() => {
     (async () => {
       const getLivelinessScore = await settingLivelinessScore(unbondTimestamp, lockPeriod, useThisDateNowTS);
+
       setLivelinessScore(getLivelinessScore ?? -2);
 
       if (onGettingLivelinessScore) {

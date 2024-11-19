@@ -30,6 +30,7 @@ import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Commitment, PublicKey, Transaction, TransactionConfirmationStrategy } from "@solana/web3.js";
+import moment from "moment/moment";
 import { useNavigate } from "react-router-dom";
 import NftMediaComponent from "components/NftMediaComponent";
 import { NoDataHere } from "components/Sections/NoDataHere";
@@ -44,7 +45,6 @@ import { formatNumberToShort, isValidNumericCharacter, sleep } from "libs/utils"
 import { useAccountStore } from "store";
 import { useNftsStore } from "store/nfts";
 import { LivelinessScore } from "./LivelinessScore";
-import moment from "moment/moment";
 
 const BN10_9 = new BN(10 ** 9);
 
@@ -739,7 +739,13 @@ export const LivelinessStakingSol: React.FC = () => {
     return (
       <VStack>
         <LivelinessScore unbondTimestamp={bond?.unbondTimestamp} lockPeriod={bondConfigData?.lockPeriod.toNumber()} useThisDateNowTS={dateNowTS} />
-        <Text fontSize="sm" mr="auto" opacity={0.7}>{`Expires On: ${moment(bond?.unbondTimestamp * 1000).format("DD/MM/YYYY LT")}`}</Text>
+        <Text fontSize="sm" mr="auto" opacity={0.7}>
+          {checkIfBondIsExpired(bond?.unbondTimestamp) ? (
+            "Expired, please renew bond..."
+          ) : (
+            <>{`Expires On: ${moment(bond?.unbondTimestamp * 1000).format("DD/MM/YYYY LT")}`}</>
+          )}
+        </Text>
         {bond.bondId == vaultBondId && <TopUpSection bond={bond} />}
       </VStack>
     );

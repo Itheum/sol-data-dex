@@ -2,8 +2,8 @@ import React from "react";
 import { Box, Button, Image, Heading, Flex, Text, Spacer, useColorMode } from "@chakra-ui/react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useNavigate } from "react-router-dom";
-import darkNfMeIDVaultHero from "assets/img/landing/nfme/dark-hero-nfme-landing-page.png";
-import liteNfMeIDVaultHero from "assets/img/landing/nfme/lite-hero-nfme-landing-page.png";
+import darkNfMeIDVaultHero from "assets/img/landing/nfme/dark-hero-nfme-landing-page.jpg";
+import liteNfMeIDVaultHero from "assets/img/landing/nfme/lite-hero-nfme-landing-page.jpg";
 import solIcon from "assets/img/sol-logo.png";
 import { gtagGo } from "libs/utils";
 
@@ -56,10 +56,10 @@ export const LandingPage = ({ onShowConnectWalletModal }: { onShowConnectWalletM
               Connect your {`"Personas"`}, Boost Your Rewards
             </Heading>
             <Text fontSize="lg" mt="1rem">
-              Each NFMe ID mint earns you 5 copies, each as rare as regular NFTs (based on traits).
+              Each free mint gives you a unique NFMe ID with randomly generated layers, some potentially rare.
               <br />
               <br />
-              Connect your web2 and web3 accounts to your NFMe ID and distribute copies to your {`"web3 persona"`} accounts to boost your rewards.
+              Mint as many as you like for diverse web3 personas and connect your web2 and web3 accounts to your NFMe ID, each mint boosts your total rewards.
             </Text>
           </Box>
         </Flex>
@@ -68,7 +68,6 @@ export const LandingPage = ({ onShowConnectWalletModal }: { onShowConnectWalletM
       <Box>
         <Image
           mt="10"
-          mb="10"
           boxSize="100%"
           height="auto"
           src={colorMode === "light" ? liteNfMeIDVaultHero : darkNfMeIDVaultHero}
@@ -104,7 +103,6 @@ const ClaimCTAs = ({ onShowConnectWalletModal }: { onShowConnectWalletModal?: an
         <Box h="100px">
           <Image m="auto" mt="10px" boxSize="73px" height="auto" src={solIcon} alt="Solana " borderRadius="lg" />
         </Box>
-        <Text fontWeight="bold">Coming November 2024 to Solana</Text>
         <Spacer />
         <Button
           m="auto"
@@ -113,6 +111,7 @@ const ClaimCTAs = ({ onShowConnectWalletModal }: { onShowConnectWalletModal?: an
           px={7}
           py={6}
           rounded="lg"
+          size="xl"
           onClick={() => {
             gtagGo("nfm", "mint", "sol");
 
@@ -122,7 +121,7 @@ const ClaimCTAs = ({ onShowConnectWalletModal }: { onShowConnectWalletModal?: an
               window.open("https://docs.google.com/forms/d/e/1FAIpQLScpguzOBjyQBj2iDzaI2E0wN9SIAQGoS92FPDM9qkk8B-rzFA/viewform");
             }
           }}>
-          {connectedSolWallet ? "Mint NFMe ID NFT" : "Claim NFMe ID NFT Whitelist"}
+          {connectedSolWallet ? "Mint NFMe ID" : "Claim NFMe ID NFT Whitelist"}
         </Button>
       </Flex>
     </Flex>

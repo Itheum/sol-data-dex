@@ -752,16 +752,49 @@ export const LivelinessStakingSol: React.FC = () => {
 
                 {numberOfBonds ? (
                   <>
-                    <Text fontSize="xl">Combined Bonds Staked: {formatNumberToShort(combinedBondsStaked.toNumber() / 10 ** 9)} $ITHEUM</Text>
-                    <Text fontSize="xl">Global Total Bonded: {formatNumberToShort(globalTotalBond.div(BN10_9).toNumber())} $ITHEUM</Text>
-                    <Text fontSize="xl">Current Staking APR: {isNaN(rewardApr) ? 0 : rewardApr}%</Text>
-                    {maxApr > 0 && <Text fontSize="xl">Max APR: {maxApr}%</Text>}
-                    <Text fontSize="xl">
-                      Current Accumulated Rewards: {formatNumberToShort(vaultLiveliness >= 95 ? claimableAmount : (vaultLiveliness * claimableAmount) / 100)}{" "}
-                      $ITHEUM
-                    </Text>
-                    <Text fontSize="xl">Potential Rewards If Combined Liveliness &gt;95%: {formatNumberToShort(claimableAmount)} $ITHEUM</Text>
-                    <HStack mt={5} justifyContent={{ base: "center", md: "start" }} alignItems="flex-start" width="100%">
+                    <Flex flexDirection={{ base: "column", md: "row" }}>
+                      <Text fontSize="xl" w={{ base: "auto", md: "330px" }}>
+                        Combined Bonds Staked
+                      </Text>{" "}
+                      <Text fontSize="xl">: {formatNumberToShort(combinedBondsStaked.toNumber() / 10 ** 9)} $ITHEUM</Text>
+                    </Flex>
+                    <Flex flexDirection={{ base: "column", md: "row" }}>
+                      <Text fontSize="xl" w={{ base: "auto", md: "330px" }}>
+                        Global Total Bonded
+                      </Text>{" "}
+                      <Text fontSize="xl">: {formatNumberToShort(globalTotalBond.div(BN10_9).toNumber())} $ITHEUM</Text>
+                    </Flex>
+                    <Flex flexDirection={{ base: "column", md: "row" }}>
+                      <Text fontSize="xl" w={{ base: "auto", md: "330px" }}>
+                        Current Staking APR
+                      </Text>{" "}
+                      <Text fontSize="xl">: {isNaN(rewardApr) ? 0 : rewardApr}%</Text>
+                    </Flex>
+                    {maxApr > 0 && (
+                      <>
+                        <Flex flexDirection={{ base: "column", md: "row" }}>
+                          <Text fontSize="xl" w={{ base: "auto", md: "330px" }}>
+                            Max APR
+                          </Text>{" "}
+                          <Text fontSize="xl">: {maxApr}%</Text>
+                        </Flex>
+                      </>
+                    )}
+                    <Flex flexDirection={{ base: "column", md: "row" }}>
+                      <Text fontSize="xl" w={{ base: "auto", md: "330px" }}>
+                        Current Accumulated Rewards
+                      </Text>{" "}
+                      <Text fontSize="xl">
+                        : {formatNumberToShort(vaultLiveliness >= 95 ? claimableAmount : (vaultLiveliness * claimableAmount) / 100)} $ITHEUM
+                      </Text>
+                    </Flex>
+                    <Flex flexDirection={{ base: "column", md: "row" }}>
+                      <Text fontSize="xl" w={{ base: "auto", md: "330px" }}>
+                        Potential Rewards If Vault Liveliness &gt;95%
+                      </Text>{" "}
+                      <Text fontSize="xl">: {formatNumberToShort(claimableAmount)} $ITHEUM</Text>
+                    </Flex>
+                    <HStack mt={5} justifyContent={{ base: "center", md: "start" }} alignItems="flex-start" width="100%" mb={2}>
                       <Flex flexDirection={{ base: "column", md: "row" }}>
                         <VStack mb={{ base: 5, md: 0 }}>
                           <Tooltip
@@ -825,9 +858,12 @@ export const LivelinessStakingSol: React.FC = () => {
                         </VStack>
                       </Flex>{" "}
                     </HStack>{" "}
-                    <Text m={{ base: "auto", md: "initial" }} mt={{ base: "10", md: "auto" }} fontSize="lg">
-                      Est. Cumulative Annual Rewards: {formatNumberToShort(estCombinedAnnualRewards / 10 ** 9)} $ITHEUM
-                    </Text>
+                    <Flex flexDirection={{ base: "column", md: "row" }}>
+                      <Text w={{ base: "auto", md: "330px" }} fontSize="lg">
+                        Est. Cumulative Annual Rewards
+                      </Text>{" "}
+                      <Text fontSize="lg">: {formatNumberToShort(estCombinedAnnualRewards / 10 ** 9)} $ITHEUM</Text>
+                    </Flex>
                     {vaultBondId === 0 && (
                       <Alert status="info" mt={2} rounded="md">
                         <AlertIcon />
@@ -840,13 +876,13 @@ export const LivelinessStakingSol: React.FC = () => {
 
                           <Text mt={2}>Pick an NFMe ID from the Liveliness Bonds list below and hit {`"Set as NFMe ID Vault"`} to unlock cool perks:</Text>
 
-                          <Text mt={2}>
+                          <Box mt={2}>
                             <ul>
                               <li>- Claim/reinvest rewards</li>
                               <li>- Top up bonus $ITHEUM</li>
                               <li>- Boost staking rewards</li>
                             </ul>
-                          </Text>
+                          </Box>
 
                           <Text mt={2}>{`It’s`} quick and easy—get started now!</Text>
                         </Box>
@@ -887,7 +923,7 @@ export const LivelinessStakingSol: React.FC = () => {
         </Box>
       </Flex>
 
-      <Flex width="100%" flexWrap="wrap" gap={7} px={{ base: 0, md: 12 }} mt={10}>
+      <Flex width="100%" flexWrap="wrap" gap={7} px={{ base: 0, md: 12 }} my={10}>
         <Heading fontSize="1.5rem" fontFamily="Clash-Medium" color="teal.200" textAlign={{ base: "center", md: "left" }}>
           Your NFMe ID Liveliness Bonds
         </Heading>
@@ -921,6 +957,7 @@ export const LivelinessStakingSol: React.FC = () => {
               }
 
               const metadata = dataNft.content.metadata;
+
               return (
                 <Card
                   _disabled={{ cursor: "not-allowed", opacity: "0.7" }}
@@ -996,20 +1033,23 @@ export const LivelinessStakingSol: React.FC = () => {
                             {formatNumberToShort(new BN(currentBond?.bondAmount ?? 0).div(BN10_9).toNumber())}
                             &nbsp;$ITHEUM Bonded
                           </Text>
-                          <Box>
+                          <Box w="100%">
                             {currentBond.bondId !== vaultBondId ? (
                               <Button
-                                colorScheme="teal"
-                                isDisabled={userPublicKey?.toBase58() === "" || currentBond.state == 0}
+                                colorScheme="blue"
+                                variant="outline"
+                                mt={2}
+                                w="100%"
+                                isDisabled={currentBond.state === 0 || hasPendingTransaction}
                                 onClick={() => {
                                   updateVaultBond(currentBond.bondId, dataNft.compression.leaf_id);
                                 }}>
                                 Set as NFMe ID Vault
                               </Button>
                             ) : (
-                              <Text fontSize="md" w="200px" m="auto">
+                              <Box fontSize="lg" w="80%" m="auto" mt="2">
                                 ✅ Currently set as your NFMe ID Vault
-                              </Text>
+                              </Box>
                             )}
                           </Box>
                         </Flex>
@@ -1075,13 +1115,13 @@ export const LivelinessStakingSol: React.FC = () => {
           }}
           bodyContent={
             <>
-              <Text mb="5">To get Max Accumulated Rewards, your Combined Liveliness must be over 95%. Yours is currently {vaultLiveliness}%</Text>
-              <Text mt="5">To boost Combined Liveliness, renew the bond on each Data NFT before claiming</Text>
+              <Text mb="5">To get Max Accumulated Rewards, your Vault Liveliness must be over 95%. Yours is currently {vaultLiveliness}%</Text>
+              <Text mt="5">To boost Vault Liveliness, renew the bond on each Data NFT before claiming</Text>
               <Text mt="5">Cancel to renew bonds first, or proceed if {`you're`} okay with lower rewards.</Text>
             </>
           }
           dialogData={{
-            title: "Get Max Rewards if Combined Liveliness > 95%",
+            title: "Get Max Rewards if Vault Liveliness > 95%",
             proceedBtnTxt: "Proceed with Claim Rewards",
             cancelBtnText: "Cancel and Close",
           }}
@@ -1106,10 +1146,10 @@ export const LivelinessStakingSol: React.FC = () => {
               {vaultLiveliness <= 95 && (
                 <>
                   <Text mb="3" fontWeight={"bold"} fontSize={"lg"} mt="7">
-                    Get Max Rewards if Combined Liveliness {`>`} 95%
+                    Get Max Rewards if Vault Liveliness {`>`} 95%
                   </Text>
-                  <Text mb="5">To reinvest Max Accumulated Rewards, your Combined Liveliness must be over 95%. Yours is currently {vaultLiveliness}%</Text>
-                  <Text mt="5">To boost Combined Liveliness, renew the bond on each Data NFT before reinvesting.</Text>
+                  <Text mb="5">To reinvest Max Accumulated Rewards, your Vault Liveliness must be over 95%. Yours is currently {vaultLiveliness}%</Text>
+                  <Text mt="5">To boost Vault Liveliness, renew the bond on each Data NFT before reinvesting.</Text>
                   <Text mt="5">Cancel to renew bonds first, or proceed if {`you're`} okay with lower rewards.</Text>
                 </>
               )}

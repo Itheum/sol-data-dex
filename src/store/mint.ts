@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { UserDataType } from "libs/Bespoke/types";
 
 type State = {
-  userData: UserDataType | undefined; // TODO ADD SOL CONFIG, BondingConfig
+  userData: UserDataType | undefined; // @TODO, we can add some Solana config here that controls how the mint form will work. It's not used now
   lockPeriodForBond: Array<{ lockPeriod: number; amount: BigNumber.Value }>;
 };
 

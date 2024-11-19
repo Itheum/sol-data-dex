@@ -83,9 +83,9 @@ export const LivelinessStaking = ({ onShowConnectWalletModal }: { onShowConnectW
               />
             </Box>
             <Text p="5" fontSize="lg" textAlign={{ base: "center", md: "left" }}>
-              The more $ITHEUM bonds you lock and the higher your {`"Combined Liveliness"`} across all Data NFTs or NFMe IDs, the greater your rewards. <br />
+              The more $ITHEUM bonds you lock and the higher your {`"Vault Liveliness"`} across all Data NFTs or NFMe IDs, the greater your rewards. <br />
               <br />
-              You can claim rewards anytime or reinvest them directly into your NFMe ID. Maintain a combined Liveliness score over 95% to maximize your rewards.
+              You can claim rewards anytime or reinvest them directly into your NFMe ID. Maintain a Vault Liveliness score over 95% to maximize your rewards.
             </Text>
           </Flex>
         </Flex>

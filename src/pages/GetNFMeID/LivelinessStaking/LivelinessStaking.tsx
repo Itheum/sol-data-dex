@@ -40,21 +40,19 @@ export const LivelinessStaking = ({ onShowConnectWalletModal }: { onShowConnectW
               />
             </Box>
             <Text p="5" fontSize="lg" textAlign={{ base: "center", md: "left" }}>
-              Bond a minimum amount of $ITHEUM to mint your NFMe ID and activate your Liveliness score, which is your on-chain reputation as a Data Creator.
+              Bond a minimum amount of $ITHEUM to mint your NFMe ID and activate your Liveliness score—your on-chain reputation as a Data Creator.
               <br />
               <br />
-              This bond also triggers staking rewards based on your token bond and Liveliness score. Renew your Liveliness bond anytime, keeping it close to
-              100% for maximum rewards.
+              Your bond earns staking rewards based on its size and your Liveliness score. Keep your bond near 100% to maximize rewards and renew it anytime.
             </Text>
           </Flex>
           <Flex flexDirection={{ base: "column-reverse", md: "row" }} my="5" alignItems="center">
             <Text p="5" fontSize="lg" textAlign={{ base: "center", md: "right" }}>
-              Top up your NFMe ID bond with extra $ITHEUM to increase your Liveliness reputation and boost your reward share. Worried about penalties? {"Don't"}{" "}
-              be.
+              You can mint unlimited NFMe IDs, each with a bond attached. The more you mint and bond, the greater your staking rewards.
               <br />
               <br />
-              The Trailblazer DAO manages bonds and works with the community to identify good and bad actors, curating reputations. This makes the Liveliness
-              score unique, allowing you to {`"farm"`} rewards based on your reputation in the Itheum protocol!
+              Set one NFMe ID as your {`"Vault"`} to top up its bond with additional $ITHEUM, boosting your Liveliness reputation and increasing your staking
+              rewards.
             </Text>
             <Box minW={{ base: "400px", md: "500px" }}>
               <Image
@@ -83,9 +81,10 @@ export const LivelinessStaking = ({ onShowConnectWalletModal }: { onShowConnectW
               />
             </Box>
             <Text p="5" fontSize="lg" textAlign={{ base: "center", md: "left" }}>
-              The more $ITHEUM bonds you lock and the higher your {`"Vault Liveliness"`} across all Data NFTs or NFMe IDs, the greater your rewards. <br />
+              Lock more $ITHEUM bonds and maintain high {`"Vault Liveliness"`} across your Data NFTs or NFMe IDs to boost your rewards.
               <br />
-              You can claim rewards anytime or reinvest them directly into your NFMe ID. Maintain a Vault Liveliness score over 95% to maximize your rewards.
+              <br />
+              Claim rewards anytime or reinvest them into your NFMe ID. Keep your Vault Liveliness above 95% for maximum earnings.
             </Text>
           </Flex>
         </Flex>

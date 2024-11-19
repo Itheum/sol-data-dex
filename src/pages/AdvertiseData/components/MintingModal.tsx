@@ -179,7 +179,7 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
                         onClick={() => {
                           navigate("/liveliness");
                         }}>
-                        Visit {"Wallet > Liveliness"} to see it!
+                        Visit {`"Liveliness"`} to see it!
                       </Button>
                       <Button
                         colorScheme="teal"

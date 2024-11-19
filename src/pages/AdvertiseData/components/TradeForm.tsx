@@ -1210,8 +1210,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
             <PopoverTooltip title="Bond $ITHEUM to Prove Reputation" bodyWidthInPX="380px">
               <>
                 <Text fontSize="md" fontWeight="500" lineHeight="22.4px" mt="3 !important">
-                  Bonding ITHEUM tokens proves your {"Liveliness"} and gives Data Consumers confidence that you will maintain the Data {`NFT's`} Data Stream.
-                  You will need to lock the{" "}
+                  Bonding ITHEUM tokens proves your {"Liveliness"} and gives Data Consumers confidence about your reputation. You will need to lock the{" "}
                   <Text fontWeight="bold" as="span">
                     Bonding Amount{" "}
                   </Text>
@@ -1233,8 +1232,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
                   <Text fontWeight="bold" as="span">
                     Bonding Amount
                   </Text>{" "}
-                  OR if you want to continue to signal to Data Consumers that you will maintain the Data {`NFT’s`} Data Stream, you can {`"renew"`} the
-                  Liveliness Bond. <br />
+                  OR if you want to continue to signal to Data Consumers that you have good on-chain reputation, you can {`"renew"`} the Liveliness Bond. <br />
                   <br />
                   But wait, on top of the benefit of having liveliness to prove your reputation, there is more good news, your bonded $ITHEUM also earns Staking
                   APR as it powers your Liveliness reputation!{" "}

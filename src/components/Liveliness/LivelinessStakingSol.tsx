@@ -86,6 +86,7 @@ export const LivelinessStakingSol: React.FC = () => {
   const toast = useToast();
   const [hasPendingTransaction, setHasPendingTransaction] = useState<boolean>(false);
   const { networkConfiguration } = useNetworkConfiguration();
+  const [dateNowTS, setDateNowTS] = useState<number>(0); // we use Date.now() or .getTime() in various parts of the code that need to be synced. It's best we only use one so its all in sync. BUT only for parts that need syncing (e.g. vault liveliness)
 
   useEffect(() => {
     async function bootstrapLogicAfterDelay() {
@@ -119,6 +120,8 @@ export const LivelinessStakingSol: React.FC = () => {
       }
 
       fetchBondConfigPDAs();
+
+      setDateNowTS(Date.now()); // this is the master Date.now() we can use to sync liveliness etc
     }
 
     bootstrapLogicAfterDelay();
@@ -195,7 +198,7 @@ export const LivelinessStakingSol: React.FC = () => {
 
   useEffect(() => {
     if (bondConfigData && vaultBondData) {
-      const vaultScore = computeBondScore(bondConfigData.lockPeriod.toNumber(), Math.floor(Date.now() / 1000), vaultBondData.unbondTimestamp.toNumber());
+      const vaultScore = computeBondScore(bondConfigData.lockPeriod.toNumber(), Math.floor(dateNowTS / 1000), vaultBondData.unbondTimestamp.toNumber());
       setVaultLiveliness(vaultScore);
     }
   }, [bondConfigData, vaultBondData]);
@@ -723,7 +726,7 @@ export const LivelinessStakingSol: React.FC = () => {
   const LivelinessContainer: React.FC<{ bond: Bond }> = ({ bond }) => {
     return (
       <VStack>
-        <LivelinessScore unbondTimestamp={bond?.unbondTimestamp} lockPeriod={bondConfigData?.lockPeriod.toNumber()} />
+        <LivelinessScore unbondTimestamp={bond?.unbondTimestamp} lockPeriod={bondConfigData?.lockPeriod.toNumber()} useThisDateNowTS={dateNowTS} />
         {/* REPLACE WITH LOGIC BELOW */}
         {bond.bondId == vaultBondId && <TopUpSection bond={bond} />}
       </VStack>
@@ -746,7 +749,7 @@ export const LivelinessStakingSol: React.FC = () => {
             ) : (
               <>
                 <>
-                  <Text fontSize="3xl">Vault Liveliness: {vaultLiveliness}% </Text>
+                  <Text fontSize="3xl">Vault Liveliness: {vaultLiveliness}%</Text>
                   <Progress hasStripe isAnimated value={vaultLiveliness} rounded="base" colorScheme="teal" width="100%" />
                 </>
 

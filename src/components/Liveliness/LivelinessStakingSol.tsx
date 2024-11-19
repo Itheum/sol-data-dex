@@ -44,6 +44,7 @@ import { formatNumberToShort, isValidNumericCharacter, sleep } from "libs/utils"
 import { useAccountStore } from "store";
 import { useNftsStore } from "store/nfts";
 import { LivelinessScore } from "./LivelinessScore";
+import moment from "moment/moment";
 
 const BN10_9 = new BN(10 ** 9);
 
@@ -326,7 +327,7 @@ export const LivelinessStakingSol: React.FC = () => {
 
   async function fetchBonds() {
     if (numberOfBonds && userPublicKey && programSol) {
-      retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, programSol).then(({ myBonds, nftMeIdVault, weightedLivelinessScore }) => {
+      retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, programSol, bondConfigData).then(({ myBonds, nftMeIdVault }) => {
         if (nftMeIdVault === undefined) {
           setAllInfoLoading(false);
         }
@@ -455,6 +456,9 @@ export const LivelinessStakingSol: React.FC = () => {
         transaction,
         customErrorMessage: "Failed to renew bond",
       });
+
+      // this is the master Date.now() we can use to sync liveliness in the UI (need to reset as the bond unbondTimestamp will be updated -- or else, we will get 100%+)
+      setDateNowTS(Date.now());
     } catch (error) {
       console.error("Failed to renew bond:", error);
     }
@@ -524,9 +528,14 @@ export const LivelinessStakingSol: React.FC = () => {
         customErrorMessage: "Failed to top-up bond",
       });
 
-      if (result) updateItheumBalance(itheumBalance - amount);
+      if (result) {
+        updateItheumBalance(itheumBalance - amount);
+      }
+
+      // this is the master Date.now() we can use to sync liveliness in the UI (need to reset as the bond unbondTimestamp will be updated -- or else, we will get 100%+)
+      setDateNowTS(Date.now());
     } catch (error) {
-      console.error("Transaction to top-up bondfailed:", error);
+      console.error("Transaction to top-up bond failed:", error);
     }
   }
 
@@ -598,6 +607,9 @@ export const LivelinessStakingSol: React.FC = () => {
         transaction,
         customErrorMessage: "Failed to re-invest the rewards",
       });
+
+      // this is the master Date.now() we can use to sync liveliness in the UI (need to reset as the bond unbondTimestamp will be updated -- or else, we will get 100%+)
+      setDateNowTS(Date.now());
     } catch (error) {
       console.error("Transaction Re-Investing failed:", error);
     }
@@ -993,7 +1005,9 @@ export const LivelinessStakingSol: React.FC = () => {
                           }}>
                           Renew Bond
                         </Button>
-                        <Text mt={1} fontSize=".75rem">{`New expiry will be ${calculateNewPeriodAfterNewBond(bondConfigData?.lockPeriod.toNumber())}`}</Text>
+                        <Text
+                          mt={1}
+                          fontSize=".75rem">{`Your new expiry will be ${calculateNewPeriodAfterNewBond(bondConfigData?.lockPeriod.toNumber())}`}</Text>
                       </Flex>
                       <Flex gap={4} pt={3} flexDirection={"column"} w="100%" alignItems="center">
                         <Flex flexDirection={{ base: "column" }} gap={2} pt={3} alignItems="center" w="100%">
@@ -1070,6 +1084,9 @@ export const LivelinessStakingSol: React.FC = () => {
                         <Text fontSize="lg" pb={3}>
                           {`Bond ID: ${currentBond.bondId}`}
                         </Text>
+                        <Text fontSize="lg" pb={3}>
+                          {`Expires On: ${moment(currentBond.unbondTimestamp * 1000).format("DD/MM/YYYY LT")}`}
+                        </Text>
                       </Flex>
                       {currentBond.state !== 0 && (
                         <Box w="100%" bgColor="1blue.800">
@@ -1143,7 +1160,7 @@ export const LivelinessStakingSol: React.FC = () => {
           bodyContent={
             <>
               <Text fontWeight={"bold"} fontSize={"xl"} color={"teal.200"}>
-                Info: The reinvested amount will be added to the latest active bond and will renew the bond.
+                The reinvested amount will be added to your {`"NFMe ID Vault"`} bond and it will also renew the bond.
               </Text>{" "}
               <Text mt={1} fontSize=".75rem">{`New expiry will be ${calculateNewPeriodAfterNewBond(bondConfigData?.lockPeriod.toNumber())}`}</Text>
               {vaultLiveliness <= 95 && (

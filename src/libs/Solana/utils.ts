@@ -264,18 +264,11 @@ export async function retrieveBondsAndNftMeIdVault(
   userPublicKey: PublicKey,
   lastIndex: number,
   program?: Program<CoreSolBondStakeSc>,
-  connection?: Connection
-): Promise<{ myBonds: Bond[]; nftMeIdVault: Bond | undefined; weightedLivelinessScore: number }> {
+  bondConfigData?: any
+): Promise<{ myBonds: Bond[]; nftMeIdVault: Bond | undefined }> {
   try {
     if (program === undefined) {
-      const programId = new PublicKey(BONDING_PROGRAM_ID);
-      if (connection) {
-        program = new Program<CoreSolBondStakeSc>(IDL, programId, {
-          connection: connection,
-        });
-      } else {
-        throw new Error("Connection is required to retrieve bonds");
-      }
+      throw new Error("Connection is required to retrieve bonds");
     }
 
     const myBonds: Bond[] = [];
@@ -295,13 +288,11 @@ export async function retrieveBondsAndNftMeIdVault(
       }
 
       // calculate the correct live Bond score
-      const LOCK_PERIOD_ON_PROGRAM = import.meta.env.VITE_ENV_SOLANA_STAKING_LOCK_SEC || 3600; // note that you have to change this based on contract val (3600 is 1h)
-
       if (bond.state === 1) {
-        //lvb1
+        // lvb1
 
-        const scorePerBond = Math.floor(computeBondScore(LOCK_PERIOD_ON_PROGRAM, currentTimestamp, bond.unbondTimestamp.toNumber()));
-        //b1 * lvb1
+        const scorePerBond = Math.floor(computeBondScore(bondConfigData?.lockPeriod.toNumber(), currentTimestamp, bond.unbondTimestamp.toNumber()));
+        // b1 * lvb1
         const bondWeight = bond.bondAmount.mul(new BN(scorePerBond));
         // b1 * lvb1 + b2 * lvb2 + b3 * lvb3 + ... + bn * lvbn
         totalBondWeight = totalBondWeight.add(bondWeight);
@@ -312,10 +303,8 @@ export async function retrieveBondsAndNftMeIdVault(
 
       myBonds.push(bondUpgraded);
     }
-    // result
-    const weightedLivelinessScore = totalBondAmount.isZero() ? new BigNumber(0) : totalBondWeight.mul(new BN(100)).div(totalBondAmount);
 
-    return { myBonds, nftMeIdVault: nftMeIdVault, weightedLivelinessScore: weightedLivelinessScore.toNumber() / 10000 };
+    return { myBonds, nftMeIdVault: nftMeIdVault };
   } catch (error) {
     console.error("retrieveBondsError", error);
 

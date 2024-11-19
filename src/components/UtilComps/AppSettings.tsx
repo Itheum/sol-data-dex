@@ -42,7 +42,6 @@ export default function () {
                 <Text>VITE_ENV_ITHEUM_SOL_TOKEN_ADDRESS : {import.meta.env.VITE_ENV_ITHEUM_SOL_TOKEN_ADDRESS}</Text>
                 <Text>VITE_ENV_SOLANA_NETWORK_RPC : {maskOutputString(import.meta.env.VITE_ENV_SOLANA_NETWORK_RPC, 10, 10)}</Text>
                 <Text>VITE_ENV_BONDING_PROGRAM_ID : {import.meta.env.VITE_ENV_BONDING_PROGRAM_ID}</Text>
-                <Text>VITE_ENV_SOLANA_STAKING_LOCK_SEC : {import.meta.env.VITE_ENV_SOLANA_STAKING_LOCK_SEC}</Text>
                 <br />
                 <Text>VITE_PRINT_UI_DEBUG_PANELS : {import.meta.env.VITE_PRINT_UI_DEBUG_PANELS}</Text>
               </Box>

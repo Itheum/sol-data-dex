@@ -739,7 +739,7 @@ export const LivelinessStakingSol: React.FC = () => {
     return (
       <VStack>
         <LivelinessScore unbondTimestamp={bond?.unbondTimestamp} lockPeriod={bondConfigData?.lockPeriod.toNumber()} useThisDateNowTS={dateNowTS} />
-        {/* REPLACE WITH LOGIC BELOW */}
+        <Text fontSize="sm" mr="auto" opacity={0.7}>{`Expires On: ${moment(bond?.unbondTimestamp * 1000).format("DD/MM/YYYY LT")}`}</Text>
         {bond.bondId == vaultBondId && <TopUpSection bond={bond} />}
       </VStack>
     );
@@ -985,7 +985,7 @@ export const LivelinessStakingSol: React.FC = () => {
                   w="100%"
                   aria-disabled={currentBond.state === 0}>
                   <Flex gap={5} flexDirection={{ base: "column", md: "row" }}>
-                    <Box minW="250px" textAlign="center" bgColor="1blue.900">
+                    <Box minW="250px" textAlign="center">
                       <Box>
                         <NftMediaComponent
                           imageUrls={[dataNft.content.links && dataNft.content.links["image"] ? (dataNft.content.links["image"] as string) : DEFAULT_NFT_IMAGE]}
@@ -1072,24 +1072,21 @@ export const LivelinessStakingSol: React.FC = () => {
                         </Flex>
                       </Flex>{" "}
                     </Box>
-                    <Flex p={0} ml={{ md: "3" }} flexDirection="column" alignItems="start" w="full" bgColor="1green.900">
-                      <Flex flexDirection="column" w="100%" bgColor="1pink.900">
+                    <Flex p={0} ml={{ md: "3" }} flexDirection="column" alignItems="start" w="full">
+                      <Flex flexDirection="column" w="100%">
                         <Text fontFamily="Clash-Medium">{metadata.name}</Text>
                         <Link isExternal href={`${SOLANA_EXPLORER_URL}address/${dataNft.id}?cluster=${networkConfiguration}`}>
-                          <Text fontSize="lg" pb={3}>
-                            {`Nft ID: ${dataNft.id.substring(0, 6)}...${dataNft.id.substring(dataNft.id.length - 6)}`}
+                          <Text fontSize="sm" pb={3}>
+                            {`${dataNft.id.substring(0, 6)}...${dataNft.id.substring(dataNft.id.length - 6)}`}
                             <ExternalLinkIcon marginLeft={3} marginBottom={1} />
                           </Text>
                         </Link>
                         <Text fontSize="lg" pb={3}>
                           {`Bond ID: ${currentBond.bondId}`}
                         </Text>
-                        <Text fontSize="lg" pb={3}>
-                          {`Expires On: ${moment(currentBond.unbondTimestamp * 1000).format("DD/MM/YYYY LT")}`}
-                        </Text>
                       </Flex>
                       {currentBond.state !== 0 && (
-                        <Box w="100%" bgColor="1blue.800">
+                        <Box w="100%">
                           <LivelinessContainer bond={currentBond} />
                         </Box>
                       )}

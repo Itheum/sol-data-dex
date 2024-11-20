@@ -93,6 +93,7 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
           Icon: RiExchangeFill,
           needToBeLoggedIn: true,
           isHidden: false,
+          isHiddenOnHeaderBar: true,
         },
         {
           menuEnum: MENU.NFTMINE,
@@ -213,7 +214,7 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
           <HStack alignItems={"center"} spacing={2}>
             <HStack display={{ base: "none", md: "none", xl: "block", "2xl": "block" }}>
               {exploreRouterMenu[0].sectionItems.map((quickMenuItem) => {
-                const { path, menuEnum, shortLbl, isHidden, Icon } = quickMenuItem;
+                const { path, menuEnum, shortLbl, isHidden, isHiddenOnHeaderBar, Icon } = quickMenuItem;
                 return (
                   <Link
                     as={ReactRouterLink}
@@ -226,7 +227,7 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                       borderColor="teal.200"
                       fontSize="md"
                       variant="outline"
-                      display={isHidden ? "none" : "initial"}
+                      display={isHidden || isHiddenOnHeaderBar ? "none" : "initial"}
                       h={"12"}
                       isDisabled={isMenuItemSelected(path)}
                       _disabled={menuButtonDisabledStyle(path)}
@@ -262,7 +263,6 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                             <Link as={ReactRouterLink} to={path} style={{ textDecoration: "none" }} key={path}>
                               <MenuItem
                                 key={label}
-                                // isDisabled={isMenuItemSelected(path) || hasPendingTransactions}
                                 isDisabled={isMenuItemSelected(path)}
                                 onClick={() => navigateToDiscover(menuEnum)}
                                 display={isHidden ? "none" : "flex"}

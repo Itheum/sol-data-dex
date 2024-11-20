@@ -405,7 +405,7 @@ export const LivelinessStakingSol: React.FC = () => {
             duration: 12000,
             isClosable: true,
           },
-          loading: { title: "Processing Transaction", description: "Please wait...", colorScheme: "teal" },
+          loading: { title: "Processing Transaction", description: "Please wait...", colorScheme: "blue" },
         }
       );
 
@@ -418,7 +418,6 @@ export const LivelinessStakingSol: React.FC = () => {
 
       return txSignature;
     } catch (error) {
-      // Show error toast
       setHasPendingTransaction(false);
 
       toast({
@@ -722,8 +721,8 @@ export const LivelinessStakingSol: React.FC = () => {
             </Box>
           </Flex>
           {currentBondEstAnnualRewards && (
-            <Text m={{ base: "auto", md: "initial" }} mt={{ base: "10", md: "auto" }} fontSize="lg">
-              Est. Bond Annual Rewards: {formatNumberToShort(currentBondEstAnnualRewards / 10 ** 9)} $ITHEUM
+            <Text m={{ base: "auto", md: "initial" }} mt={{ base: "10", md: "2" }} fontSize="md">
+              Estimated Bond Annual Rewards (After Top-Up): {formatNumberToShort(currentBondEstAnnualRewards / 10 ** 9)} $ITHEUM
             </Text>
           )}
         </VStack>
@@ -752,7 +751,7 @@ export const LivelinessStakingSol: React.FC = () => {
   };
 
   return (
-    <Flex flexDirection={"column"} width="100%">
+    <Flex flexDirection="column" width="100%">
       <Flex flexDirection={{ base: "column", md: "row" }} width="100%" justifyContent="space-between" pt={{ base: "0", md: "5" }}>
         <Box flex="1" px={{ base: 0, md: 12 }}>
           <Heading fontSize="1.5rem" fontFamily="Clash-Medium" color="teal.200" mb="20px" textAlign={{ base: "center", md: "left" }}>
@@ -881,7 +880,7 @@ export const LivelinessStakingSol: React.FC = () => {
                     </HStack>{" "}
                     <Flex flexDirection={{ base: "column", md: "row" }}>
                       <Text w={{ base: "auto", md: "330px" }} fontSize="lg">
-                        Est. Cumulative Annual Rewards
+                        Your Estimated Combined Annual Rewards
                       </Text>{" "}
                       <Text fontSize="lg">: {formatNumberToShort(estCombinedAnnualRewards / 10 ** 9)} $ITHEUM</Text>
                     </Flex>

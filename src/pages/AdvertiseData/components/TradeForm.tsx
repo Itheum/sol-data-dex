@@ -535,7 +535,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
             duration: 12000,
             isClosable: true,
           },
-          loading: { title: "Processing Transaction", description: "Please wait...", colorScheme: "teal" },
+          loading: { title: "Processing Transaction", description: "Please wait...", colorScheme: "blue" },
         }
       );
       const result = await confirmationPromise;

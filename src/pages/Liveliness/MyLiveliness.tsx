@@ -23,7 +23,7 @@ export default function MyLiveliness() {
           Bond ITHEUM tokens into your NFMe ID to prove your on-chain reputation and receive protocol staking rewards in return.
         </Heading>
 
-        <Box mt={10} mx="10">
+        <Box mt={10} mx={{ base: 2, lg: 10 }}>
           <Flex flexDirection={{ base: "column" }} alignItems="start">
             {connected && (
               <>

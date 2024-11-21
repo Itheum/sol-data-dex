@@ -20,7 +20,13 @@ export default function MyHome({ setMenuItem }: { setMenuItem: any }) {
         <Box mx={{ base: 5, lg: 24 }}>
           <Box m={heroGridMargin} pt="20" pb="10" w={"100%"}>
             <SimpleGrid columns={{ base: 1, md: 2, xl: 3, "2xl": 4 }} spacing={10}>
-              <Box w={[tileBoxW, "initial"]} border="1px solid transparent" borderColor="#00C79740" borderRadius="16px" m={{ base: "auto", md: "initial" }}>
+              <Box
+                hidden
+                w={[tileBoxW, "initial"]}
+                border="1px solid transparent"
+                borderColor="#00C79740"
+                borderRadius="16px"
+                m={{ base: "auto", md: "initial" }}>
                 <Stack p="5" h={"439px"} borderRadius="lg" alignItems={{ base: "center", xl: "start" }}>
                   <Box
                     className="bounce-hero-img"

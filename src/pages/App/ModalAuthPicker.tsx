@@ -22,6 +22,7 @@ import {
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import axios from "axios";
+import { useNavigate, useLocation } from "react-router-dom";
 import { WALLETS, SOL_ENV_ENUM } from "libs/config";
 import { useLocalStorage } from "libs/hooks";
 import { gtagGo, getApiDataDex } from "libs/utils";
@@ -34,6 +35,8 @@ these vars are used to detect a "new login", i.e a logged out user logged in. we
 let solGotConnected = false;
 
 function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { publicKey: solPubKey } = useWallet();
   const addressSol = solPubKey?.toBase58();
   const { isOpen: isProgressModalOpen, onOpen: onProgressModalOpen, onClose: onProgressModalClose } = useDisclosure();
@@ -52,6 +55,13 @@ function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
         // the user came to the unlock page without a solana connection and then connected a wallet,
         // ... i.e a non-logged in user, just logged in using SOL
         console.log("==== User JUST logged in with addressSol = ", addressSol);
+
+        // redirect user to the dashboard if there are from home or other certain routes
+        if (pathname === "/") {
+          navigate("/dashboard");
+        } else if (pathname === "/NFMeID") {
+          navigate("/liveliness");
+        }
 
         const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SOL_ENV_ENUM.devnet : SOL_ENV_ENUM.mainnet;
         logUserLoggedInInUserAccounts(addressSol, chainId);

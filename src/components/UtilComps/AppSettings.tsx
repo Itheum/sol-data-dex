@@ -30,20 +30,20 @@ export default function () {
                 Env Vars
               </Heading>
               <Box fontSize="sm">
-                <Text>VITE_ENV_SENTRY_DSN : {maskOutputString(import.meta.env.VITE_ENV_SENTRY_DSN, 10, 5)}</Text>
-                <Text>VITE_ENV_NFT_STORAGE_KEY : {maskOutputString(import.meta.env.VITE_ENV_NFT_STORAGE_KEY, 10, 10)}</Text>
                 <Text>VITE_ENV_NETWORK : {import.meta.env.VITE_ENV_NETWORK}</Text>
                 <br />
-                <Text>VITE_ENV_DATADEX_DEVNET_API : {maskOutputString(import.meta.env.VITE_ENV_DATADEX_DEVNET_API, 26, 5)}</Text>
-                <Text>VITE_ENV_DATAMARSHAL_DEVNET_API : {maskOutputString(import.meta.env.VITE_ENV_DATAMARSHAL_DEVNET_API, 26, 5)}</Text>
-                <br />
-                <Text>VITE_ENV_DATADEX_MAINNET_API : {maskOutputString(import.meta.env.VITE_ENV_DATADEX_MAINNET_API, 26, 5)}</Text>
-                <Text>VITE_ENV_DATAMARSHAL_MAINNET_API : {maskOutputString(import.meta.env.VITE_ENV_DATAMARSHAL_MAINNET_API, 26, 5)}</Text>
+                <Text>VITE_ENV_NFT_STORAGE_KEY : {maskOutputString(import.meta.env.VITE_ENV_NFT_STORAGE_KEY, 10, 10)}</Text>
                 <br />
                 <Text>VITE_ENV_BACKEND_API : {maskOutputString(import.meta.env.VITE_ENV_BACKEND_API, 10, 10)}</Text>
                 <Text>VITE_ENV_BACKEND_DEVNET_API : {maskOutputString(import.meta.env.VITE_ENV_BACKEND_DEVNET_API, 26, 5)}</Text>
-                <Text>VITE_ENV_BACKEND_MAINNET_API : {maskOutputString(import.meta.env.VITE_ENV_BACKEND_MAINNET_API, 26, 5)}</Text>
-                <Text>VITE_LOADING_DELAY_SECONDS : {import.meta.env.VITE_LOADING_DELAY_SECONDS}</Text>
+                <Text>VITE_ENV_DATADEX_DEVNET_API : {maskOutputString(import.meta.env.VITE_ENV_DATADEX_DEVNET_API, 26, 5)}</Text>
+                <Text>VITE_ENV_DATAMARSHAL_DEVNET_API : {maskOutputString(import.meta.env.VITE_ENV_DATAMARSHAL_DEVNET_API, 26, 5)}</Text>
+                <br />
+                <Text>VITE_ENV_ITHEUM_SOL_TOKEN_ADDRESS : {import.meta.env.VITE_ENV_ITHEUM_SOL_TOKEN_ADDRESS}</Text>
+                <Text>VITE_ENV_SOLANA_NETWORK_RPC : {maskOutputString(import.meta.env.VITE_ENV_SOLANA_NETWORK_RPC, 10, 10)}</Text>
+                <Text>VITE_ENV_BONDING_PROGRAM_ID : {import.meta.env.VITE_ENV_BONDING_PROGRAM_ID}</Text>
+                <br />
+                <Text>VITE_PRINT_UI_DEBUG_PANELS : {import.meta.env.VITE_PRINT_UI_DEBUG_PANELS}</Text>
               </Box>
             </Box>
 

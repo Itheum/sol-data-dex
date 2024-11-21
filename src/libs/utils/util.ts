@@ -83,7 +83,7 @@ export const getSentryProfile = () => {
   }
 
   // we cannot set ENV for our cicd stg build, so we do this manually
-  if (location?.host?.toLowerCase() === "stg.datadex.itheum.io") {
+  if (location?.host?.toLowerCase() === "stg.datadex-sol.itheum.io") {
     profile = "stage";
   }
 
@@ -112,11 +112,16 @@ export const getLivelinessScore = (seconds: number, lockPeriod: number) => {
   return (100 / lockPeriod) * seconds;
 };
 
-export const settingLivelinessScore = async (unbondTimestamp?: number, lockPeriod?: number): Promise<number | undefined> => {
+export const settingLivelinessScore = async (unbondTimestamp?: number, lockPeriod?: number, useThisDateNowTS?: number): Promise<number | undefined> => {
   try {
     if (unbondTimestamp && lockPeriod) {
-      const newDate = new Date();
-      const currentTimestamp = Math.floor(newDate.getTime() / 1000);
+      let currentTimestamp = Math.floor(Date.now() / 1000);
+
+      // .. did the host component provide a fixed Date.now to work with?
+      if (useThisDateNowTS && useThisDateNowTS > 0) {
+        currentTimestamp = Math.floor(useThisDateNowTS / 1000);
+      }
+
       const difDays = currentTimestamp - unbondTimestamp;
       return difDays > 0 ? 0 : unbondTimestamp === 0 ? -1 : Number(Math.abs(getLivelinessScore(difDays, lockPeriod)).toFixed(2));
     }

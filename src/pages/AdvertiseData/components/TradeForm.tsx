@@ -2,12 +2,10 @@ import React, { useEffect, useState } from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import {
   Alert,
-  AlertDescription,
-  AlertTitle,
+  AlertIcon,
   Box,
   Button,
   Checkbox,
-  CloseButton,
   Flex,
   FormControl,
   FormErrorMessage,
@@ -19,11 +17,6 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
-  Slider,
-  SliderFilledTrack,
-  SliderMark,
-  SliderThumb,
-  SliderTrack,
   Step,
   StepDescription,
   StepIcon,
@@ -36,15 +29,12 @@ import {
   Tag,
   Text,
   Textarea,
-  Tooltip,
   Image,
   Heading,
   Highlight,
   useColorMode,
-  useDisclosure,
   useSteps,
   useToast,
-  AlertIcon,
 } from "@chakra-ui/react";
 import { Program } from "@coral-xyz/anchor";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -55,14 +45,14 @@ import BigNumber from "bignumber.js";
 import { Controller, useForm } from "react-hook-form";
 import * as Yup from "yup";
 import extraAssetDemo from "assets/img/extra-asset-demo.gif";
-import darkNFMeIDHero from "assets/img/nfme/dark-nfmeid-vault-mint-page-hero.png";
-import liteNFMeIDHero from "assets/img/nfme/lite-nfmeid-vault-mint-page-hero.png";
+import darkNFMeIDHero from "assets/img/nfme/dark-nfmeid-vault-mint-page-hero.jpg";
+import liteNFMeIDHero from "assets/img/nfme/lite-nfmeid-vault-mint-page-hero.jpg";
 import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
 import { PopoverTooltip } from "components/UtilComps/PopoverTooltip";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
+import { UserDataType } from "libs/Bespoke/types";
 import { IS_DEVNET, PRINT_UI_DEBUG_PANELS } from "libs/config";
 import { labels } from "libs/language";
-import { UserDataType } from "libs/Bespoke/types";
 import { BONDING_PROGRAM_ID, SOLANA_EXPLORER_URL } from "libs/Solana/config";
 import { CoreSolBondStakeSc, IDL } from "libs/Solana/CoreSolBondStakeSc";
 import { itheumSolPreaccess } from "libs/Solana/SolViewData";
@@ -134,10 +124,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     index: 0,
     count: steps.length,
   });
-  const [imageUrl, setImageUrl] = useState(""); // not sure if needed? @TODO remove if now
-  const [metadataUrl, setMetadataUrl] = useState(""); // not sure if needed? @TODO remove if now
-  const [nftImgAndMetadataLoadedOnIPFS, setNftImgAndMetadataLoadedOnIPFS] = useState<boolean>(false);
-  const [bondVaultNonce, setBondVaultNonce] = useState<number | undefined>(0);
   const [maxApy, setMaxApy] = useState<number>(80);
   const [needsMoreITHEUMToProceed, setNeedsMoreITHEUMToProceed] = useState<boolean>(false);
   const updateItheumBalance = useAccountStore((state) => state.updateItheumBalance);
@@ -222,11 +208,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           return true;
         }
       }),
-
-    // donatePercentage: Yup.number()
-    //   .optional()
-    //   .min(0, "Donate percentage must be a number between 0 and 100")
-    //   .max(userData?.maxDonationPecentage ?? 100, "Donate percentage must be a number between 0 and 100"),
 
     numberOfCopiesForm: Yup.number()
       .typeError("Number of copies must be a number.")
@@ -386,28 +367,16 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   }, [solanaBondTransaction]);
 
   function shouldMintYourDataNftBeDisabled(): boolean | undefined {
-    return !isValid || !readTermsChecked || (solPubKey && solBondingConfigObtainedFromChainErr) || !readLivelinessBonding;
+    return !isValid || !readTermsChecked || !readLivelinessBonding || solBondingConfigObtainedFromChainErr || itheumBalance < bondingAmount;
   }
 
   const closeProgressModal = () => {
-    if ((dataToPrefill?.shouldAutoVault ?? false) && !bondVaultNonce) {
-      // mint and auto vault is a success
-      if (mintingSuccessful && makePrimaryNFMeIdSuccessful) {
-        toast({
-          title: 'Success! Data NFT Minted and set as your NFMe ID. Head over to your "Wallet" to view your new NFT',
-          status: "success",
-          isClosable: true,
-        });
-      }
-    } else {
-      // only minting was needed, and that was a success
-      if (mintingSuccessful) {
-        toast({
-          title: 'Success! Data NFT Minted. Head over to your "Wallet" to view your new NFT',
-          status: "success",
-          isClosable: true,
-        });
-      }
+    if (mintingSuccessful) {
+      toast({
+        title: 'Success! Head over to your "Wallet" to view your new Data NFT or head over to Liveliness if you want to stake against your NFMe ID',
+        status: "success",
+        isClosable: true,
+      });
     }
 
     // reset all the key state
@@ -417,9 +386,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     setMakePrimaryNFMeIdSuccessful(false);
     setDataNFTImg("");
     closeTradeFormModal();
-    setImageUrl("");
-    setMetadataUrl("");
-    setNftImgAndMetadataLoadedOnIPFS(false);
   };
 
   function validateBaseInput() {
@@ -569,7 +535,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
             duration: 12000,
             isClosable: true,
           },
-          loading: { title: "Processing Transaction", description: "Please wait...", colorScheme: "teal" },
+          loading: { title: "Processing Transaction", description: "Please wait...", colorScheme: "blue" },
         }
       );
       const result = await confirmationPromise;
@@ -779,9 +745,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       const imgCIDOnIPFS = _imageUrl.split("ipfs/")[1];
       setDataNFTImg(`https://gateway.pinata.cloud/ipfs/${imgCIDOnIPFS}`);
       setDataNFTTraits(dataNFTTraitsFetched);
-      setImageUrl(_imageUrl);
-      setMetadataUrl(_metadataUrl);
-      setNftImgAndMetadataLoadedOnIPFS(true);
     } else {
       setErrDataNFTStreamGeneric(new Error(labels.ERR_IPFS_ASSET_SAVE_FAILED));
     }
@@ -1223,19 +1186,31 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
             </Flex>
 
             <Box>
-              {/* {(!solPubKey ? itheumBalance < antiSpamTax + bondingAmount : itheumBalance < bondingAmount) && ( */}
               {itheumBalance < bondingAmount && (
-                <Text color="red.400" fontSize="md" mt="1 !important" mb="2">
-                  {labels.ERR_MINT_FORM_NOT_ENOUGH_BOND}
-                </Text>
+                <Alert status="error" mt={5} rounded="md" mb={8}>
+                  <AlertIcon />
+                  <Box>
+                    <Text>{labels.ERR_MINT_FORM_NOT_ENOUGH_BOND} </Text>
+                    <Text mt="2" fontWeight="bold">
+                      You can get some ITHEUM tokens on
+                      <Link
+                        href="https://raydium.io/swap/?inputMint=sol&outputMint=iTHSaXjdqFtcnLK4EFEs7mqYQbJb6B7GostqWbBQwaV"
+                        isExternal
+                        textDecoration="underline"
+                        _hover={{ textDecoration: "none" }}
+                        ml={1}>
+                        Raydium here
+                      </Link>
+                    </Text>
+                  </Box>
+                </Alert>
               )}
             </Box>
 
             <PopoverTooltip title="Bond $ITHEUM to Prove Reputation" bodyWidthInPX="380px">
               <>
                 <Text fontSize="md" fontWeight="500" lineHeight="22.4px" mt="3 !important">
-                  Bonding ITHEUM tokens proves your {"Liveliness"} and gives Data Consumers confidence that you will maintain the Data {`NFT's`} Data Stream.
-                  You will need to lock the{" "}
+                  Bonding ITHEUM tokens proves your {"Liveliness"} and gives Data Consumers confidence about your reputation. You will need to lock the{" "}
                   <Text fontWeight="bold" as="span">
                     Bonding Amount{" "}
                   </Text>
@@ -1257,8 +1232,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
                   <Text fontWeight="bold" as="span">
                     Bonding Amount
                   </Text>{" "}
-                  OR if you want to continue to signal to Data Consumers that you will maintain the Data {`NFT’s`} Data Stream, you can {`"renew"`} the
-                  Liveliness Bond. <br />
+                  OR if you want to continue to signal to Data Consumers that you have good on-chain reputation, you can {`"renew"`} the Liveliness Bond. <br />
                   <br />
                   But wait, on top of the benefit of having liveliness to prove your reputation, there is more good news, your bonded $ITHEUM also earns Staking
                   APR as it powers your Liveliness reputation!{" "}
@@ -1405,11 +1379,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
                 isLoading={isMintingModalOpen}
                 onClick={() => {
                   // For solana, as there are a few steps involved, lets inform the user what to expect next
-                  if (solPubKey) {
-                    setSolNFMeIDMintConfirmationWorkflow(true);
-                  } else {
-                    dataNFTSellSubmit();
-                  }
+                  setSolNFMeIDMintConfirmationWorkflow(true);
                 }}
                 isDisabled={shouldMintYourDataNftBeDisabled()}>
                 {isNFMeIDMint ? "Mint Your NFMe ID" : "Mint Your Data NFT Collection"}
@@ -1417,7 +1387,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
             </Flex>
 
             <MintingModal
-              // isSolanaMinting={!!solPubKey}
               isOpen={isMintingModalOpen}
               setIsOpen={setIsMintingModalOpen}
               errDataNFTStreamGeneric={errDataNFTStreamGeneric}
@@ -1427,11 +1396,8 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
               closeProgressModal={closeProgressModal}
               mintingSuccessful={mintingSuccessful}
               makePrimaryNFMeIdSuccessful={makePrimaryNFMeIdSuccessful}
-              // onChainMint={handleOnChainMint}
               isNFMeIDMint={isNFMeIDMint}
-              // isAutoVault={solPubKey ? true : (dataToPrefill?.shouldAutoVault ?? false) && !bondVaultNonce}
               isAutoVault={true}
-              // nftImgAndMetadataLoadedOnIPFS={nftImgAndMetadataLoadedOnIPFS}
               solBondingTxHasFailed={solBondingTxHasFailed}
               sendSolanaBondingTx={sendSolanaBondingTx}
             />

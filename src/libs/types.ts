@@ -1,17 +1,8 @@
-import { Bond, Offer, ViewDataReturnType } from "@itheum/sdk-mx-data-nft/out";
+import { ViewDataReturnType } from "@itheum/sdk-mx-data-nft/out";
 
 export interface ContractsType {
   itheumToken: string;
 }
-
-export type AddressBoughtOffer = {
-  id: number;
-  address: string;
-  offerId: number;
-  quantity: number;
-};
-
-export interface ExtendedOffer extends Offer, Partial<Bond> {}
 
 export enum BlobDataType {
   TEXT,

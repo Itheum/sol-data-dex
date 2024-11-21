@@ -168,7 +168,7 @@ const NftMediaComponent: React.FC<NftMediaComponentProps> = (props) => {
             <Flex justifyContent="center" my={2}>
               <IconButton
                 isDisabled={makeFlip}
-                colorScheme={"teal"}
+                colorScheme="teal"
                 mx={3}
                 aria-label="Previous image"
                 size="sm"
@@ -177,7 +177,7 @@ const NftMediaComponent: React.FC<NftMediaComponentProps> = (props) => {
               />
               <IconButton
                 isDisabled={makeFlip}
-                colorScheme={"teal"}
+                colorScheme="teal"
                 mx={3}
                 aria-label="Next image"
                 size="sm"

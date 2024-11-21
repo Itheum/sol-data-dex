@@ -7,7 +7,7 @@ import BigNumber from "bignumber.js";
 import { getItheumPriceFromApi } from "libs/Bespoke/api";
 import { BONDING_PROGRAM_ID } from "libs/Solana/config";
 import { CoreSolBondStakeSc, IDL } from "libs/Solana/CoreSolBondStakeSc";
-import { fetchBondingConfigSol, fetchSolNfts, ITHEUM_TOKEN_ADDRESS } from "libs/Solana/utils";
+import { fetchBondingConfigSol, fetchSolNfts, ITHEUM_SOL_TOKEN_ADDRESS } from "libs/Solana/utils";
 import { useAccountStore, useMarketStore, useMintStore } from "store";
 import { useNftsStore } from "./nfts";
 
@@ -65,12 +65,12 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
 
   const getItheumBalanceOnSolana = async () => {
     try {
-      const itheumTokenMint = new PublicKey(ITHEUM_TOKEN_ADDRESS);
+      const itheumTokenMint = new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS);
       const addressAta = getAssociatedTokenAddressSync(itheumTokenMint, solPubKey!, false);
       const balance = await connection.getTokenAccountBalance(addressAta);
       return balance.value.uiAmount;
     } catch (error) {
-      console.error("Error fetching Itheum" + ITHEUM_TOKEN_ADDRESS + "  balance on Solana " + import.meta.env.VITE_ENV_NETWORK + " blockchain:", error);
+      console.error("Error fetching Itheum" + ITHEUM_SOL_TOKEN_ADDRESS + "  balance on Solana " + import.meta.env.VITE_ENV_NETWORK + " blockchain:", error);
       throw error;
     }
   };

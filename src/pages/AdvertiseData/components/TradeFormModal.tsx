@@ -19,7 +19,6 @@ import {
   useColorMode,
 } from "@chakra-ui/react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useNavigate } from "react-router-dom";
 import { labels } from "libs/language";
 import { getApiDataDex, getApiDataMarshal } from "libs/utils";
 import { useMintStore } from "store";
@@ -41,7 +40,6 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
   const [dataNFTMarshalServiceStatus, setDataNFTMarshalServiceStatus] = useState<boolean>(false);
   const [, setDataNFTMarshalService] = useState<string>("");
   const [dataNFTImgGenServiceValid, setDataNFTImgGenService] = useState(false);
-  const navigate = useNavigate();
   const userData = useMintStore((state) => state.userData);
   const lockPeriod = useMintStore((state) => state.lockPeriodForBond);
   const { publicKey: solPubKey } = useWallet();
@@ -49,6 +47,9 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
 
   useEffect(() => {
     (async () => {
+      console.log("userData");
+      console.log(userData);
+
       const minRoyaltiesT = userData?.minRoyalties ?? 0;
       const maxRoyaltiesT = userData?.maxRoyalties ?? 8000;
       const maxSupplyT = userData?.maxSupply ?? 10000;
@@ -73,8 +74,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
       }
     }
 
-    if (solPubKey && !userData) {
-      // userData will be undefined on solana
+    if (solPubKey) {
       checkIfWhitelistedOnSolanaToMint();
     }
   }, [solPubKey]);
@@ -213,9 +213,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
               antiSpamTax < 0 ||
               dataNFTMarshalServiceStatus ||
               !dataNFTImgGenServiceValid ||
-              (!!userData && userData.contractWhitelistEnabled && !userData.userWhitelistedForMint) ||
-              (!!userData && userData.contractPaused) ||
-              (!userData && !onSolOnlyAndWhitelistedToMint)) && (
+              !onSolOnlyAndWhitelistedToMint) && (
               <Alert status="error" mb={5}>
                 <Stack>
                   <AlertTitle fontSize="md" mb={5}>
@@ -231,31 +229,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
                     {antiSpamTax < 0 && <Text fontSize="md">Unable to read default value of Anti-Spam Tax.</Text>}
                     {!!dataNFTMarshalServiceStatus && <Text fontSize="md">{labels.ERR_DATA_MARSHAL_DOWN}</Text>}
                     {!dataNFTImgGenServiceValid && <Text fontSize="md">{labels.ERR_MINT_FORM_GEN_IMG_API_DOWN}</Text>}
-                    {(!!userData && userData.contractWhitelistEnabled && !userData.userWhitelistedForMint) ||
-                      (!userData && !onSolOnlyAndWhitelistedToMint && (
-                        <AlertDescription fontSize="md">You are not currently whitelisted to mint Data NFTs</AlertDescription>
-                      ))}
-                    {!!userData && userData.contractPaused && <Text fontSize="md">The minter smart contract is paused for maintenance.</Text>}
-                  </AlertDescription>
-                </Stack>
-              </Alert>
-            )}
-
-            {!!userData && Date.now() < userData.lastUserMintTime + userData.mintTimeLimit && (
-              <Alert status="error" mb={5}>
-                <Stack>
-                  <AlertTitle fontSize="md" mb={2}>
-                    <AlertIcon display="inline-block" />
-                    <Text display="inline-block" lineHeight="2" style={{ verticalAlign: "middle" }}>
-                      Alerts
-                    </Text>
-                  </AlertTitle>
-                  <AlertDescription>
-                    {!!userData && Date.now() < userData.lastUserMintTime + userData.mintTimeLimit && (
-                      <Text fontSize="md">{`There is a time interval enforced between mints. You can mint your next Data NFT-FT after ${new Date(
-                        userData.lastUserMintTime + userData.mintTimeLimit
-                      ).toLocaleString()}`}</Text>
-                    )}
+                    {!onSolOnlyAndWhitelistedToMint && <AlertDescription fontSize="md">You are not currently whitelisted to mint Data NFTs</AlertDescription>}
                   </AlertDescription>
                 </Stack>
               </Alert>
@@ -287,13 +261,11 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
           width="100%"
           backgroundColor="blackAlpha.800"
           rounded="lg"
-          visibility={
-            (userData?.contractWhitelistEnabled && !userData.userWhitelistedForMint) || (!userData && !onSolOnlyAndWhitelistedToMint) ? "visible" : "hidden"
-          }
+          visibility={!onSolOnlyAndWhitelistedToMint ? "visible" : "hidden"}
           borderTop="solid .1rem"
           borderColor="teal.200">
           <Text fontSize="24px" fontWeight="500" lineHeight="38px" textAlign="center" textColor="teal.200" px="2">
-            - You are not whitelisted -
+            - You are not whitelisted to mint -
           </Text>
           <Button
             variant="solid"
@@ -303,11 +275,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
             rounded="lg"
             mt={7}
             onClick={() => {
-              if (solPubKey) {
-                window.open("https://docs.google.com/forms/d/e/1FAIpQLScpguzOBjyQBj2iDzaI2E0wN9SIAQGoS92FPDM9qkk8B-rzFA/viewform");
-              } else {
-                navigate("/getVerified");
-              }
+              window.open("https://docs.google.com/forms/d/e/1FAIpQLScpguzOBjyQBj2iDzaI2E0wN9SIAQGoS92FPDM9qkk8B-rzFA/viewform");
             }}>
             Find out how you can get whitelisted
           </Button>
@@ -326,11 +294,11 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
           width="100%"
           backgroundColor="blackAlpha.800"
           rounded="lg"
-          visibility={(userData === null || userData === undefined) && !solPubKey ? "visible" : "hidden" || lockPeriod === undefined}
+          visibility={lockPeriod.length === 0 || !solPubKey ? "visible" : "hidden"}
           borderTop="solid .1rem"
           borderColor="teal.200">
           <Text fontSize="24px" fontWeight="500" lineHeight="38px" textAlign="center" textColor="teal.200" px="2">
-            - Fetching minting requirements failed, please refresh the page to try again. -
+            Fetching minting requirements failed, please refresh the page to try again.
           </Text>
           <Button
             variant="solid"

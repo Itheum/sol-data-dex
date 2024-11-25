@@ -5,11 +5,11 @@ import { SPL_ACCOUNT_COMPRESSION_PROGRAM_ID } from "@solana/spl-account-compress
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { AccountMeta, Connection, PublicKey, Transaction } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
-import { getApiDataDex } from "libs/utils";
-
+import { getApiDataDex, getApiDataMarshal } from "libs/utils";
 import { BOND_CONFIG_INDEX, BONDING_PROGRAM_ID } from "./config";
 import { CoreSolBondStakeSc, IDL } from "./CoreSolBondStakeSc";
 import { Bond } from "./types";
+import { SOL_ENV_ENUM } from "libs/config";
 
 enum RewardsState {
   Inactive = 0,
@@ -18,9 +18,7 @@ enum RewardsState {
 
 export const MAX_PERCENT = 10000;
 export const SLOTS_IN_YEAR = 78840000; // solana slots in a year; Approx. 0.4 seconds per  slot
-
 export const ITHEUM_SOL_TOKEN_ADDRESS = import.meta.env.VITE_ENV_ITHEUM_SOL_TOKEN_ADDRESS;
-//contractsForChain(IS_DEVNET ? SolEnvEnum.devnet : SolEnvEnum.mainnet).itheumToken;
 export const DIVISION_SAFETY_CONST = 10 ** 9;
 
 export async function fetchSolNfts(solAddress: string | undefined) {
@@ -34,9 +32,6 @@ export async function fetchSolNfts(solAddress: string | undefined) {
   }
 }
 
-// BONDING
-
-// helper functions
 function bufferToArray(buffer: Buffer): number[] {
   const nums: number[] = [];
   for (let i = 0; i < buffer.length; i++) {
@@ -44,6 +39,7 @@ function bufferToArray(buffer: Buffer): number[] {
   }
   return nums;
 }
+
 function decode(stuff: string) {
   return bufferToArray(bs58.decode(stuff));
 }
@@ -190,14 +186,14 @@ function calculateAddressShareInRewards(
 export async function createBondTransaction(
   mintMeta: CNftSolPostMintMetaType,
   userPublicKey: PublicKey,
-  connection: Connection
+  connection: Connection,
+  skipDeepParse?: boolean
 ): Promise<Transaction | undefined> {
   try {
-    const mintMetaJSON = JSON.parse(mintMeta.toString());
+    const mintMetaJSON = skipDeepParse ? mintMeta : JSON.parse(mintMeta.toString());
     const {
       assetId,
       leafSchema: { dataHash, creatorHash, nonce },
-      //index,
       proof: { proof, root },
     } = mintMetaJSON;
 
@@ -325,4 +321,132 @@ export function computeBondScore(lockPeriod: number, currentTimestamp: number, u
       return Number(((divResult * difference) / 100).toFixed(2));
     }
   }
+}
+
+export async function getNftMetaForDelayedBonding(dataNftId: string, bondForSolAddr: string, solSignature: string, signatureNonce: string) {
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  const requestBody = { dataNftId, bondForSolAddr, solSignature, signatureNonce };
+
+  const res = await fetch(`${getApiDataDex()}/solNftUtils/nftMetaForDelayedBonding`, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(requestBody),
+  });
+
+  const data = await res.json();
+
+  return data;
+}
+
+export async function mintMiscDataNft(mintTemplate: string, mintForSolAddr: string, solSignature: string, signatureNonce: string) {
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SOL_ENV_ENUM.devnet : SOL_ENV_ENUM.mainnet;
+
+    const requestBody = { mintTemplate, mintForSolAddr, solSignature, signatureNonce, chainId };
+
+    const res = await fetch(`${getApiDataDex()}/solNftUtils/mintMiscDataNft`, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await res.json();
+
+    return data;
+  } catch (e) {
+    return {
+      error: true,
+      e,
+    };
+  }
+}
+
+export async function checkIfFreeDataNftGiftMinted(mintTemplate: string, checkForSolAddr: string) {
+  const res = await fetch(`${getApiDataDex()}/solNftUtils/checkIfFreeDataNftGiftMinted?mintTemplate=${mintTemplate}&checkForSolAddr=${checkForSolAddr}`, {
+    method: "GET",
+  });
+
+  const data = await res.json();
+
+  return data;
+}
+
+export async function itheumSolPreaccess() {
+  const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SOL_ENV_ENUM.devnet : SOL_ENV_ENUM.mainnet;
+  const preaccessUrl = `${getApiDataMarshal()}/preaccess?chainId=${chainId}`;
+  const response = await fetch(preaccessUrl);
+  const data = await response.json();
+  return data.nonce;
+}
+
+/*
+This method will get the Solana Data Marshal access nonce and Signature
+from local app cache (so we don't have to keep asking for a signature)
+or if the cache is not suitable, then get a fresh nonce and sig and cache it again
+*/
+export async function getOrCacheAccessNonceAndSignature({
+  solPreaccessNonce,
+  solPreaccessSignature,
+  solPreaccessTimestamp,
+  signMessage,
+  publicKey,
+  updateSolPreaccessNonce,
+  updateSolSignedPreaccess,
+  updateSolPreaccessTimestamp,
+}: {
+  solPreaccessNonce: string;
+  solPreaccessSignature: string;
+  solPreaccessTimestamp: number;
+  signMessage: any;
+  publicKey: any;
+  updateSolPreaccessNonce: any;
+  updateSolSignedPreaccess: any;
+  updateSolPreaccessTimestamp: any;
+}) {
+  let usedPreAccessNonce = solPreaccessNonce;
+  let usedPreAccessSignature = solPreaccessSignature;
+
+  // Marshal Access lasts for 30 Mins. We cache it for this amount of time
+  const minsMarshalAllowsForNonceCaching = 20;
+
+  if (solPreaccessSignature === "" || solPreaccessTimestamp === -2 || solPreaccessTimestamp + minsMarshalAllowsForNonceCaching * 60 * 1000 < Date.now()) {
+    const preAccessNonce = await itheumSolPreaccess();
+    const message = new TextEncoder().encode(preAccessNonce);
+
+    if (signMessage === undefined) {
+      throw new Error("signMessage is undefined");
+    }
+
+    const signature = await signMessage(message);
+
+    if (!preAccessNonce || !signature || !publicKey) {
+      throw new Error("Missing data for viewData");
+    }
+
+    // const encodedSignature = Buffer.from(signature).toString("hex"); // this format was another way we did it, and the backend api used it. but we aligned he backend api to be same as below
+    const encodedSignature = bs58.encode(signature); // the marshal needs it in bs58
+
+    updateSolPreaccessNonce(preAccessNonce);
+    updateSolSignedPreaccess(encodedSignature);
+    updateSolPreaccessTimestamp(Date.now()); // in MS
+
+    usedPreAccessNonce = preAccessNonce;
+    usedPreAccessSignature = encodedSignature;
+
+    console.log("------> Access NOT FROM Cache");
+  } else {
+    console.log("------> Access FROM Cache");
+  }
+
+  return {
+    usedPreAccessNonce,
+    usedPreAccessSignature,
+  };
 }

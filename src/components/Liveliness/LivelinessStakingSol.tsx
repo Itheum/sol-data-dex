@@ -80,7 +80,7 @@ export const LivelinessStakingSol: React.FC = () => {
   const [claimRewardsConfirmationWorkflow, setClaimRewardsConfirmationWorkflow] = useState<boolean>(false);
   const [reinvestRewardsConfirmationWorkflow, setReinvestRewardsConfirmationWorkflow] = useState<boolean>(false);
   const [nftMeIdBond, setNftMeIdBond] = useState<Bond>();
-  const { solNfts } = useNftsStore();
+  const { solNfts, updateBondedNftIds } = useNftsStore();
   const { colorMode } = useColorMode();
   const [claimableAmount, setClaimableAmount] = useState<number>(0);
   const [withdrawBondConfirmationWorkflow, setWithdrawBondConfirmationWorkflow] = useState<{ bondId: number; bondAmount: number; bondExpired: boolean }>();
@@ -333,6 +333,14 @@ export const LivelinessStakingSol: React.FC = () => {
         }
 
         setBonds(myBonds);
+
+        console.log("myBonds ");
+        console.log(myBonds);
+
+        updateBondedNftIds(myBonds.map((i) => i.assetId.toBase58()));
+        console.log("myBonds IDs");
+        console.log(myBonds.map((i) => i.assetId.toBase58()));
+
         setNftMeIdBond(nftMeIdVault);
       });
     }
@@ -1079,6 +1087,13 @@ export const LivelinessStakingSol: React.FC = () => {
                     </Box>
                     <Flex p={0} ml={{ md: "3" }} flexDirection="column" alignItems="start" w="full">
                       <Flex flexDirection="column" w="100%">
+                        <Text fontSize="sm" mb="5">
+                          ID: {dataNft.id}
+                          <br />
+                          Length {dataNft.grouping.length}
+                          <br />
+                          Collection {dataNft.grouping[0].group_value}
+                        </Text>
                         <Text fontFamily="Clash-Medium">{metadata.name}</Text>
                         <Link isExternal href={`${SOLANA_EXPLORER_URL}address/${dataNft.id}?cluster=${networkConfiguration}`}>
                           <Text fontSize="sm" pb={3}>

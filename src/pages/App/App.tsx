@@ -30,6 +30,7 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
   const updateBitzBalance = useAccountStore((state: any) => state.updateBitzBalance);
   const updateItheumBalance = useAccountStore((state: any) => state.updateItheumBalance);
   const updateCooldown = useAccountStore((state: any) => state.updateCooldown);
+  const [triggerBiTzPlayModelAndIsOpen, setTriggerBiTzPlayModelAndIsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (path) {
@@ -61,14 +62,33 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
     }
   };
 
+  const handleRemoteTriggerOfBiTzPlayModel = (openItIfNotOpen: boolean) => {
+    if (openItIfNotOpen && !triggerBiTzPlayModelAndIsOpen) {
+      setTriggerBiTzPlayModelAndIsOpen(true);
+    } else {
+      setTriggerBiTzPlayModelAndIsOpen(false);
+    }
+  };
+
   function commonRoutes() {
     return (
       <>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LandingPage onShowConnectWalletModal={onShowConnectWalletModal} handleLogout={handleLogout} />} />
         <Route path="NFMeID" element={<Outlet />}>
           <Route path="" element={<GetNFMeID onShowConnectWalletModal={onShowConnectWalletModal} />} />
         </Route>
-        <Route path="dashboard" element={<MyHome key={rfKeys.tools} setMenuItem={setMenuItem} />} />
+        <Route
+          path="dashboard"
+          element={
+            <MyHome
+              key={rfKeys.tools}
+              setMenuItem={setMenuItem}
+              onShowConnectWalletModal={onShowConnectWalletModal}
+              handleLogout={handleLogout}
+              onRemoteTriggerOfBiTzPlayModel={handleRemoteTriggerOfBiTzPlayModel}
+            />
+          }
+        />
         <Route path="mintdata" element={<TradeData />} />
         <Route path="datanfts" element={<Outlet />}>
           <Route path="wallet" element={<MyDataNFTs tabState={1} />} />
@@ -85,7 +105,13 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
   return (
     <>
       {/* App Header */}
-      <AppHeader onShowConnectWalletModal={onShowConnectWalletModal} setMenuItem={setMenuItem} handleLogout={handleLogout} />
+      <AppHeader
+        onShowConnectWalletModal={onShowConnectWalletModal}
+        setMenuItem={setMenuItem}
+        handleLogout={handleLogout}
+        onRemoteTriggerOfBiTzPlayModel={handleRemoteTriggerOfBiTzPlayModel}
+        triggerBiTzPlayModel={triggerBiTzPlayModelAndIsOpen}
+      />
 
       {/* App Body */}
       {isSolLoggedIn ? (

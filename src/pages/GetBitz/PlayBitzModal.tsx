@@ -26,6 +26,8 @@ export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
     document.documentElement.classList.toggle(colorMode);
   }, [colorMode]);
 
+  console.log("bitzBalance", bitzBalance);
+
   return (
     <div
       id="static-modal"

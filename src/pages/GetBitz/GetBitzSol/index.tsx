@@ -125,6 +125,7 @@ const GetBitzSol = (props: any) => {
   const { solNfts } = useNftsStore();
   const [solNftsBitz, setSolNftsBitz] = useState<DasApiAsset[]>([]);
   const [populatedBitzStore, setPopulatedBitzStore] = useState<boolean>(false);
+
   useEffect(() => {
     if (solPubKey && solNfts) {
       setSolNftsBitz(
@@ -193,6 +194,7 @@ const GetBitzSol = (props: any) => {
 
   useEffect(() => {
     if (solNftsBitz === undefined) return;
+
     if (!populatedBitzStore) {
       if (solPubKey && solNftsBitz.length > 0) {
         updateBitzBalance(-2);
@@ -209,15 +211,17 @@ const GetBitzSol = (props: any) => {
 
         (async () => {
           const getBitzGameResult = await viewData(viewDataArgs, solNftsBitz[0]);
+
           if (getBitzGameResult) {
             const bitzBeforePlay = getBitzGameResult.data.gamePlayResult.bitsScoreBeforePlay || 0;
             const sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0;
             const sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0;
-            if (sumGivenBits > 0) {
-              updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
-              updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
-              updateBonusBitzSum(sumBonusBitz);
-            }
+
+            // if (sumGivenBits > 0) { // not sure why this there -- but when it was, the bitz score was not updating from -2 start start when sumGivenBits was 0 (when it was a new wallet that never gave bitz)
+            updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
+            updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
+            updateBonusBitzSum(sumBonusBitz);
+            // }
 
             updateCooldown(
               computeRemainingCooldown(
@@ -282,6 +286,7 @@ const GetBitzSol = (props: any) => {
     };
 
     const viewDataPayload = await viewData(viewDataArgs, solNftsBitz[0]);
+
     if (viewDataPayload) {
       setGameDataFetched(true);
       setIsFetchingDataMarshal(false);
@@ -292,9 +297,11 @@ const GetBitzSol = (props: any) => {
           viewDataPayload.data.gamePlayResult.configCanPlayEveryMSecs
         )
       );
+
       const sumBitzBalance = viewDataPayload.data.gamePlayResult.bitsScoreAfterPlay || 0;
       const sumBonusBitz = viewDataPayload.data?.bitsMain?.bitsBonusSum || 0;
       const sumGivenBits = viewDataPayload.data?.bitsMain?.bitsGivenSum || 0;
+
       if (viewDataPayload.data.gamePlayResult.bitsScoreAfterPlay > -1) {
         updateBitzBalance(sumBitzBalance + sumBonusBitz - sumGivenBits); // won some bis, minus given bits and show
         updateCollectedBitzSum(viewDataPayload.data.gamePlayResult.bitsScoreAfterPlay);
@@ -310,6 +317,7 @@ const GetBitzSol = (props: any) => {
       }
     }
   }
+
   function gamePlayImageSprites() {
     const _viewDataRes = viewDataRes;
     const _loadBlankGameCanvas = loadBlankGameCanvas;

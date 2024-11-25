@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import {
   Box,
   Flex,
   Link,
+  Button,
   Popover,
   PopoverArrow,
   PopoverBody,
@@ -23,27 +24,21 @@ import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationPro
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { SOLANA_EXPLORER_URL } from "libs/Solana/config";
 import { transformDescription } from "libs/utils";
+import { useNftsStore } from "store/nfts";
 
 interface WalletDataNftSolProps {
   index: number;
   solDataNft: DasApiAsset;
+  onReEstablishBond: any;
 }
 
-const WalletDataNftSol: React.FC<WalletDataNftSolProps> = ({ index, solDataNft }) => {
+const WalletDataNftSol: React.FC<WalletDataNftSolProps> = ({ index, solDataNft, onReEstablishBond }) => {
   const { networkConfiguration } = useNetworkConfiguration();
+  const { bondedNftIds } = useNftsStore();
 
   return (
     <Skeleton fitContent={true} isLoaded={true} borderRadius="16px" display="flex" alignItems="center" justifyContent="center">
-      <Box
-        key={index}
-        w="275px"
-        h={"460px"}
-        mx="3 !important"
-        border="1px solid transparent"
-        borderColor="#00C79740"
-        borderRadius="16px"
-        mb="1rem"
-        position="relative">
+      <Box key={index} w="275px" mx="3 !important" border="1px solid transparent" borderColor="#00C79740" borderRadius="16px" mb="1rem" position="relative">
         <NftMediaComponent
           imageUrls={[solDataNft.content.links && solDataNft.content.links["image"] ? (solDataNft.content.links["image"] as string) : DEFAULT_NFT_IMAGE]}
           autoSlide
@@ -57,9 +52,36 @@ const WalletDataNftSol: React.FC<WalletDataNftSolProps> = ({ index, solDataNft }
           marginTop="1.5rem"
           borderRadius="16px"
         />
-        <Flex h="14rem" mx={6} direction="column">
+        <Flex mx={6} direction="column">
           <Text fontWeight="semibold" fontSize="lg" mt="1.5" noOfLines={1}>
             {solDataNft.content.metadata.name}
+          </Text>
+          <Text fontSize="sm">
+            <>
+              BONDED:{" "}
+              {bondedNftIds.includes(solDataNft.id) ? (
+                <Text>TRUE</Text>
+              ) : (
+                <Box>
+                  <Button
+                    w={"100%"}
+                    size={"sm"}
+                    p={5}
+                    colorScheme="teal"
+                    onClick={() => {
+                      onReEstablishBond(solDataNft.id);
+                    }}>
+                    Bond To Get Liveliness <br />+ Staking Rewards
+                  </Button>
+                </Box>
+              )}
+            </>
+            <br />
+            ID: {solDataNft.id}
+            <br />
+            Length {solDataNft.grouping.length}
+            <br />
+            Collection {solDataNft.grouping[0].group_value}
           </Text>
           <Link
             onClick={() => window.open(`${SOLANA_EXPLORER_URL}address/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}

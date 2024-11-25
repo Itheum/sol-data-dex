@@ -99,13 +99,12 @@ export const getApiDataDex = () => {
 };
 
 export const getApiDataMarshal = () => {
-  const envKey = import.meta.env.VITE_ENV_NETWORK === "mainnet" ? "VITE_ENV_DATAMARSHAL_MAINNET_API" : "VITE_ENV_DATAMARSHAL_DEVNET_API";
   const defaultUrl =
     import.meta.env.VITE_ENV_NETWORK === "mainnet"
       ? "https://api.itheumcloud.com/datamarshalapi/router/v1"
       : "https://api.itheumcloud-stg.com/datamarshalapi/router/v1";
 
-  return import.meta.env[envKey] || defaultUrl;
+  return import.meta.env.VITE_ENV_DATAMARSHAL_API || defaultUrl;
 };
 
 export const getLivelinessScore = (seconds: number, lockPeriod: number) => {

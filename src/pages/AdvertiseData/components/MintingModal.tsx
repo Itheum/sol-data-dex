@@ -167,7 +167,7 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
               <>
                 {mintingSuccessful && makePrimaryNFMeIdSuccessful ? (
                   <Box textAlign="center" mt="2">
-                    <Alert status="success">
+                    <Alert status="success" rounded="md">
                       <Text fontSize="lg" colorScheme="teal">
                         Success! {isNFMeIDMint ? "NFMe ID" : "Data NFT"} Minted and {isSolWalletConnected ? "bonded" : "set as your NFMe ID"}.
                       </Text>
@@ -216,7 +216,7 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
               <>
                 {mintingSuccessful && (
                   <Box textAlign="center" mt="2">
-                    <Alert status="success">
+                    <Alert status="success" rounded="md">
                       <Text fontSize="lg" colorScheme="teal">
                         Success! Your {isNFMeIDMint ? "NFMe ID" : "Data NFT"} has been minted.
                       </Text>
@@ -247,7 +247,7 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
             )}
 
             {errDataNFTStreamGeneric && (
-              <Alert status="error">
+              <Alert status="error" rounded="md">
                 <Stack>
                   <AlertTitle fontSize="md">
                     <AlertIcon mb={2} />

@@ -47,9 +47,6 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
 
   useEffect(() => {
     (async () => {
-      console.log("userData");
-      console.log(userData);
-
       const minRoyaltiesT = userData?.minRoyalties ?? 0;
       const maxRoyaltiesT = userData?.maxRoyalties ?? 8000;
       const maxSupplyT = userData?.maxSupply ?? 10000;
@@ -214,7 +211,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
               dataNFTMarshalServiceStatus ||
               !dataNFTImgGenServiceValid ||
               !onSolOnlyAndWhitelistedToMint) && (
-              <Alert status="error" mb={5}>
+              <Alert status="error" mb={5} rounded="md">
                 <Stack>
                   <AlertTitle fontSize="md" mb={5}>
                     <AlertIcon display="inline-block" />

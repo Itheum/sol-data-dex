@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { WarningTwoIcon, SunIcon } from "@chakra-ui/icons";
 import {
   Accordion,
@@ -58,7 +58,19 @@ import { formatNumberRoundFloor } from "libs/utils";
 import { PlayBitzModal } from "pages/GetBitz/PlayBitzModal";
 import { useAccountStore } from "store";
 
-const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { onShowConnectWalletModal?: any; setMenuItem: any; handleLogout: any }) => {
+const AppHeader = ({
+  onShowConnectWalletModal,
+  setMenuItem,
+  handleLogout,
+  onRemoteTriggerOfBiTzPlayModel,
+  triggerBiTzPlayModel,
+}: {
+  onShowConnectWalletModal?: any;
+  setMenuItem: any;
+  handleLogout: any;
+  onRemoteTriggerOfBiTzPlayModel: any;
+  triggerBiTzPlayModel?: boolean;
+}) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { networkConfiguration } = useNetworkConfiguration();
   const { publicKey: solPubKey } = useWallet();
@@ -125,6 +137,15 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
       ],
     },
   ];
+  const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
+  const solPreaccessSignature = useAccountStore((state: any) => state.solPreaccessSignature);
+  const solPreaccessTimestamp = useAccountStore((state: any) => state.solPreaccessTimestamp);
+
+  useEffect(() => {
+    if (!showPlayBitzModal && triggerBiTzPlayModel) {
+      setShowPlayBitzModal(true);
+    }
+  }, [triggerBiTzPlayModel]);
 
   const navigateToDiscover = (menuEnum: number) => {
     setMenuItem(menuEnum);
@@ -302,6 +323,7 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                     <Button display={{ base: "none", md: "inline-flex" }} size={{ md: "md", xl: "md", "2xl": "lg" }} p="2 !important">
                       {bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}
                       <LuFlaskRound fontSize={"1.4rem"} fill="#38bdf8" />
+
                       {cooldown <= 0 && cooldown != -2 && (
                         <>
                           {" "}
@@ -437,6 +459,10 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
           </HStack>
         </Flex>
       </Flex>
+
+      <Text textAlign={"center"} fontSize={"small"}>{`preaccessNonce = ${solPreaccessNonce.substring(0, 8)},
+       preaccessSig = ${solPreaccessSignature.substring(0, 8)},
+      preaccessTS = ${solPreaccessTimestamp > -2 ? new Date(solPreaccessTimestamp).toUTCString() : solPreaccessTimestamp}`}</Text>
 
       <Drawer placement={"left"} onClose={onClose} isOpen={isOpen} blockScrollOnMount={false}>
         <DrawerOverlay />
@@ -589,7 +615,15 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
         </DrawerContent>
       </Drawer>
 
-      {showPlayBitzModal && <PlayBitzModal showPlayBitzModel={showPlayBitzModal} handleHideBitzModel={() => setShowPlayBitzModal(false)} />}
+      {showPlayBitzModal && (
+        <PlayBitzModal
+          showPlayBitzModel={showPlayBitzModal}
+          handleHideBitzModel={() => {
+            onRemoteTriggerOfBiTzPlayModel(false);
+            setShowPlayBitzModal(false);
+          }}
+        />
+      )}
     </>
   );
 };

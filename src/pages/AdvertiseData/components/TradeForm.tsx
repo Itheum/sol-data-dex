@@ -61,6 +61,7 @@ import { getApiDataMarshal, isValidNumericCharacter, sleep, timeUntil } from "li
 import { useAccountStore, useMintStore } from "store";
 import { useNftsStore } from "store/nfts";
 import { MintingModal } from "./MintingModal";
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 type TradeDataFormType = {
   dataStreamUrlForm: string;
@@ -706,7 +707,8 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     }
 
     const signature = await signMessage(message);
-    const encodedSignature = Buffer.from(signature).toString("hex");
+    // const encodedSignature = Buffer.from(signature).toString("hex");
+    const encodedSignature = bs58.encode(signature); // the marshal needs it in bs58
 
     if (!preAccessNonce || !signature || !solPubKey) {
       throw new Error("Missing data for viewData");
@@ -793,7 +795,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
         {PRINT_UI_DEBUG_PANELS && (
           <Box>
-            <Alert status="warning" mt={3} p={2} fontSize=".8rem" rounded="lg" as="div" style={{ "display": "block" }}>
+            <Alert status="warning" mt={3} p={2} fontSize=".8rem" rounded="md" as="div" style={{ "display": "block" }}>
               <Box>--- Debugging Panel ---</Box>
               <Box>^^ Needs more Itheum to Proceed: {needsMoreITHEUMToProceed.toString()}</Box>
               <Box>^^ Is NFMe ID Mint: {isNFMeIDMint.toString()}</Box>
@@ -1320,7 +1322,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
             </Box>
 
             {solPubKey ? (
-              <Alert status="warning" rounded="lg">
+              <Alert status="warning" rounded="md">
                 <AlertIcon />
                 All Data NFTs, including NFMeIDs minted, will include a fixed 5% royalty. <br /> These royalties are split equally 50% / 50% with you and the
                 Itheum Protocol.
@@ -1366,7 +1368,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
             )}
 
             {solPubKey && solBondingConfigObtainedFromChainErr && (
-              <Alert status="error" rounded="lg" mt="2">
+              <Alert status="error" rounded="md" mt="2">
                 <AlertIcon />
                 {labels.ERR_SOL_CANT_GET_ONCHAIN_CONFIG}
               </Alert>

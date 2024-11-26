@@ -68,10 +68,6 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
   const updateSolSignedPreaccess = useAccountStore((state: any) => state.updateSolSignedPreaccess);
   // E: Cached Signature Store Items
 
-  // useEffect(() => {
-  //   onBondingSuccessCTAModalOpen();
-  // }, []);
-
   useEffect(() => {
     if (solanaBondTransaction) {
       sendSolanaBondingTx();
@@ -164,23 +160,6 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
       }
 
       const { confirmationPromise, txSignature } = await sendAndConfirmTransaction({ userPublicKey, connection, transaction, sendTransaction });
-
-      // const latestBlockhash = await connection.getLatestBlockhash();
-      // transaction.recentBlockhash = latestBlockhash.blockhash;
-      // transaction.feePayer = userPublicKey;
-
-      // const txSignature = await sendTransaction(transaction, connection, {
-      //   skipPreflight: true,
-      //   preflightCommitment: "finalized",
-      // });
-
-      // const strategy: TransactionConfirmationStrategy = {
-      //   signature: txSignature,
-      //   blockhash: latestBlockhash.blockhash,
-      //   lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-      // };
-
-      // const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
 
       toast.promise(
         confirmationPromise.then((response) => {

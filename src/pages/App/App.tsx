@@ -115,11 +115,11 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
 
       {/* App Body */}
       {isSolLoggedIn ? (
-        <Box flexGrow={1} minH={{ base: "auto", lg: "1000px" }}>
+        <Box flexGrow={1} minH={{ base: "auto", lg: "100vh" }}>
           <Routes>{commonRoutes()}</Routes>
         </Box>
       ) : (
-        <Box flexGrow={1} minH={{ base: "auto", lg: "1000px" }}>
+        <Box flexGrow={1} minH={{ base: "auto", lg: "100vh" }}>
           <Routes>{commonRoutes()}</Routes>
         </Box>
       )}

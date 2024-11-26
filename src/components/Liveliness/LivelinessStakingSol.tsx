@@ -29,7 +29,6 @@ import { Program, BN } from "@coral-xyz/anchor";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-// import { Commitment, PublicKey, Transaction, TransactionConfirmationStrategy } from "@solana/web3.js";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import moment from "moment/moment";
 import { useNavigate } from "react-router-dom";
@@ -38,8 +37,8 @@ import { NoDataHere } from "components/Sections/NoDataHere";
 import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
-import { BOND_CONFIG_INDEX, BONDING_PROGRAM_ID, SOLANA_EXPLORER_URL } from "libs/Solana/config";
-import { CoreSolBondStakeSc, IDL } from "libs/Solana/CoreSolBondStakeSc";
+import { BOND_CONFIG_INDEX, SOLANA_EXPLORER_URL } from "libs/Solana/config";
+import { CoreSolBondStakeSc } from "libs/Solana/CoreSolBondStakeSc";
 import { Bond } from "libs/Solana/types";
 import { sendAndConfirmTransaction } from "libs/Solana/utils";
 import {
@@ -109,11 +108,6 @@ export const LivelinessStakingSol: React.FC = () => {
         return;
       }
 
-      // const programId = new PublicKey(BONDING_PROGRAM_ID);
-      // const program = new Program<CoreSolBondStakeSc>(IDL, programId, {
-      //   connection,
-      // });
-
       const programObj = getBondingProgramInterface(connection);
       const programId = programObj.programId;
 
@@ -144,7 +138,6 @@ export const LivelinessStakingSol: React.FC = () => {
     updateIsKeyChainDataForAppLoading(true);
   }, []);
 
-  // when a tx is happening we need to update the data
   useEffect(() => {
     if (!hasPendingTransaction) {
       fetchBonds();
@@ -261,7 +254,6 @@ export const LivelinessStakingSol: React.FC = () => {
     if (!programSol || !addressBondsRewardsPda) return;
 
     try {
-      // const data = await programSol.account.addressBondsRewards.fetch(addressBondsRewardsPda);
       const userBondsInfo = await fetchAddressBondsRewards(programSol, addressBondsRewardsPda);
 
       if (userBondsInfo) {
@@ -356,12 +348,7 @@ export const LivelinessStakingSol: React.FC = () => {
 
   async function fetchBonds() {
     if (numberOfBonds && userPublicKey && programSol) {
-      // retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, programSol, bondConfigData).then(({ myBonds, nftMeIdVault }) => {
       retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, programSol).then(({ myBonds, nftMeIdVault }) => {
-        // if (nftMeIdVault === undefined) {
-        //   livelinessPageInfoLoaded();
-        // }
-
         setBonds(myBonds);
 
         updateBondedDataNftIds(myBonds.map((i) => i.assetId.toBase58()));
@@ -384,23 +371,6 @@ export const LivelinessStakingSol: React.FC = () => {
       setHasPendingTransaction(true);
 
       const { confirmationPromise, txSignature } = await sendAndConfirmTransaction({ userPublicKey, connection, transaction, sendTransaction });
-
-      // const latestBlockHash = await connection.getLatestBlockhash();
-      // transaction.recentBlockhash = latestBlockHash.blockhash;
-      // transaction.feePayer = userPublicKey;
-
-      // const txSignature = await sendTransaction(transaction, connection, {
-      //   skipPreflight: true,
-      //   preflightCommitment: "finalized",
-      // });
-
-      // const strategy: TransactionConfirmationStrategy = {
-      //   signature: txSignature,
-      //   blockhash: latestBlockHash.blockhash,
-      //   lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-      // };
-
-      // const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
 
       toast.promise(
         confirmationPromise.then((response) => {

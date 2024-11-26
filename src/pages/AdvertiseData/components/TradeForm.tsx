@@ -37,11 +37,9 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { Program } from "@coral-xyz/anchor";
-// import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CNftSolMinter } from "@itheum/sdk-mx-data-nft/out";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-// import { Commitment, PublicKey, Transaction, TransactionConfirmationStrategy } from "@solana/web3.js";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { Controller, useForm } from "react-hook-form";
@@ -57,7 +55,6 @@ import { IS_DEVNET, PRINT_UI_DEBUG_PANELS } from "libs/config";
 import { labels } from "libs/language";
 import { BONDING_PROGRAM_ID, SOLANA_EXPLORER_URL } from "libs/Solana/config";
 import { CoreSolBondStakeSc, IDL } from "libs/Solana/CoreSolBondStakeSc";
-// import { itheumSolPreaccess } from "libs/Solana/SolViewData";
 import { createBondTransaction, fetchRewardsConfigSol, fetchSolNfts, getOrCacheAccessNonceAndSignature, sendAndConfirmTransaction } from "libs/Solana/utils";
 import { getApiDataMarshal, isValidNumericCharacter, sleep, timeUntil } from "libs/utils";
 import { useAccountStore, useMintStore } from "store";
@@ -442,7 +439,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     }
   }
 
-  // Step 1 of minting (user clicked on mint button on main form)
   const dataNFTSellSubmit = async () => {
     // if (!mxAddress && !userPublicKey) {
     if (!userPublicKey) {
@@ -471,7 +467,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     }
   };
 
-  // Step 2 of minting (call the SDK mint - encrypt stream, get the gen image and save new image and traits to IPFS)
   const prepareMint = async () => {
     await sleep(1);
     setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s2: 1 }));
@@ -488,23 +483,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       }
 
       const { confirmationPromise, txSignature } = await sendAndConfirmTransaction({ userPublicKey, connection, transaction, sendTransaction });
-
-      // const latestBlockhash = await connection.getLatestBlockhash();
-      // transaction.recentBlockhash = latestBlockhash.blockhash;
-      // transaction.feePayer = userPublicKey;
-
-      // const txSignature = await sendTransaction(transaction, connection, {
-      //   skipPreflight: true,
-      //   preflightCommitment: "finalized",
-      // });
-
-      // const strategy: TransactionConfirmationStrategy = {
-      //   signature: txSignature,
-      //   blockhash: latestBlockhash.blockhash,
-      //   lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-      // };
-
-      // const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
 
       toast.promise(
         confirmationPromise.then((response) => {
@@ -599,8 +577,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
         updateSolPreaccessTimestamp,
       });
 
-      // const { signatureNonce, solSignature } = await getAccessNonceAndSign();
-
       if (usedPreAccessNonce && usedPreAccessSignature) {
         optionalSDKMintCallFields["signatureNonce"] = usedPreAccessNonce;
         optionalSDKMintCallFields["solSignature"] = usedPreAccessSignature;
@@ -611,7 +587,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
         metadataUrl: _metadataUrl,
         mintMeta: mintMeta,
       } = await cNftSolMinter.mint(
-        userPublicKey?.toBase58(), // Solana User Wallet Address
+        userPublicKey?.toBase58(),
         dataNFTTokenName,
         dataNFTMarshalService,
         dataNFTStreamUrl,
@@ -717,25 +693,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       console.error("createBondTransaction failed to create bond transaction");
     }
   };
-
-  // const getAccessNonceAndSign = async () => {
-  //   const preAccessNonce = await itheumSolPreaccess();
-  //   const message = new TextEncoder().encode(preAccessNonce);
-
-  //   if (signMessage === undefined) {
-  //     throw new Error("signMessage is undefined");
-  //   }
-
-  //   const signature = await signMessage(message);
-  //   // const encodedSignature = Buffer.from(signature).toString("hex");
-  //   const encodedSignature = bs58.encode(signature); // the marshal needs it in bs58
-
-  //   if (!preAccessNonce || !signature || !userPublicKey) {
-  //     throw new Error("Missing data for viewData");
-  //   }
-
-  //   return { signatureNonce: preAccessNonce, solSignature: encodedSignature };
-  // };
 
   const checkIfNftImgAndMetadataIsAvailableOnIPFS = async (_imageUrl: string, _metadataUrl: string) => {
     let assetsLoadedOnIPFSwasSuccess = false;

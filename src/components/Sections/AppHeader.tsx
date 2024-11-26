@@ -324,7 +324,7 @@ const AppHeader = ({
                   <PopoverTrigger>
                     <Button display={{ base: "none", md: "inline-flex" }} size={{ md: "md", xl: "md", "2xl": "lg" }} p="2 !important">
                       {bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}
-                      <LuFlaskRound fontSize={"1.4rem"} fill="#38bdf8" />
+                      <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />
 
                       {cooldown <= 0 && cooldown != -2 && (
                         <>
@@ -336,7 +336,7 @@ const AppHeader = ({
                             right="-15px"
                             top="-15px"
                             as={BsDot}
-                            color="#38bdf8"
+                            color="#03c797"
                             size="15px"
                             animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"></Box>{" "}
                           <Box
@@ -346,7 +346,7 @@ const AppHeader = ({
                             right="-8px"
                             top="-18px"
                             as={BsDot}
-                            color="#38bdf8"
+                            color="#03c797"
                             size="15px"
                             animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
                             style={{ animationDelay: "0.5s" }}></Box>{" "}
@@ -357,7 +357,7 @@ const AppHeader = ({
                             right="-12px"
                             top="-25px"
                             as={BsDot}
-                            color="#38bdf8"
+                            color="#03c797"
                             size="55px"
                             animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
                             style={{ animationDelay: "1s" }}></Box>{" "}
@@ -369,9 +369,9 @@ const AppHeader = ({
                     <PopoverCloseButton />
                     <PopoverBody pt={5} justifyContent="center" alignItems="center" w="full">
                       <Flex w="full" justifyContent="center" alignItems="center" py={4}>
-                        <Box shadow="#38bdf8" boxShadow="inset 0 2px 4px 0 #38bdf8" w="3.5rem" h="3.5rem" rounded="lg">
+                        <Box shadow="#03c797" boxShadow="inset 0 2px 4px 0 #03c797" w="3.5rem" h="3.5rem" rounded="lg">
                           <Flex w="full" justifyContent="center" alignItems="center" h="3.5rem">
-                            <LuFlaskRound fontSize={"1.7rem"} fill="#38bdf8" />
+                            <LuFlaskRound fontSize={"1.7rem"} fill="#03c797" />
                           </Flex>
                         </Box>
                       </Flex>
@@ -386,10 +386,10 @@ const AppHeader = ({
                       <Button
                         onClick={() => setShowPlayBitzModal(true)}
                         variant="outline"
-                        borderColor="#38bdf8"
+                        borderColor="#03c797"
                         rounded="full"
                         w="full"
-                        _hover={{ backgroundImage: "linear-gradient(345deg, #171717, #38bdf8)" }}>
+                        _hover={{ backgroundImage: "linear-gradient(345deg, #171717, #03c797)" }}>
                         <span>
                           {cooldown === -2 ? (
                             <span>Check XP Balance & Play</span>
@@ -497,7 +497,7 @@ const AppHeader = ({
                                   left="-20px"
                                   top="-16px"
                                   as={BsDot}
-                                  color="#38bdf8"
+                                  color="#03c797"
                                   size="15px"
                                   animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"></Box>{" "}
                                 <Box
@@ -507,7 +507,7 @@ const AppHeader = ({
                                   left="-25px"
                                   top="-18px"
                                   as={BsDot}
-                                  color="#38bdf8"
+                                  color="#03c797"
                                   size="15px"
                                   animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
                                   style={{ animationDelay: "0.5s" }}></Box>{" "}
@@ -518,13 +518,13 @@ const AppHeader = ({
                                   left="-23px"
                                   top="-25px"
                                   as={BsDot}
-                                  color="#38bdf8"
+                                  color="#03c797"
                                   size="55px"
                                   animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
                                   style={{ animationDelay: "1s" }}></Box>{" "}
                               </>
                             )}
-                            <LuFlaskRound fontSize={"1.4rem"} fill="#38bdf8" />{" "}
+                            <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />{" "}
                             {bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}
                           </Flex>
                         </PopoverTrigger>
@@ -532,9 +532,9 @@ const AppHeader = ({
                           <PopoverCloseButton />
                           <PopoverBody pt={5} justifyContent="center" alignItems="center" w="full">
                             <Flex w="full" justifyContent="center" alignItems="center" py={4}>
-                              <Box shadow="#38bdf8" boxShadow="inset 0 2px 4px 0 #38bdf8" w="3.5rem" h="3.5rem" rounded="lg">
+                              <Box shadow="#03c797" boxShadow="inset 0 2px 4px 0 #03c797" w="3.5rem" h="3.5rem" rounded="lg">
                                 <Flex w="full" justifyContent="center" alignItems="center" h="3.5rem">
-                                  <LuFlaskRound fontSize={"1.7rem"} fill="#38bdf8" />
+                                  <LuFlaskRound fontSize={"1.7rem"} fill="#03c797" />
                                 </Flex>
                               </Box>
                             </Flex>
@@ -548,10 +548,10 @@ const AppHeader = ({
                             <Link as={ReactRouterLink} isExternal to={`${EXPLORER_APP_FOR_TOKEN[connectedChain]["bitzgame"]}`}>
                               <Button
                                 variant="outline"
-                                borderColor="#38bdf8"
+                                borderColor="#03c797"
                                 rounded="full"
                                 w="full"
-                                _hover={{ backgroundImage: "linear-gradient(345deg, #171717, #38bdf8)" }}>
+                                _hover={{ backgroundImage: "linear-gradient(345deg, #171717, #03c797)" }}>
                                 Get {`<BiTz>`}
                               </Button>
                             </Link>

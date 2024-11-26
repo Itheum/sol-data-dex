@@ -209,7 +209,7 @@ const Dashboard = ({
             <Flex flexDirection="column" gap="3">
               <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2} borderBottom="1px solid" borderColor="teal.200">
                 <Heading as="h3" size="md" textAlign="center" fontFamily="Satoshi-Regular">
-                  Connect Solana Wallet
+                  Connect Your Wallet
                 </Heading>
 
                 <Text textAlign="center">You need this to collect your rewards</Text>
@@ -237,7 +237,7 @@ const Dashboard = ({
 
               <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2} borderBottom="1px solid" borderColor="teal.200">
                 <Heading as="h3" size="md" textAlign="center">
-                  Get Free NFMe ID
+                  Get a Free NFMe ID
                 </Heading>
 
                 <Text textAlign="center">You can use it as your web3 identity for AI agents to verify</Text>
@@ -269,7 +269,7 @@ const Dashboard = ({
 
               <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2}>
                 <Heading as="h3" size="md" textAlign="center">
-                  Get Free BiTz XP Data NFT
+                  Get a Free BiTz XP Data NFT
                 </Heading>
 
                 <Text textAlign="center">You can use it to grow XP by staying active</Text>
@@ -309,12 +309,17 @@ const Dashboard = ({
             <Flex flexDirection="column" gap="3">
               <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2} borderBottom="1px solid" borderColor="teal.200">
                 <Heading as="h3" size="md" textAlign="center">
-                  Proof of Activity
+                  Boost Your Proof-of-Activity
                 </Heading>
 
-                <Text textAlign="center">Prove that you are active and use BiTz to vote and curate content</Text>
+                <Text textAlign="center">You need BiTz to vote to curate AI content. Earn BiTz by playing the game every few hours.</Text>
 
-                <Button m="auto" display={{ base: "none", md: "inline-flex" }} size={{ md: "md", xl: "md", "2xl": "lg" }} p="8 !important">
+                <Button
+                  m="auto"
+                  display={{ base: "none", md: "inline-flex" }}
+                  size={{ md: "md", xl: "md", "2xl": "lg" }}
+                  p="8 !important"
+                  isDisabled={!isUserLoggedIn}>
                   <Text fontSize="xl">{bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}</Text>
 
                   <LuFlaskRound fontSize={"2.2rem"} fill="#03c797" />
@@ -366,7 +371,7 @@ const Dashboard = ({
                     borderColor="#03c797"
                     rounded="full"
                     w="full"
-                    _hover={{ backgroundImage: "linear-gradient(345deg, #171717, #03c797)" }}>
+                    _hover={{ textColor: "white", backgroundImage: "linear-gradient(345deg, #171717, #03c797)" }}>
                     <span>
                       {cooldown === -2 ? (
                         <span>Check XP Balance & Play</span>
@@ -395,7 +400,7 @@ const Dashboard = ({
 
               <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2}>
                 <Heading as="h3" size="md" textAlign="center">
-                  Proof of Reputation
+                  Boost Your Proof-of-Reputation
                 </Heading>
 
                 <Text textAlign="center">Bond ITHEUM on your NFMe ID vault, and grow your Liveliness to signal that you are {"Committed"}</Text>
@@ -439,7 +444,7 @@ const Dashboard = ({
 
             <Flex flexDirection="column" gap="3">
               <Text textAlign="center" fontSize="lg" fontWeight="bold">
-                The following jobs are live
+                {`<< `}The Following Jobs Are Live{` >>`}
               </Text>
 
               <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2} borderBottom="1px solid" borderColor="teal.200">
@@ -450,6 +455,9 @@ const Dashboard = ({
               </Flex>
 
               <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2} borderBottom="1px solid" borderColor="teal.200">
+                <Text textAlign="center" fontSize="2xl">
+                  1.
+                </Text>
                 <Heading as="h3" size="md" textAlign="center">
                   Get Free Music Data NFT
                 </Heading>
@@ -483,16 +491,19 @@ const Dashboard = ({
                   onClick={() => {
                     window.open("https://explorer.itheum.io/nftunes", "_blank");
                   }}>
-                  Listen on NF-Tunes
+                  Use Music Data NFT on NF-Tunes
                 </Button>
               </Flex>
 
               <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2}>
+                <Text textAlign="center" fontSize="2xl">
+                  2.
+                </Text>
                 <Heading as="h3" size="md" textAlign="center">
                   Signal Feedback
                 </Heading>
 
-                <Text textAlign="center">Share your feedback by gifting BiTz points</Text>
+                <Text textAlign="center">Share your feedback by gifting BiTz points to content you like</Text>
 
                 <Button
                   margin="auto"
@@ -523,7 +534,7 @@ const Dashboard = ({
                   Liveliness Staking Rewards
                 </Heading>
 
-                <Text textAlign="center">Get a share of protocol rewards. Currently 40% APR</Text>
+                <Text textAlign="center">Get a share of protocol rewards. Currently 40% APR on your NFMe Id Bonds</Text>
 
                 <Button
                   margin="auto"

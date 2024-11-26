@@ -92,7 +92,7 @@ const AppHeader = ({
           menuEnum: MENU.HOME,
           path: "/dashboard",
           label: "Dashboard",
-          shortLbl: "Dash",
+          shortLbl: "Dashboard",
           Icon: MdSpaceDashboard,
           needToBeLoggedIn: true,
           isHidden: false,

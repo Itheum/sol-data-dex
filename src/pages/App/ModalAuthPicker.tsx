@@ -39,8 +39,8 @@ let solGotConnected = false;
 function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { publicKey: solPubKey, signMessage } = useWallet();
-  const addressSol = solPubKey?.toBase58();
+  const { publicKey: userPublicKey, signMessage } = useWallet();
+  const addressSol = userPublicKey?.toBase58();
   const { isOpen: isProgressModalOpen, onOpen: onProgressModalOpen, onClose: onProgressModalClose } = useDisclosure();
   const [, setWalletUsedSession] = useLocalStorage("itm-wallet-used", null);
   const { colorMode } = useColorMode();
@@ -93,7 +93,7 @@ function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
       solPreaccessSignature,
       solPreaccessTimestamp,
       signMessage,
-      publicKey: solPubKey,
+      publicKey: userPublicKey,
       updateSolPreaccessNonce,
       updateSolSignedPreaccess,
       updateSolPreaccessTimestamp,

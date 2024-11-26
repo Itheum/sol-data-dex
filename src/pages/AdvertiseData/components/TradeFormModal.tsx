@@ -42,7 +42,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
   const [dataNFTImgGenServiceValid, setDataNFTImgGenService] = useState(false);
   const userData = useMintStore((state) => state.userData);
   const lockPeriod = useMintStore((state) => state.lockPeriodForBond);
-  const { publicKey: solPubKey } = useWallet();
+  const { publicKey: userPublicKey } = useWallet();
   const [onSolOnlyAndWhitelistedToMint, setOnSolOnlyAndWhitelistedToMint] = useState(false);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
 
   useEffect(() => {
     async function checkIfWhitelistedOnSolanaToMint() {
-      const resp = await fetch(`${getApiDataDex()}/solNftUtils/checkIfWhitelistedToMint?mintForSolAddr=${solPubKey?.toBase58()}`);
+      const resp = await fetch(`${getApiDataDex()}/solNftUtils/checkIfWhitelistedToMint?mintForSolAddr=${userPublicKey?.toBase58()}`);
       const data = await resp.json();
 
       if (data?.success) {
@@ -71,10 +71,10 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
       }
     }
 
-    if (solPubKey) {
+    if (userPublicKey) {
       checkIfWhitelistedOnSolanaToMint();
     }
-  }, [solPubKey]);
+  }, [userPublicKey]);
 
   const onClose = () => {
     setIsOpen(false);
@@ -291,7 +291,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
           width="100%"
           backgroundColor="blackAlpha.800"
           rounded="lg"
-          visibility={lockPeriod.length === 0 || !solPubKey ? "visible" : "hidden"}
+          visibility={lockPeriod.length === 0 || !userPublicKey ? "visible" : "hidden"}
           borderTop="solid .1rem"
           borderColor="teal.200">
           <Text fontSize="24px" fontWeight="500" lineHeight="38px" textAlign="center" textColor="teal.200" px="2">

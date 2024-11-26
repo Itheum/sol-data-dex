@@ -39,8 +39,8 @@ const Dashboard = ({
 }) => {
   const navigate = useNavigate();
   const { connected: isSolWalletConnected } = useWallet();
-  const { publicKey: solPubKey, signMessage } = useWallet();
-  const isUserLoggedIn = solPubKey ? true : false;
+  const { publicKey: userPublicKey, signMessage } = useWallet();
+  const isUserLoggedIn = userPublicKey ? true : false;
   const modelSize = useBreakpointValue({ base: "xs", md: "xl" });
   const { isOpen: isProgressModalOpen, onOpen: onProgressModalOpen, onClose: onProgressModalClose } = useDisclosure();
   const { colorMode } = useColorMode();
@@ -64,9 +64,9 @@ const Dashboard = ({
 
   useEffect(() => {
     const checkFreeClaims = async () => {
-      if (solPubKey) {
+      if (userPublicKey) {
         setFreeDropCheckLoading(true);
-        const freeNfMeIdMinted = await checkIfFreeDataNftGiftMinted("nfmeid", solPubKey.toBase58());
+        const freeNfMeIdMinted = await checkIfFreeDataNftGiftMinted("nfmeid", userPublicKey.toBase58());
 
         if (freeNfMeIdMinted.alreadyGifted) {
           setFreeNfMeIdClaimed(true);
@@ -74,7 +74,7 @@ const Dashboard = ({
 
         await sleep(1);
 
-        const freeBitzMinted = await checkIfFreeDataNftGiftMinted("bitzxp", solPubKey.toBase58());
+        const freeBitzMinted = await checkIfFreeDataNftGiftMinted("bitzxp", userPublicKey.toBase58());
 
         if (freeBitzMinted.alreadyGifted) {
           setFreeBitzClaimed(true);
@@ -82,7 +82,7 @@ const Dashboard = ({
 
         await sleep(1);
 
-        const freeMusicGiftMinted = await checkIfFreeDataNftGiftMinted("musicgift", solPubKey.toBase58());
+        const freeMusicGiftMinted = await checkIfFreeDataNftGiftMinted("musicgift", userPublicKey.toBase58());
 
         if (freeMusicGiftMinted.alreadyGifted) {
           setFreeMusicGiftClaimed(true);
@@ -93,14 +93,14 @@ const Dashboard = ({
     };
 
     checkFreeClaims();
-  }, [solPubKey]);
+  }, [userPublicKey]);
 
   useEffect(() => {
     const checkFreeClaim = async () => {
-      if (solPubKey) {
+      if (userPublicKey) {
         setFreeDropCheckLoading(true);
 
-        const freeDataNftMinted = await checkIfFreeDataNftGiftMinted("bitzxp", solPubKey.toBase58());
+        const freeDataNftMinted = await checkIfFreeDataNftGiftMinted("bitzxp", userPublicKey.toBase58());
 
         if (freeDataNftMinted.alreadyGifted) {
           setFreeBitzClaimed(true);
@@ -117,10 +117,10 @@ const Dashboard = ({
 
   useEffect(() => {
     const checkFreeClaim = async () => {
-      if (solPubKey) {
+      if (userPublicKey) {
         setFreeDropCheckLoading(true);
 
-        const freeDataNftMinted = await checkIfFreeDataNftGiftMinted("musicgift", solPubKey.toBase58());
+        const freeDataNftMinted = await checkIfFreeDataNftGiftMinted("musicgift", userPublicKey.toBase58());
 
         if (freeDataNftMinted.alreadyGifted) {
           setFreeMusicGiftClaimed(true);
@@ -143,7 +143,7 @@ const Dashboard = ({
   };
 
   const handleFreeMint = async (mintTemplate: string) => {
-    if (!solPubKey) {
+    if (!userPublicKey) {
       return;
     }
 
@@ -155,13 +155,13 @@ const Dashboard = ({
       solPreaccessSignature,
       solPreaccessTimestamp,
       signMessage,
-      publicKey: solPubKey,
+      publicKey: userPublicKey,
       updateSolPreaccessNonce,
       updateSolSignedPreaccess,
       updateSolPreaccessTimestamp,
     });
 
-    const miscMintRes = await mintMiscDataNft(mintTemplate, solPubKey.toBase58(), usedPreAccessSignature, usedPreAccessNonce);
+    const miscMintRes = await mintMiscDataNft(mintTemplate, userPublicKey.toBase58(), usedPreAccessSignature, usedPreAccessNonce);
 
     if (miscMintRes.error) {
       setErrFreeMintGeneric(miscMintRes.error || miscMintRes?.e?.toString() || "unknown error");
@@ -222,7 +222,7 @@ const Dashboard = ({
                 ) : (
                   <Box>
                     ✅
-                    <ShortAddress address={solPubKey?.toBase58()} fontSize="xl" isCopyAddress={true} />
+                    <ShortAddress address={userPublicKey?.toBase58()} fontSize="xl" isCopyAddress={true} />
                   </Box>
                 )}
               </Box>
@@ -365,9 +365,9 @@ const Dashboard = ({
                     size={{ base: "sm", lg: "lg" }}
                     isLoading={freeDropCheckLoading}
                     onClick={() => {
-                      navigate("/liveliness");
+                      navigate("/datanfts/unbonded");
                     }}>
-                    Bond ITHEUM on your NFMe ID
+                    Bond ITHEUM on your NFMe ID for staking rewards
                   </Button>
                   <Button
                     colorScheme="teal"

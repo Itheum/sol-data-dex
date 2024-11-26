@@ -127,3 +127,5 @@ export enum SOL_ENV_ENUM {
   devnet = "SD",
   mainnet = "S1",
 }
+
+export const NFME_ID_COLLECTION_ID = import.meta.env.VITE_ENV_NFME_ID_COLLECTION_ID || "";

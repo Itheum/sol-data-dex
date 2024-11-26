@@ -43,7 +43,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { BsDot } from "react-icons/bs";
 import { FaLaptop, FaUserAstronaut, FaTachometerAlt } from "react-icons/fa";
 import { LuFlaskRound } from "react-icons/lu";
-import { MdAccountBalanceWallet, MdDarkMode, MdMenu, MdSpaceDashboard } from "react-icons/md";
+import { MdAccountBalanceWallet, MdDarkMode, MdMenu, MdSpaceDashboard, MdOutlineDownloading, MdCheckCircle } from "react-icons/md";
 import { RiExchangeFill } from "react-icons/ri";
 import { TiArrowSortedDown } from "react-icons/ti";
 import { Link as ReactRouterLink, useLocation } from "react-router-dom";
@@ -73,10 +73,10 @@ const AppHeader = ({
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { networkConfiguration } = useNetworkConfiguration();
-  const { publicKey: solPubKey } = useWallet();
-  const solAddress = solPubKey?.toBase58();
+  const { publicKey: userPublicKey } = useWallet();
+  const solAddress = userPublicKey?.toBase58();
   const connectedChain = networkConfiguration === "devnet" ? SolEnvEnum.devnet : SolEnvEnum.mainnet;
-  const isUserLoggedIn = solPubKey ? true : false;
+  const isUserLoggedIn = userPublicKey ? true : false;
   const { colorMode, setColorMode } = useColorMode();
   const { pathname } = useLocation();
   const bitzBalance = useAccountStore((state) => state.bitzBalance);
@@ -140,6 +140,8 @@ const AppHeader = ({
   const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
   const solPreaccessSignature = useAccountStore((state: any) => state.solPreaccessSignature);
   const solPreaccessTimestamp = useAccountStore((state: any) => state.solPreaccessTimestamp);
+
+  const keyChainDataForAppLoading = useAccountStore((state) => state.keyChainDataForAppLoading);
 
   useEffect(() => {
     if (!showPlayBitzModal && triggerBiTzPlayModel) {
@@ -419,6 +421,7 @@ const AppHeader = ({
               </>
             )}
 
+            {/* Data / Light Mode */}
             <Box
               display={{
                 base: isUserLoggedIn ? "block" : "none",
@@ -456,13 +459,16 @@ const AppHeader = ({
                 </MenuList>
               </Menu>
             </Box>
+            {keyChainDataForAppLoading ? <MdOutlineDownloading size={"1.3em"} /> : <MdCheckCircle size={"1.3em"} />}
           </HStack>
         </Flex>
       </Flex>
 
-      <Text textAlign={"center"} fontSize={"small"}>{`preaccessNonce = ${solPreaccessNonce.substring(0, 8)},
+      <Box backgroundColor={"#5d3d0d"}>
+        <Text textAlign={"center"} fontSize={"small"}>{`preaccessNonce = ${solPreaccessNonce.substring(0, 8)},
        preaccessSig = ${solPreaccessSignature.substring(0, 8)},
       preaccessTS = ${solPreaccessTimestamp > -2 ? new Date(solPreaccessTimestamp).toUTCString() : solPreaccessTimestamp}`}</Text>
+      </Box>
 
       <Drawer placement={"left"} onClose={onClose} isOpen={isOpen} blockScrollOnMount={false}>
         <DrawerOverlay />

@@ -37,10 +37,12 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { Program } from "@coral-xyz/anchor";
+// import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CNftSolMinter } from "@itheum/sdk-mx-data-nft/out";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { Commitment, PublicKey, Transaction, TransactionConfirmationStrategy } from "@solana/web3.js";
+// import { Commitment, PublicKey, Transaction, TransactionConfirmationStrategy } from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { Controller, useForm } from "react-hook-form";
 import * as Yup from "yup";
@@ -55,13 +57,12 @@ import { IS_DEVNET, PRINT_UI_DEBUG_PANELS } from "libs/config";
 import { labels } from "libs/language";
 import { BONDING_PROGRAM_ID, SOLANA_EXPLORER_URL } from "libs/Solana/config";
 import { CoreSolBondStakeSc, IDL } from "libs/Solana/CoreSolBondStakeSc";
-import { itheumSolPreaccess } from "libs/Solana/SolViewData";
-import { createBondTransaction, fetchRewardsConfigSol, fetchSolNfts } from "libs/Solana/utils";
+// import { itheumSolPreaccess } from "libs/Solana/SolViewData";
+import { createBondTransaction, fetchRewardsConfigSol, fetchSolNfts, getOrCacheAccessNonceAndSignature, sendAndConfirmTransaction } from "libs/Solana/utils";
 import { getApiDataMarshal, isValidNumericCharacter, sleep, timeUntil } from "libs/utils";
 import { useAccountStore, useMintStore } from "store";
 import { useNftsStore } from "store/nfts";
 import { MintingModal } from "./MintingModal";
-import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 type TradeDataFormType = {
   dataStreamUrlForm: string;
@@ -93,7 +94,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     props;
   const showInlineErrorsBeforeAction = false;
   const enableBondingInputForm = false;
-  const { publicKey: solPubKey, sendTransaction, signMessage } = useWallet();
+  const { publicKey: userPublicKey, sendTransaction, signMessage } = useWallet();
   const { connection } = useConnection();
   const { networkConfiguration } = useNetworkConfiguration();
   const [solanaBondTransaction, setSolanaBondTransaction] = useState<Transaction | undefined>(undefined);
@@ -128,10 +129,19 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   const [maxApy, setMaxApy] = useState<number>(80);
   const [needsMoreITHEUMToProceed, setNeedsMoreITHEUMToProceed] = useState<boolean>(false);
   const updateItheumBalance = useAccountStore((state) => state.updateItheumBalance);
-  const updateSolNfts = useNftsStore((state) => state.updateSolNfts);
+  const updateAllDataNfts = useNftsStore((state) => state.updateAllDataNfts);
   const [solBondingTxHasFailed, setSolBondingTxHasFailed] = useState<boolean>(false);
   const [solNFMeIDMintConfirmationWorkflow, setSolNFMeIDMintConfirmationWorkflow] = useState<boolean>(false);
   const [solBondingConfigObtainedFromChainErr, setSolBondingConfigObtainedFromChainErr] = useState<boolean>(false);
+
+  // S: Cached Signature Store Items
+  const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
+  const solPreaccessSignature = useAccountStore((state: any) => state.solPreaccessSignature);
+  const solPreaccessTimestamp = useAccountStore((state: any) => state.solPreaccessTimestamp);
+  const updateSolPreaccessNonce = useAccountStore((state: any) => state.updateSolPreaccessNonce);
+  const updateSolPreaccessTimestamp = useAccountStore((state: any) => state.updateSolPreaccessTimestamp);
+  const updateSolSignedPreaccess = useAccountStore((state: any) => state.updateSolSignedPreaccess);
+  // E: Cached Signature Store Items
 
   // S: React hook form + yup integration ---->
   // Declaring a validation schema for the form with the validation needed
@@ -257,7 +267,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       royaltiesForm: 0,
       bondingAmount:
         lockPeriod.length > 0
-          ? solPubKey
+          ? userPublicKey
             ? BigNumber(lockPeriod[0]?.amount).toNumber()
             : BigNumber(lockPeriod[0]?.amount)
                 .dividedBy(10 ** 18)
@@ -282,7 +292,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
   function generatePrefilledNFMeIDDataStreamURL() {
     // append the imgswapsalt to make the image unique to the user
-    const userAddress = solPubKey?.toBase58();
+    const userAddress = userPublicKey?.toBase58();
 
     if (!userAddress) {
       return;
@@ -298,7 +308,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     // if it's solana then append chain=sol
     let chainMeta = "";
 
-    if (solPubKey) {
+    if (userPublicKey) {
       chainMeta = "&chain=sol";
     }
 
@@ -320,7 +330,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
   useEffect(() => {
     // check if we got the data for lockPeriod from Solana Program (lockPeriod also is for MVX, but not checking that here)
-    if (solPubKey) {
+    if (userPublicKey) {
       if (lockPeriod?.length === 0) {
         setSolBondingConfigObtainedFromChainErr(true);
       } else {
@@ -331,7 +341,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
   useEffect(() => {
     async function fetchBondingRelatedDataFromSolana() {
-      if (solPubKey) {
+      if (userPublicKey) {
         const programId = new PublicKey(BONDING_PROGRAM_ID);
         const program = new Program<CoreSolBondStakeSc>(IDL, programId, {
           connection,
@@ -349,7 +359,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       }
     }
     fetchBondingRelatedDataFromSolana();
-  }, [solPubKey]);
+  }, [userPublicKey]);
 
   useEffect(() => {
     if (itheumBalance && antiSpamTax && bondingAmount) {
@@ -434,8 +444,8 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
   // Step 1 of minting (user clicked on mint button on main form)
   const dataNFTSellSubmit = async () => {
-    // if (!mxAddress && !solPubKey) {
-    if (!solPubKey) {
+    // if (!mxAddress && !userPublicKey) {
+    if (!userPublicKey) {
       toast({
         title: labels.ERR_MINT_FORM_NO_WALLET_CONN,
         status: "error",
@@ -466,39 +476,35 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     await sleep(1);
     setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s2: 1 }));
 
-    if (solPubKey) {
+    if (userPublicKey) {
       await mintDataNftSol();
     }
   };
 
-  async function sendAndConfirmTransaction({
-    transaction,
-    customErrorMessage = "Transaction failed",
-  }: {
-    transaction: Transaction;
-    customErrorMessage?: string;
-  }) {
+  async function executeTransaction({ transaction, customErrorMessage = "Transaction failed" }: { transaction: Transaction; customErrorMessage?: string }) {
     try {
-      if (solPubKey === null) {
+      if (!userPublicKey) {
         throw new Error("Wallet not connected");
       }
 
-      const latestBlockhash = await connection.getLatestBlockhash();
-      transaction.recentBlockhash = latestBlockhash.blockhash;
-      transaction.feePayer = solPubKey;
+      const { confirmationPromise, txSignature } = await sendAndConfirmTransaction({ userPublicKey, connection, transaction, sendTransaction });
 
-      const txSignature = await sendTransaction(transaction, connection, {
-        skipPreflight: true,
-        preflightCommitment: "finalized",
-      });
+      // const latestBlockhash = await connection.getLatestBlockhash();
+      // transaction.recentBlockhash = latestBlockhash.blockhash;
+      // transaction.feePayer = userPublicKey;
 
-      const strategy: TransactionConfirmationStrategy = {
-        signature: txSignature,
-        blockhash: latestBlockhash.blockhash,
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-      };
+      // const txSignature = await sendTransaction(transaction, connection, {
+      //   skipPreflight: true,
+      //   preflightCommitment: "finalized",
+      // });
 
-      const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
+      // const strategy: TransactionConfirmationStrategy = {
+      //   signature: txSignature,
+      //   blockhash: latestBlockhash.blockhash,
+      //   lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      // };
+
+      // const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
 
       toast.promise(
         confirmationPromise.then((response) => {
@@ -539,10 +545,13 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           loading: { title: "Processing Transaction", description: "Please wait...", colorScheme: "blue" },
         }
       );
+
       const result = await confirmationPromise;
+
       if (result.value.err) {
         return false;
       }
+
       return txSignature;
     } catch (error) {
       toast({
@@ -575,15 +584,26 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
         optionalSDKMintCallFields["imgGenSet"] = "set9_series_nfmeid_gen1";
       }
 
-      if (!solPubKey) {
+      if (!userPublicKey) {
         return;
       }
 
-      const { signatureNonce, solSignature } = await getAccessNonceAndSign();
+      const { usedPreAccessNonce, usedPreAccessSignature } = await getOrCacheAccessNonceAndSignature({
+        solPreaccessNonce,
+        solPreaccessSignature,
+        solPreaccessTimestamp,
+        signMessage,
+        publicKey: userPublicKey,
+        updateSolPreaccessNonce,
+        updateSolSignedPreaccess,
+        updateSolPreaccessTimestamp,
+      });
 
-      if (signatureNonce && solSignature) {
-        optionalSDKMintCallFields["signatureNonce"] = signatureNonce;
-        optionalSDKMintCallFields["solSignature"] = solSignature;
+      // const { signatureNonce, solSignature } = await getAccessNonceAndSign();
+
+      if (usedPreAccessNonce && usedPreAccessSignature) {
+        optionalSDKMintCallFields["signatureNonce"] = usedPreAccessNonce;
+        optionalSDKMintCallFields["solSignature"] = usedPreAccessSignature;
       }
 
       const {
@@ -591,7 +611,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
         metadataUrl: _metadataUrl,
         mintMeta: mintMeta,
       } = await cNftSolMinter.mint(
-        solPubKey?.toBase58(), // Solana User Wallet Address
+        userPublicKey?.toBase58(), // Solana User Wallet Address
         dataNFTTokenName,
         dataNFTMarshalService,
         dataNFTStreamUrl,
@@ -631,14 +651,14 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           // let's attempt to checks 3 times if the IPFS data is loaded and available on the gateway
           await checkIfNftImgAndMetadataIsAvailableOnIPFS(_imageUrl, _metadataUrl);
 
-          fetchSolNfts(solPubKey?.toBase58()).then((nfts) => {
-            updateSolNfts(nfts);
+          fetchSolNfts(userPublicKey?.toBase58()).then((nfts) => {
+            updateAllDataNfts(nfts);
           });
 
           setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s4: 1 }));
 
           const programId = new PublicKey(BONDING_PROGRAM_ID);
-          const addressBondsRewardsPda = PublicKey.findProgramAddressSync([Buffer.from("address_bonds_rewards"), solPubKey?.toBuffer()], programId)[0];
+          const addressBondsRewardsPda = PublicKey.findProgramAddressSync([Buffer.from("address_bonds_rewards"), userPublicKey?.toBuffer()], programId)[0];
           const accountInfo = await connection.getAccountInfo(addressBondsRewardsPda);
           const isExist = accountInfo !== null;
 
@@ -655,14 +675,14 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
               .accounts({
                 addressBondsRewards: addressBondsRewardsPda,
                 rewardsConfig: rewardsConfigPda,
-                authority: solPubKey,
+                authority: userPublicKey,
               })
               .transaction();
 
-            await sendAndConfirmTransaction({ transaction: transactionInitializeAddress, customErrorMessage: "Bonding Program address initialization failed" });
+            await executeTransaction({ transaction: transactionInitializeAddress, customErrorMessage: "Bonding Program address initialization failed" });
           }
 
-          const bondTransaction = await createBondTransaction(mintMeta, solPubKey, connection);
+          const bondTransaction = await createBondTransaction(mintMeta, userPublicKey, connection);
           setSolanaBondTransaction(bondTransaction);
         }
       }
@@ -677,7 +697,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       try {
         setSolBondingTxHasFailed(false);
 
-        const result = await sendAndConfirmTransaction({ transaction: solanaBondTransaction, customErrorMessage: "Failed to send the bonding transaction" });
+        const result = await executeTransaction({ transaction: solanaBondTransaction, customErrorMessage: "Failed to send the bonding transaction" });
 
         if (result) {
           updateItheumBalance(itheumBalance - bondingAmount);
@@ -698,24 +718,24 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     }
   };
 
-  const getAccessNonceAndSign = async () => {
-    const preAccessNonce = await itheumSolPreaccess();
-    const message = new TextEncoder().encode(preAccessNonce);
+  // const getAccessNonceAndSign = async () => {
+  //   const preAccessNonce = await itheumSolPreaccess();
+  //   const message = new TextEncoder().encode(preAccessNonce);
 
-    if (signMessage === undefined) {
-      throw new Error("signMessage is undefined");
-    }
+  //   if (signMessage === undefined) {
+  //     throw new Error("signMessage is undefined");
+  //   }
 
-    const signature = await signMessage(message);
-    // const encodedSignature = Buffer.from(signature).toString("hex");
-    const encodedSignature = bs58.encode(signature); // the marshal needs it in bs58
+  //   const signature = await signMessage(message);
+  //   // const encodedSignature = Buffer.from(signature).toString("hex");
+  //   const encodedSignature = bs58.encode(signature); // the marshal needs it in bs58
 
-    if (!preAccessNonce || !signature || !solPubKey) {
-      throw new Error("Missing data for viewData");
-    }
+  //   if (!preAccessNonce || !signature || !userPublicKey) {
+  //     throw new Error("Missing data for viewData");
+  //   }
 
-    return { signatureNonce: preAccessNonce, solSignature: encodedSignature };
-  };
+  //   return { signatureNonce: preAccessNonce, solSignature: encodedSignature };
+  // };
 
   const checkIfNftImgAndMetadataIsAvailableOnIPFS = async (_imageUrl: string, _metadataUrl: string) => {
     let assetsLoadedOnIPFSwasSuccess = false;
@@ -1321,7 +1341,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
               )}
             </Box>
 
-            {solPubKey ? (
+            {userPublicKey ? (
               <Alert status="warning" rounded="md">
                 <AlertIcon />
                 All Data NFTs, including NFMeIDs minted, will include a fixed 5% royalty. <br /> These royalties are split equally 50% / 50% with you and the
@@ -1367,7 +1387,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
               </>
             )}
 
-            {solPubKey && solBondingConfigObtainedFromChainErr && (
+            {userPublicKey && solBondingConfigObtainedFromChainErr && (
               <Alert status="error" rounded="md" mt="2">
                 <AlertIcon />
                 {labels.ERR_SOL_CANT_GET_ONCHAIN_CONFIG}
@@ -1419,7 +1439,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           }}
           bodyContent={
             <>
-              <Text mb="5">1. Sign a message to verify your wallet (no gas required).</Text>
+              <Text mb="5">1. You may be asked to sign a message to verify your wallet (no gas required).</Text>
               <Text mt="5">2. (First-time minting only) Sign a transaction to prepare your Liveliness bond.</Text>
               <Text mt="5">3. Sign a transaction to bond $ITHEUM and activate your NFMe ID for staking rewards.</Text>
               <Text fontWeight="bold" fontSize="md" color="teal.200" mt={5}>

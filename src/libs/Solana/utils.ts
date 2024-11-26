@@ -3,13 +3,13 @@ import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { CNftSolPostMintMetaType } from "@itheum/sdk-mx-data-nft/out";
 import { SPL_ACCOUNT_COMPRESSION_PROGRAM_ID } from "@solana/spl-account-compression";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { AccountMeta, Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { AccountMeta, Connection, PublicKey, Transaction, TransactionConfirmationStrategy, Commitment } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
+import { SOL_ENV_ENUM } from "libs/config";
 import { getApiDataDex, getApiDataMarshal } from "libs/utils";
 import { BOND_CONFIG_INDEX, BONDING_PROGRAM_ID } from "./config";
 import { CoreSolBondStakeSc, IDL } from "./CoreSolBondStakeSc";
 import { Bond } from "./types";
-import { SOL_ENV_ENUM } from "libs/config";
 
 enum RewardsState {
   Inactive = 0,
@@ -204,8 +204,12 @@ export async function createBondTransaction(
     });
 
     const proofRoot = decode(root);
-    const _dataHash = Object.values(dataHash) as number[];
-    const _creatorHash = Object.values(creatorHash as number[]);
+
+    // note that we do the below string check, as dataHash and creatorHash come from the backend in various formats depending on the RPC being uses
+    // ... i.e. during mint and bond direct, we get the values from the mint tx signature, where as for delayed bonding we get it from getAssetProof RPC
+    // ... and they both return it in different formats
+    const _dataHash = typeof dataHash === "string" ? Array.from(bs58.decode(dataHash)) : Object.values(dataHash).map(Number);
+    const _creatorHash = typeof creatorHash === "string" ? Array.from(bs58.decode(creatorHash)) : Object.values(creatorHash).map(Number);
 
     const rewardsConfigPda = PublicKey.findProgramAddressSync([Buffer.from("rewards_config")], program.programId)[0];
     const addressBondsRewardsPda = PublicKey.findProgramAddressSync([Buffer.from("address_bonds_rewards"), userPublicKey.toBuffer()], program.programId)[0];
@@ -221,7 +225,7 @@ export async function createBondTransaction(
     const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), vaultConfigPda, true);
     const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), userPublicKey, true);
 
-    const bondConfigPda = await PublicKey.findProgramAddressSync([Buffer.from("bond_config"), Buffer.from([BOND_CONFIG_INDEX])], program.programId)[0];
+    const bondConfigPda = PublicKey.findProgramAddressSync([Buffer.from("bond_config"), Buffer.from([BOND_CONFIG_INDEX])], program.programId)[0];
     const bondConfigData = await program.account.bondConfig.fetch(bondConfigPda).then((data: any) => {
       const bondAmount = data.bondAmount;
       const merkleTree = data.merkleTree;
@@ -259,8 +263,8 @@ export async function createBondTransaction(
 export async function retrieveBondsAndNftMeIdVault(
   userPublicKey: PublicKey,
   lastIndex: number,
-  program?: Program<CoreSolBondStakeSc>,
-  bondConfigData?: any
+  program?: Program<CoreSolBondStakeSc>
+  // bondConfigData?: any
 ): Promise<{ myBonds: Bond[]; nftMeIdVault: Bond | undefined }> {
   try {
     if (program === undefined) {
@@ -269,9 +273,9 @@ export async function retrieveBondsAndNftMeIdVault(
 
     const myBonds: Bond[] = [];
     let nftMeIdVault: Bond | undefined;
-    let totalBondAmount = new BN(0);
-    let totalBondWeight = new BN(0);
-    const currentTimestamp = Math.floor(Date.now() / 1000);
+    // let totalBondAmount = new BN(0);
+    // let totalBondWeight = new BN(0);
+    // const currentTimestamp = Math.floor(Date.now() / 1000);
 
     // TODO THIS CAN BE improved by using a single fetch, only for the modified bond. not all of them if i just top up one
     for (let i = 1; i <= lastIndex; i++) {
@@ -283,19 +287,19 @@ export async function retrieveBondsAndNftMeIdVault(
         nftMeIdVault = bondUpgraded;
       }
 
-      // calculate the correct live Bond score
-      if (bond.state === 1) {
-        // lvb1
+      // // calculate the correct live Bond score
+      // if (bond.state === 1) {
+      //   // lvb1
 
-        const scorePerBond = Math.floor(computeBondScore(bondConfigData?.lockPeriod.toNumber(), currentTimestamp, bond.unbondTimestamp.toNumber()));
-        // b1 * lvb1
-        const bondWeight = bond.bondAmount.mul(new BN(scorePerBond));
-        // b1 * lvb1 + b2 * lvb2 + b3 * lvb3 + ... + bn * lvbn
-        totalBondWeight = totalBondWeight.add(bondWeight);
+      //   const scorePerBond = Math.floor(computeBondScore(bondConfigData?.lockPeriod.toNumber(), currentTimestamp, bond.unbondTimestamp.toNumber()));
+      //   // b1 * lvb1
+      //   const bondWeight = bond.bondAmount.mul(new BN(scorePerBond));
+      //   // b1 * lvb1 + b2 * lvb2 + b3 * lvb3 + ... + bn * lvbn
+      //   totalBondWeight = totalBondWeight.add(bondWeight);
 
-        //b1 + b2 + b3 + ... + bn
-        totalBondAmount = totalBondAmount.add(bond.bondAmount);
-      }
+      //   //b1 + b2 + b3 + ... + bn
+      //   totalBondAmount = totalBondAmount.add(bond.bondAmount);
+      // }
 
       myBonds.push(bondUpgraded);
     }
@@ -306,6 +310,30 @@ export async function retrieveBondsAndNftMeIdVault(
 
     throw new Error("Retrieve Bonds Error: Not able to fetch the bonds from the blockchain");
   }
+}
+
+export async function fetchAddressBondsRewards(programSol: Program<CoreSolBondStakeSc> | undefined, addressBondsRewardsPda: PublicKey | undefined) {
+  if (!programSol || !addressBondsRewardsPda) return;
+
+  try {
+    const data = await programSol.account.addressBondsRewards.fetch(addressBondsRewardsPda);
+
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch address rewards data:", error);
+  }
+}
+
+export function getBondingProgramInterface(connection: Connection) {
+  const programId = new PublicKey(BONDING_PROGRAM_ID);
+  const programInterface = new Program<CoreSolBondStakeSc>(IDL, programId, {
+    connection,
+  });
+
+  return {
+    programId,
+    programInterface,
+  };
 }
 
 export function computeBondScore(lockPeriod: number, currentTimestamp: number, unbondTimestamp: number): number {
@@ -449,4 +477,35 @@ export async function getOrCacheAccessNonceAndSignature({
     usedPreAccessNonce,
     usedPreAccessSignature,
   };
+}
+
+export async function sendAndConfirmTransaction({
+  userPublicKey,
+  connection,
+  transaction,
+  sendTransaction,
+}: {
+  userPublicKey: PublicKey;
+  connection: Connection;
+  transaction: Transaction;
+  sendTransaction: any;
+}) {
+  const latestBlockhash = await connection.getLatestBlockhash();
+  transaction.recentBlockhash = latestBlockhash.blockhash;
+  transaction.feePayer = userPublicKey;
+
+  const txSignature = await sendTransaction(transaction, connection, {
+    skipPreflight: true,
+    preflightCommitment: "finalized",
+  });
+
+  const strategy: TransactionConfirmationStrategy = {
+    signature: txSignature,
+    blockhash: latestBlockhash.blockhash,
+    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+  };
+
+  const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
+
+  return { confirmationPromise, txSignature };
 }

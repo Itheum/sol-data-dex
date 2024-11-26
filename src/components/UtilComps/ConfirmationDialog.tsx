@@ -27,20 +27,24 @@ export function ConfirmationDialog({
 
   return (
     <>
-      <AlertDialog motionPreset="slideInBottom" leastDestructiveRef={cancelRef} onClose={onCancel} isOpen={isOpen} isCentered>
+      <AlertDialog motionPreset="slideInBottom" leastDestructiveRef={cancelRef} onClose={onCancel} isOpen={isOpen} isCentered size={{ base: "md", md: "lg" }}>
         <AlertDialogOverlay />
 
         <AlertDialogContent>
           <AlertDialogHeader>{title}</AlertDialogHeader>
-          <AlertDialogCloseButton />
+          {cancelBtnText.trim() !== "" && <AlertDialogCloseButton />}
           <AlertDialogBody>{bodyContent}</AlertDialogBody>
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={onCancel}>
-              {cancelBtnText}
-            </Button>
-            <Button colorScheme={proceedBtnColorScheme || "teal"} ml={3} onClick={onProceed}>
-              {proceedBtnTxt}
-            </Button>
+            {cancelBtnText.trim() !== "" && (
+              <Button ref={cancelRef} onClick={onCancel}>
+                {cancelBtnText}
+              </Button>
+            )}
+            {proceedBtnTxt.trim() !== "" && (
+              <Button colorScheme={proceedBtnColorScheme || "teal"} ml={3} onClick={onProceed}>
+                {proceedBtnTxt}
+              </Button>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

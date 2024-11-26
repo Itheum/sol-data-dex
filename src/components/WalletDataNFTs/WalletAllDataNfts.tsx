@@ -24,21 +24,27 @@ import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationPro
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { SOLANA_EXPLORER_URL } from "libs/Solana/config";
 import { transformDescription } from "libs/utils";
-import { useNftsStore } from "store/nfts";
 
-interface WalletDataNftSolProps {
+interface WalletAllDataNftsProps {
   index: number;
   solDataNft: DasApiAsset;
-  onReEstablishBond: any;
 }
 
-const WalletDataNftSol: React.FC<WalletDataNftSolProps> = ({ index, solDataNft, onReEstablishBond }) => {
+const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft }) => {
   const { networkConfiguration } = useNetworkConfiguration();
-  const { bondedNftIds } = useNftsStore();
 
   return (
     <Skeleton fitContent={true} isLoaded={true} borderRadius="16px" display="flex" alignItems="center" justifyContent="center">
-      <Box key={index} w="275px" mx="3 !important" border="1px solid transparent" borderColor="#00C79740" borderRadius="16px" mb="1rem" position="relative">
+      <Box
+        key={index}
+        w="275px"
+        mx="3 !important"
+        border="1px solid transparent"
+        borderColor="#00C79740"
+        borderRadius="16px"
+        mb="1rem"
+        position="relative"
+        pb="1rem">
         <NftMediaComponent
           imageUrls={[solDataNft.content.links && solDataNft.content.links["image"] ? (solDataNft.content.links["image"] as string) : DEFAULT_NFT_IMAGE]}
           autoSlide
@@ -56,33 +62,13 @@ const WalletDataNftSol: React.FC<WalletDataNftSolProps> = ({ index, solDataNft, 
           <Text fontWeight="semibold" fontSize="lg" mt="1.5" noOfLines={1}>
             {solDataNft.content.metadata.name}
           </Text>
-          <Text fontSize="sm">
-            <>
-              BONDED:{" "}
-              {bondedNftIds.includes(solDataNft.id) ? (
-                <Text>TRUE</Text>
-              ) : (
-                <Box>
-                  <Button
-                    w={"100%"}
-                    size={"sm"}
-                    p={5}
-                    colorScheme="teal"
-                    onClick={() => {
-                      onReEstablishBond(solDataNft.id);
-                    }}>
-                    Bond To Get Liveliness <br />+ Staking Rewards
-                  </Button>
-                </Box>
-              )}
-            </>
-            <br />
+          {/* <Text fontSize="sm">
             ID: {solDataNft.id}
             <br />
             Length {solDataNft.grouping.length}
             <br />
             Collection {solDataNft.grouping[0].group_value}
-          </Text>
+          </Text> */}
           <Link
             onClick={() => window.open(`${SOLANA_EXPLORER_URL}address/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}
             fontSize="md"
@@ -113,17 +99,18 @@ const WalletDataNftSol: React.FC<WalletDataNftSolProps> = ({ index, solDataNft, 
             </Popover>
           </Box>
           {solDataNft.creators && (
-            <Box mt={3} color="#8c8f92d0" fontSize="md" display="flex" alignItems="start">
+            <Box mt={3} color="#8c8f92d0" fontSize="sm" display="flex" alignItems="start">
               Creator{solDataNft.creators.length > 1 && "s"}:&nbsp;{" "}
               <Flex w={"full"} alignItems="center" key={index} flexDirection={"column"} maxH="100px" overflowY="auto" scrollBehavior={"auto"}>
                 {solDataNft.creators.map((creator, index) => (
                   <Link
+                    fontSize="sm"
                     display="flex"
                     alignItems="center"
                     key={index}
                     isExternal
                     href={`${SOLANA_EXPLORER_URL}address/${creator.address}?cluster=${networkConfiguration}`}>
-                    <ShortAddress address={creator.address} fontSize="lg" tooltipLabel="Check on explorer" />{" "}
+                    <ShortAddress address={creator.address} fontSize="sm" tooltipLabel="Check on explorer" />{" "}
                     <MdOutlineInfo style={{ marginLeft: "5px", color: "#00c797" }} fontSize="lg" />
                   </Link>
                 ))}
@@ -136,4 +123,4 @@ const WalletDataNftSol: React.FC<WalletDataNftSolProps> = ({ index, solDataNft, 
   );
 };
 
-export default WalletDataNftSol;
+export default WalletAllDataNfts;

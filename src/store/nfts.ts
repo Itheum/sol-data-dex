@@ -1,23 +1,23 @@
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { create } from "zustand";
 
+/*
+This store holds things related to the users data nft collections
+*/
+
 type State = {
-  solNfts: DasApiAsset[];
-  bondedNftIds: string[];
-  isLoadingSol: boolean;
+  allDataNfts: DasApiAsset[];
+  bondedDataNftIds: string[];
 };
 
 type Action = {
-  updateSolNfts: (solNfts: State["solNfts"]) => void;
-  updateBondedNftIds: (bondedNftIds: State["bondedNftIds"]) => void;
-  updateIsLoadingSol: (isLoading: boolean) => void;
+  updateAllDataNfts: (allDataNfts: State["allDataNfts"]) => void;
+  updateBondedDataNftIds: (bondedDataNftIds: State["bondedDataNftIds"]) => void;
 };
 
 export const useNftsStore = create<State & Action>((set) => ({
-  solNfts: [],
-  updateSolNfts: (value: DasApiAsset[]) => set(() => ({ solNfts: value })),
-  bondedNftIds: [],
-  updateBondedNftIds: (value: string[]) => set(() => ({ bondedNftIds: value })),
-  isLoadingSol: false,
-  updateIsLoadingSol: (value: boolean) => set(() => ({ isLoadingSol: value })),
+  allDataNfts: [],
+  updateAllDataNfts: (value: DasApiAsset[]) => set(() => ({ allDataNfts: value })),
+  bondedDataNftIds: [],
+  updateBondedDataNftIds: (value: string[]) => set(() => ({ bondedDataNftIds: value })),
 }));

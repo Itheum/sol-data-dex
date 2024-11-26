@@ -92,7 +92,7 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
         <Route path="mintdata" element={<TradeData />} />
         <Route path="datanfts" element={<Outlet />}>
           <Route path="wallet" element={<MyDataNFTs tabState={1} />} />
-          <Route path="claim" element={<MyDataNFTs tabState={2} />} />
+          <Route path="unbonded" element={<MyDataNFTs tabState={2} />} />
         </Route>
 
         <Route path="liveliness" element={<MyLiveliness />} />

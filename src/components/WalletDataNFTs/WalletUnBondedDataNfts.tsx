@@ -285,12 +285,12 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                 }}>
                 Bond To Get Liveliness <br />+ Staking Rewards
               </Button>
-              {/* <br />
+              <br />
               ID: {solDataNft.id}
               <br />
               Length {solDataNft.grouping.length}
               <br />
-              Collection {solDataNft.grouping[0].group_value} */}
+              Collection {solDataNft.grouping[0].group_value}
             </Box>
             <Link
               onClick={() => window.open(`${SOLANA_EXPLORER_URL}address/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}

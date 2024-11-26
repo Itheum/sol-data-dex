@@ -62,13 +62,13 @@ const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft
           <Text fontWeight="semibold" fontSize="lg" mt="1.5" noOfLines={1}>
             {solDataNft.content.metadata.name}
           </Text>
-          {/* <Text fontSize="sm">
+          <Text fontSize="sm">
             ID: {solDataNft.id}
             <br />
             Length {solDataNft.grouping.length}
             <br />
             Collection {solDataNft.grouping[0].group_value}
-          </Text> */}
+          </Text>
           <Link
             onClick={() => window.open(`${SOLANA_EXPLORER_URL}address/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}
             fontSize="md"

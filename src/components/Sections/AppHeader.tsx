@@ -35,11 +35,13 @@ import {
   Spinner,
   Stack,
   Text,
+  Tooltip,
   useBreakpointValue,
   useColorMode,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet, Wallet } from "@solana/wallet-adapter-react";
 import { BsDot } from "react-icons/bs";
 import { FaLaptop, FaUserAstronaut, FaTachometerAlt } from "react-icons/fa";
 import { LuFlaskRound } from "react-icons/lu";
@@ -57,6 +59,7 @@ import { SolEnvEnum } from "libs/Solana/config";
 import { formatNumberRoundFloor } from "libs/utils";
 import { PlayBitzModal } from "pages/GetBitz/PlayBitzModal";
 import { useAccountStore } from "store";
+import { NATIVE_MINT } from "@solana/spl-token";
 
 const AppHeader = ({
   onShowConnectWalletModal,
@@ -73,7 +76,7 @@ const AppHeader = ({
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { networkConfiguration } = useNetworkConfiguration();
-  const { publicKey: userPublicKey } = useWallet();
+  const { publicKey: userPublicKey, wallet } = useWallet();
   const solAddress = userPublicKey?.toBase58();
   const connectedChain = networkConfiguration === "devnet" ? SolEnvEnum.devnet : SolEnvEnum.mainnet;
   const isUserLoggedIn = userPublicKey ? true : false;
@@ -83,6 +86,7 @@ const AppHeader = ({
   const cooldown = useAccountStore((state) => state.cooldown);
   const connectBtnTitle = useBreakpointValue({ base: "Connect Wallet" });
   const [showPlayBitzModal, setShowPlayBitzModal] = useState(false);
+  const toast = useToast();
   const exploreRouterMenu = [
     {
       sectionId: "MainSections",
@@ -180,6 +184,33 @@ const AppHeader = ({
 
   const chainFriendlyName = CHAINS[connectedChain as keyof typeof CHAINS];
 
+  const initJupiter = () => {
+    if (!wallet) return;
+
+    window.Jupiter.init({
+      onSuccess: ({ txid, swapResult }) => {
+        console.log({ txid });
+        toast({
+          title: "Swap Successful",
+          description: "Swap was successful",
+          status: "info",
+          duration: 15000,
+          isClosable: true,
+        });
+      },
+      endpoint: import.meta.env.VITE_ENV_SOLANA_NETWORK_RPC,
+      passThroughWallet: wallet,
+      containerStyles: { maxHeight: "60vh" },
+      formProps: {
+        fixedOutputMint: true,
+        swapMode: "ExactInOut",
+        initialAmount: "100000000",
+        initialOutputMint: import.meta.env.VITE_ENV_ITHEUM_SOL_TOKEN_ADDRESS,
+        initialInputMint: NATIVE_MINT.toBase58(),
+      },
+    });
+  };
+
   return (
     <>
       <Flex
@@ -267,6 +298,10 @@ const AppHeader = ({
                   </Link>
                 );
               })}
+              <Button borderColor="teal.200" fontSize="md" variant="outline" display={"initial"} h={"12"} onClick={() => initJupiter()}>
+                {" "}
+                Get $ITHEUM
+              </Button>
             </HStack>
 
             {isUserLoggedIn && (

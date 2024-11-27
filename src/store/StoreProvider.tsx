@@ -28,7 +28,7 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
   const { updateItheumPrice, updateItheumBalance, updateIsKeyChainDataForAppLoading } = useAccountStore();
   // const updateLockPeriodForBond = useMintStore((state) => state.updateLockPeriodForBond);
   const { updateAllDataNfts, updateBondedDataNftIds } = useNftsStore();
-  const { updateLockPeriodForBond, updateUserBonds, updateUsersNfMeIdVaultBond, updateCurrentMaxApr } = useMintStore();
+  const { updateLockPeriodForBond, updateUserBonds, updateUsersNfMeIdVaultBondId, updateCurrentMaxApr } = useMintStore();
 
   useEffect(() => {
     getItheumPrice();
@@ -103,16 +103,18 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
 
         const numberOfBonds = userBondsInfo.currentIndex;
 
+        updateUsersNfMeIdVaultBondId(userBondsInfo.vaultBondId);
+
         retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, programObj.programInterface).then(({ myBonds, nftMeIdVault }) => {
           console.log("userBondsInfo C");
 
           updateUserBonds(myBonds);
           updateBondedDataNftIds(myBonds.map((i) => i.assetId.toBase58()));
 
-          if (nftMeIdVault) {
-            console.log("userBondsInfo D");
-            updateUsersNfMeIdVaultBond(nftMeIdVault);
-          }
+          // if (nftMeIdVault) {
+          //   console.log("userBondsInfo D");
+          //   updateUsersNfMeIdVaultBond(nftMeIdVault);
+          // }
         });
       }
       // E: get users bonds, and nfmeid value bond object

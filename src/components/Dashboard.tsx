@@ -58,7 +58,7 @@ const Dashboard = ({
   const bitzBalance = useAccountStore((state) => state.bitzBalance);
   const cooldown = useAccountStore((state) => state.cooldown);
   const { updateAllDataNfts, bondedDataNftIds } = useNftsStore();
-  const { usersNfMeIdVaultBond } = useMintStore();
+  const { usersNfMeIdVaultBondId } = useMintStore();
 
   // S: Cached Signature Store Items
   const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
@@ -205,7 +205,7 @@ const Dashboard = ({
     setFreeMintLoading(false);
   };
 
-  // console.log("usersNfMeIdVaultBond", usersNfMeIdVaultBond);
+  console.log("usersNfMeIdVaultBondId", usersNfMeIdVaultBondId);
 
   return (
     <Flex mt={{ base: "10", md: "0" }} flexDirection="column" alignItems="center" justifyContent="center" backgroundColor={"xred.800"}>
@@ -442,20 +442,36 @@ const Dashboard = ({
                   Bond ITHEUM on your NFMe ID
                 </Button>
 
-                {/* check if the user has a nfme id vault */}
+                {/* check if the user has no vault and then allow them to action that */}
                 <Button
                   m="auto"
                   colorScheme="teal"
-                  variant="outline"
+                  variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
                   fontSize={{ base: "sm", md: "md" }}
                   size={{ base: "sm", lg: "lg" }}
                   w="280px"
                   isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn}
+                  isDisabled={!isUserLoggedIn || usersNfMeIdVaultBondId > 0}
                   onClick={() => {
-                    navigate("/liveliness");
+                    navigate("/liveliness?hl=makevault");
                   }}>
-                  Boost your bond for Staking Rewards
+                  Upgrade the NFMe ID into a Vault
+                </Button>
+
+                {/* if the user has a vault allow them to top-up */}
+                <Button
+                  m="auto"
+                  colorScheme="teal"
+                  variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
+                  fontSize={{ base: "sm", md: "md" }}
+                  size={{ base: "sm", lg: "lg" }}
+                  w="280px"
+                  isLoading={freeDropCheckLoading}
+                  isDisabled={!isUserLoggedIn || usersNfMeIdVaultBondId === 0}
+                  onClick={() => {
+                    navigate("/liveliness?hl=topup");
+                  }}>
+                  Top-up Vault for Higher Staking Rewards
                 </Button>
               </Flex>
             </Flex>
@@ -562,32 +578,34 @@ const Dashboard = ({
 
                 <Text textAlign="center">Get a share of protocol rewards. Currently 40% APR on your NFMe Id Bonds</Text>
 
+                {/* if the user has a vault allow them to top-up */}
                 <Button
                   margin="auto"
                   colorScheme="teal"
-                  variant="outline"
+                  variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
                   fontSize={{ base: "sm", md: "md" }}
                   size={{ base: "sm", lg: "lg" }}
                   isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn}
+                  isDisabled={!isUserLoggedIn || usersNfMeIdVaultBondId === 0}
                   w="280px"
                   onClick={() => {
-                    navigate("/liveliness");
+                    navigate("/liveliness?hl=topup");
                   }}>
                   Top-up your bond for more rewards
                 </Button>
 
+                {/* if the user has a vault allow them to claim rewards */}
                 <Button
                   margin="auto"
                   colorScheme="teal"
-                  variant="outline"
+                  variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
                   fontSize={{ base: "sm", md: "md" }}
                   size={{ base: "sm", lg: "lg" }}
                   w="280px"
                   isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn}
+                  isDisabled={!isUserLoggedIn || usersNfMeIdVaultBondId === 0}
                   onClick={() => {
-                    navigate("/liveliness");
+                    navigate("/liveliness?hl=claim");
                   }}>
                   Claim Rewards
                 </Button>

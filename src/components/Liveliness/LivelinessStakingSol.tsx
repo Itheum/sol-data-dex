@@ -92,7 +92,7 @@ export const LivelinessStakingSol: React.FC = () => {
   const [reinvestRewardsConfirmationWorkflow, setReinvestRewardsConfirmationWorkflow] = useState<boolean>(false);
   // const [nftMeIdBond, setNftMeIdBond] = useState<Bond>();
   const { allDataNfts, updateBondedDataNftIds } = useNftsStore();
-  const { updateUsersNfMeIdVaultBond } = useMintStore();
+  const { updateUsersNfMeIdVaultBondId } = useMintStore();
   const { colorMode } = useColorMode();
   const [claimableAmount, setClaimableAmount] = useState<number>(0);
   const [withdrawBondConfirmationWorkflow, setWithdrawBondConfirmationWorkflow] = useState<{ bondId: number; bondAmount: number; bondExpired: boolean }>();
@@ -265,6 +265,8 @@ export const LivelinessStakingSol: React.FC = () => {
         setAddressClaimableAmount(userBondsInfo.claimableAmount.toNumber() / 10 ** 9);
         setNumberOfBonds(userBondsInfo.currentIndex);
         setVaultBondId(userBondsInfo.vaultBondId);
+
+        updateUsersNfMeIdVaultBondId(userBondsInfo.vaultBondId); // update the store as well
 
         if (userBondsInfo.vaultBondId == 0) {
           toast({

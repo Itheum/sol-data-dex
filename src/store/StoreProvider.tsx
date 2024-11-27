@@ -95,17 +95,22 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
 
       const userBondsInfo = await fetchAddressBondsRewards(programObj.programInterface, addressBondsRewardsPda);
 
-      console.log("userBondsInfo");
+      console.log("userBondsInfo A");
       console.log(userBondsInfo);
 
       if (userBondsInfo) {
+        console.log("userBondsInfo B");
+
         const numberOfBonds = userBondsInfo.currentIndex;
 
         retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, programObj.programInterface).then(({ myBonds, nftMeIdVault }) => {
+          console.log("userBondsInfo C");
+
           updateUserBonds(myBonds);
           updateBondedDataNftIds(myBonds.map((i) => i.assetId.toBase58()));
 
           if (nftMeIdVault) {
+            console.log("userBondsInfo D");
             updateUsersNfMeIdVaultBond(nftMeIdVault);
           }
         });

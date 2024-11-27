@@ -32,7 +32,6 @@ export default function MyDataNFTs({ tabState }: { tabState: number }) {
   useEffect(() => {
     if (allDataNfts.length > 0) {
       const sortedAllDataNfts = sortDataNftsByLeafIdDesc(allDataNfts);
-      console.log(sortedAllDataNfts);
 
       setAllDataNftsWithBestOrdering(sortedAllDataNfts);
 

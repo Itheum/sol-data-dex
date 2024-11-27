@@ -31,6 +31,7 @@ import { checkIfFreeDataNftGiftMinted, mintMiscDataNft, getOrCacheAccessNonceAnd
 import { sleep } from "libs/utils/util";
 import { useAccountStore } from "store/account";
 import { useNftsStore } from "store/nfts";
+import { useMintStore } from "store/mint";
 
 const Dashboard = ({
   onShowConnectWalletModal,
@@ -56,7 +57,8 @@ const Dashboard = ({
   const [errFreeMintGeneric, setErrFreeMintGeneric] = useState<string | null>(null);
   const bitzBalance = useAccountStore((state) => state.bitzBalance);
   const cooldown = useAccountStore((state) => state.cooldown);
-  const { updateAllDataNfts } = useNftsStore();
+  const { updateAllDataNfts, bondedDataNftIds } = useNftsStore();
+  const { usersNfMeIdVaultBond } = useMintStore();
 
   // S: Cached Signature Store Items
   const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
@@ -203,14 +205,16 @@ const Dashboard = ({
     setFreeMintLoading(false);
   };
 
+  // console.log("usersNfMeIdVaultBond", usersNfMeIdVaultBond);
+
   return (
     <Flex mt={{ base: "10", md: "0" }} flexDirection="column" alignItems="center" justifyContent="center" backgroundColor={"xred.800"}>
       <Box width={"100%"} backgroundColor={"xblue.900"} padding={5} textAlign="center">
         <Heading as="h1" size="xl" fontFamily="Satoshi-Regular">
           Hello Human,
         </Heading>
-        <Heading as="h1" size="lg" fontFamily="Satoshi-Regular">
-          Join the AI Data Workforce, prove your reputation, co-create data with me and get rewarded
+        <Heading as="h1" size="lg" fontFamily="Satoshi-Regular" w="70%" textAlign="center" margin={"auto"}>
+          Join the AI Data Workforce, prove your reputation, co-create creative data with me and get rewarded
         </Heading>
         <Image hidden margin="auto" boxSize="auto" w={{ base: "60%", md: "50%" }} src={nfMeIDVault} alt="Data NFTs Illustration" />
       </Box>
@@ -260,6 +264,7 @@ const Dashboard = ({
                 <Button
                   m="auto"
                   colorScheme="teal"
+                  variant={freeNfMeIdClaimed ? "solid" : "outline"}
                   fontSize={{ base: "sm", md: "md" }}
                   size={{ base: "sm", lg: "lg" }}
                   isLoading={freeDropCheckLoading}
@@ -292,6 +297,7 @@ const Dashboard = ({
                 <Button
                   m="auto"
                   colorScheme="teal"
+                  variant={freeBitzClaimed ? "solid" : "outline"}
                   fontSize={{ base: "sm", md: "md" }}
                   size={{ base: "sm", lg: "lg" }}
                   isLoading={freeDropCheckLoading}
@@ -420,20 +426,23 @@ const Dashboard = ({
 
                 <Text textAlign="center">Bond ITHEUM on your NFMe ID vault, and grow your Liveliness to signal that you are {"Committed"}</Text>
 
+                {/* check if the user has at least 1 bond */}
                 <Button
                   m="auto"
                   colorScheme="teal"
-                  variant="outline"
+                  variant={bondedDataNftIds.length > 0 ? "solid" : "outline"}
                   fontSize={{ base: "sm", md: "md" }}
                   size={{ base: "sm", lg: "lg" }}
                   w="280px"
                   isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn}
+                  isDisabled={!isUserLoggedIn || bondedDataNftIds.length > 0}
                   onClick={() => {
                     navigate("/datanfts/unbonded");
                   }}>
                   Bond ITHEUM on your NFMe ID
                 </Button>
+
+                {/* check if the user has a nfme id vault */}
                 <Button
                   m="auto"
                   colorScheme="teal"
@@ -466,7 +475,9 @@ const Dashboard = ({
                 <Heading as="h3" size="md" textAlign="center">
                   NF-Tunes AI Music Feedback
                 </Heading>
-                <Text textAlign="center">Help real-world music artists amplify their music using AI tools</Text>
+                <Text textAlign="center">
+                  Help real-world music artists amplify their music with help from the Itheum Sigma AI Agent and your data curation
+                </Text>
               </Flex>
 
               <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2} borderBottom="1px solid" borderColor="teal.200">
@@ -482,7 +493,7 @@ const Dashboard = ({
                 <Button
                   margin="auto"
                   colorScheme="teal"
-                  variant="outline"
+                  variant={freeMusicGiftClaimed ? "solid" : "outline"}
                   fontSize={{ base: "sm", md: "md" }}
                   size={{ base: "sm", lg: "lg" }}
                   isLoading={freeDropCheckLoading}
@@ -518,7 +529,7 @@ const Dashboard = ({
                   Signal Feedback
                 </Heading>
 
-                <Text textAlign="center">Share your feedback by gifting BiTz points to content you like</Text>
+                <Text textAlign="center">Share your feedback by gifting BiTz to music content created by the Itheum Sigma AI</Text>
 
                 <Button
                   margin="auto"

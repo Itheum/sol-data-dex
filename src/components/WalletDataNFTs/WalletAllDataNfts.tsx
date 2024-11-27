@@ -63,6 +63,8 @@ const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft
           <Text fontSize="sm">
             ID: {solDataNft.id}
             <br />
+            Leaf {solDataNft.compression.leaf_id}
+            <br />
             Length {solDataNft.grouping.length}
             <br />
             Collection {solDataNft.grouping[0].group_value}

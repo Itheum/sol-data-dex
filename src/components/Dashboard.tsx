@@ -9,6 +9,7 @@ import {
   Image,
   Alert,
   AlertIcon,
+  Spinner,
   ModalOverlay,
   ModalContent,
   ModalCloseButton,
@@ -26,9 +27,10 @@ import { useNavigate } from "react-router-dom";
 import nfMeIDVault from "assets/img/nfme/nfme-id-avatar.png";
 import Countdown from "components/CountDown";
 import ShortAddress from "components/UtilComps/ShortAddress";
-import { checkIfFreeDataNftGiftMinted, mintMiscDataNft, getOrCacheAccessNonceAndSignature } from "libs/Solana/utils";
+import { checkIfFreeDataNftGiftMinted, mintMiscDataNft, getOrCacheAccessNonceAndSignature, fetchSolNfts } from "libs/Solana/utils";
 import { sleep } from "libs/utils/util";
 import { useAccountStore } from "store/account";
+import { useNftsStore } from "store/nfts";
 
 const Dashboard = ({
   onShowConnectWalletModal,
@@ -44,15 +46,17 @@ const Dashboard = ({
   const modelSize = useBreakpointValue({ base: "xs", md: "xl" });
   const { isOpen: isProgressModalOpen, onOpen: onProgressModalOpen, onClose: onProgressModalClose } = useDisclosure();
   const { colorMode } = useColorMode();
+  const [freeMintLoading, setFreeMintLoading] = useState<boolean>(false);
   const [freeNfMeIdClaimed, setFreeNfMeIdClaimed] = useState<boolean>(false);
   const [freeBitzClaimed, setFreeBitzClaimed] = useState<boolean>(false);
   const [freeMusicGiftClaimed, setFreeMusicGiftClaimed] = useState<boolean>(false);
   const [freeDropCheckLoading, setFreeDropCheckLoading] = useState<boolean>(false);
   const [freeDropCheckNeededForBitz, setFreeDropCheckNeededForBitz] = useState<number>(0);
   const [freeDropCheckNeededForMusicGift, setFreeDropCheckNeededForMusicGift] = useState<number>(0);
-  const [errFreeMintGeneric, setErrFreeMintGeneric] = useState<any>(null);
+  const [errFreeMintGeneric, setErrFreeMintGeneric] = useState<string | null>(null);
   const bitzBalance = useAccountStore((state) => state.bitzBalance);
   const cooldown = useAccountStore((state) => state.cooldown);
+  const { updateAllDataNfts } = useNftsStore();
 
   // S: Cached Signature Store Items
   const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
@@ -139,7 +143,7 @@ const Dashboard = ({
   const handleProgressModalClose = () => {
     setFreeDropCheckLoading(false);
     setErrFreeMintGeneric(null);
-
+    setFreeMintLoading(false);
     onProgressModalClose();
   };
 
@@ -148,6 +152,7 @@ const Dashboard = ({
       return;
     }
 
+    setFreeMintLoading(true);
     onProgressModalOpen();
     await sleep(1);
 
@@ -171,10 +176,11 @@ const Dashboard = ({
     }
 
     if (miscMintRes?.assetId) {
-      await sleep(1);
+      // check 10 seconds and check if the API in the backend to mark the free mint as done
+      await sleep(10);
 
       switch (mintTemplate) {
-        case "nfmeid":
+        case "bitzxp":
           setFreeDropCheckNeededForBitz(freeDropCheckNeededForBitz + 1);
           break;
         case "musicgift":
@@ -184,8 +190,17 @@ const Dashboard = ({
           break;
       }
 
+      // update the NFT store now as we have a new NFT
+      fetchSolNfts(userPublicKey?.toBase58()).then((nfts) => {
+        updateAllDataNfts(nfts);
+      });
+
       onProgressModalClose();
+    } else {
+      setErrFreeMintGeneric("Free minting has failed");
     }
+
+    setFreeMintLoading(false);
   };
 
   return (
@@ -203,7 +218,7 @@ const Dashboard = ({
         <Flex backgroundColor={"xblue.700"} flexDirection={["column", null, "row"]} gap={2} minH="90%">
           <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
             <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
-              Get Started
+              Get Started for Free
             </Heading>
 
             <Flex flexDirection="column" gap="3">
@@ -250,15 +265,15 @@ const Dashboard = ({
                   isLoading={freeDropCheckLoading}
                   isDisabled={!isUserLoggedIn || freeNfMeIdClaimed}
                   onClick={() => {
-                    onProgressModalOpen();
+                    navigate("/mintdata?launchTemplate=nfMeIdFreeMint");
                   }}>
                   {freeNfMeIdClaimed ? "Claimed" : "Free Mint Now"}
                 </Button>
 
                 {!freeNfMeIdClaimed ? (
                   <Text fontSize="xs" textAlign="center">
-                    Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which wont be used by is to make sure your wallet
-                    can received the NFT
+                    Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which will NOT be used but is to make sure your
+                    wallet exists and can receive the NFT.
                   </Text>
                 ) : (
                   <Box margin="auto">
@@ -289,8 +304,8 @@ const Dashboard = ({
 
                 {!freeBitzClaimed ? (
                   <Text fontSize="xs" textAlign="center">
-                    Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which wont be used by is to make sure your wallet
-                    can received the NFT
+                    Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which will NOT be used but is to make sure your
+                    wallet exists and can receive the NFT.
                   </Text>
                 ) : (
                   <Box margin="auto">
@@ -439,7 +454,7 @@ const Dashboard = ({
 
           <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
             <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
-              Do Work
+              Co-Create with AI
             </Heading>
 
             <Flex flexDirection="column" gap="3">
@@ -581,9 +596,16 @@ const Dashboard = ({
         blockScrollOnMount={false}>
         <ModalOverlay backdropFilter="blur(10px)" />
         <ModalContent bgColor={colorMode === "dark" ? "#181818" : "bgWhite"}>
-          <ModalCloseButton />
-          <ModalHeader mt={5}>Working...</ModalHeader>
+          {!freeMintLoading && <ModalCloseButton />}
+          <ModalHeader mt={5} textAlign="center">
+            Free Mint in Progress
+          </ModalHeader>
           <ModalBody pb={6}>
+            {freeMintLoading && (
+              <Flex w="100%" h="5rem" justifyContent="center" alignItems="center">
+                <Spinner size="xl" color="teal.200" />
+              </Flex>
+            )}
             {errFreeMintGeneric && (
               <Alert status="error" mt={5} rounded="md" mb={8}>
                 <AlertIcon />

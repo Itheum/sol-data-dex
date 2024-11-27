@@ -96,7 +96,8 @@ export const CHAIN_TOKEN_SYMBOL = (chainID: string) => {
 export const nfMeIDVaultConfig = {
   "program": "nfme-id-vault",
   "isNFMeID": true,
-  "shouldAutoVault": true,
+  "shouldAutoVaultIfPossible": true,
+  "isFreeMint": false,
   additionalInformation: {
     "tokenName": "NFMeIDG1",
     "programName": "NFMe ID Avatar",

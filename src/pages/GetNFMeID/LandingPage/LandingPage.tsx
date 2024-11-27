@@ -116,7 +116,7 @@ const ClaimCTAs = ({ onShowConnectWalletModal }: { onShowConnectWalletModal?: an
             gtagGo("nfm", "mint", "sol");
 
             if (connectedSolWallet) {
-              navigate("/mintdata?launchTemplate=nfmeidvault");
+              navigate("/mintdata?launchTemplate=nfMeIdWithBond");
             } else {
               onShowConnectWalletModal();
             }

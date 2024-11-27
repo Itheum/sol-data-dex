@@ -1,6 +1,7 @@
 import { BN, Program } from "@coral-xyz/anchor";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { CNftSolPostMintMetaType } from "@itheum/sdk-mx-data-nft/out";
+import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { SPL_ACCOUNT_COMPRESSION_PROGRAM_ID } from "@solana/spl-account-compression";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { AccountMeta, Connection, PublicKey, Transaction, TransactionConfirmationStrategy, Commitment } from "@solana/web3.js";
@@ -320,7 +321,8 @@ export async function fetchAddressBondsRewards(programSol: Program<CoreSolBondSt
 
     return data;
   } catch (error) {
-    console.error("Failed to fetch address rewards data:", error);
+    console.error("Failed to fetch address rewards data, might be a new user who never bonded:", error);
+    return null;
   }
 }
 
@@ -508,4 +510,46 @@ export async function sendAndConfirmTransaction({
   const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
 
   return { confirmationPromise, txSignature };
+}
+
+export function sortDataNftsByLeafIdDesc(allDataNfts: DasApiAsset[]) {
+  const _OrderByLeadIdDataNfts = [...allDataNfts].sort((a, b) => {
+    if (a.compression.leaf_id > b.compression.leaf_id) {
+      return -1;
+    } else {
+      return 1;
+    }
+  });
+
+  return _OrderByLeadIdDataNfts;
+}
+
+export async function getInitAddressBondsRewardsPdaTransaction(connection: Connection, userPublicKey: PublicKey) {
+  const programId = new PublicKey(BONDING_PROGRAM_ID);
+  const addressBondsRewardsPda = PublicKey.findProgramAddressSync([Buffer.from("address_bonds_rewards"), userPublicKey?.toBuffer()], programId)[0];
+  const accountInfo = await connection.getAccountInfo(addressBondsRewardsPda);
+  const isExist = accountInfo !== null;
+
+  let transactionInitializeAddress = null;
+
+  // if no addressBondsRewardsPda was found, this means the user has never minted and bonded on Solana NFMe contract before -- so we first need to "initializeAddress"
+  // ... in this workflow, the user has to sign and submit 2 transactions (initializeAddress and then createBondTransaction)
+  if (!isExist) {
+    const program = new Program<CoreSolBondStakeSc>(IDL, programId, {
+      connection,
+    });
+
+    const rewardsConfigPda = PublicKey.findProgramAddressSync([Buffer.from("rewards_config")], programId)[0];
+
+    transactionInitializeAddress = await program.methods
+      .initializeAddress()
+      .accounts({
+        addressBondsRewards: addressBondsRewardsPda,
+        rewardsConfig: rewardsConfigPda,
+        authority: userPublicKey,
+      })
+      .transaction();
+  }
+
+  return transactionInitializeAddress;
 }

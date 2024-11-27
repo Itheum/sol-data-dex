@@ -32,6 +32,7 @@ type TradeFormProps = {
 
 export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
   const { isOpen, setIsOpen, dataToPrefill } = props;
+  const { isFreeMint } = dataToPrefill || { isFreeMint: false };
   const { colorMode } = useColorMode();
   const [minRoyalties, setMinRoyalties] = useState<number>(-1);
   const [maxRoyalties, setMaxRoyalties] = useState<number>(-1);
@@ -197,9 +198,14 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
               }}
             />
             <Heading as="h4" fontFamily="Clash-Medium" size="lg">
-              {dataToPrefill?.isNFMeID ? "Mint Your NFMe ID" : "Mint Your Data NFT Collection"}
+              {dataToPrefill?.isNFMeID ? (isFreeMint ? "Mint Your Free NFMe ID" : "Mint Your NFMe ID") : "Mint Your Data NFT Collection"}
             </Heading>
           </HStack>
+          {isFreeMint && (
+            <Text fontFamily="Clash-Medium" fontSize={"md"} ml={"60px"}>
+              Use your NFMe ID as your web3 persona that AI agents can use to verify your identity and reputation.
+            </Text>
+          )}
         </ModalHeader>
 
         <ModalBody bgColor={colorMode === "dark" ? "#181818" : "bgWhite"} overflowX={"hidden"} maxH="85svh" pt="0">

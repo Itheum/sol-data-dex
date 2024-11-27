@@ -153,13 +153,13 @@ export default function () {
               </li>
               <li>
                 {"> "}
-                <a href="https://portal.itheum.com/nftunes" className="hover:underline" rel="noreferrer">
+                <a href="https://portal.itheum.com/nftunes" target="_blank" className="hover:underline" rel="noreferrer">
                   NF-Tunes : Stream Web3 Music
                 </a>
               </li>
               <li>
                 {"> "}
-                <a href="https://drip.haus/itheum" className="hover:underline" rel="noreferrer">
+                <a href="https://drip.haus/itheum" target="_blank" className="hover:underline" rel="noreferrer">
                   Free Music Data NFTs on {`Solana's`} DRiP Haus
                 </a>
               </li>

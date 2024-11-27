@@ -70,7 +70,7 @@ export default function MyHome({ setMenuItem }: { setMenuItem: any }) {
                       colorScheme="teal"
                       borderRadius="xl"
                       onClick={() => {
-                        navigate("/mintdata?launchTemplate=nfmeidvault");
+                        navigate("/mintdata?launchTemplate=nfMeIdWithBond");
                       }}>
                       <Text>Mint Your NFMe ID</Text>
                     </Button>

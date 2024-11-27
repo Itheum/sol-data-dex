@@ -935,7 +935,7 @@ export const LivelinessStakingSol: React.FC = () => {
                           variant="outline"
                           size="lg"
                           mt="5"
-                          onClick={() => navigate("/mintdata?launchTemplate=nfmeidvault")}>
+                          onClick={() => navigate("/mintdata?launchTemplate=nfMeIdWithBond")}>
                           <Text px={2}>Mint NFMe ID</Text>
                         </Button>
                       </Box>
@@ -971,6 +971,10 @@ export const LivelinessStakingSol: React.FC = () => {
               // Sort by state, with bonds having state = 1 coming first
               if (a.state === 1 && b.state !== 1) return -1;
               if (b.state === 1 && a.state !== 1) return 1;
+
+              // Sort remaining by bondId, newest ones on top
+              if (a.bondId > b.bondId) return -1;
+              if (a.bondId < b.bondId) return 1;
 
               // Otherwise, maintain the existing order
               return 0;
@@ -1086,6 +1090,8 @@ export const LivelinessStakingSol: React.FC = () => {
                       <Flex flexDirection="column" w="100%">
                         <Text fontSize="sm" mb="5">
                           ID: {dataNft.id}
+                          <br />
+                          Leaf {dataNft.compression.leaf_id}
                           <br />
                           Length {dataNft.grouping.length}
                           <br />

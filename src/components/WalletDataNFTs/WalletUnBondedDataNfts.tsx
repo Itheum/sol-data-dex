@@ -33,7 +33,13 @@ import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { SOLANA_EXPLORER_URL } from "libs/Solana/config";
-import { createBondTransaction, getNftMetaForDelayedBonding, getOrCacheAccessNonceAndSignature, sendAndConfirmTransaction } from "libs/Solana/utils";
+import {
+  createBondTransaction,
+  getNftMetaForDelayedBonding,
+  getOrCacheAccessNonceAndSignature,
+  sendAndConfirmTransaction,
+  getInitAddressBondsRewardsPdaTransaction,
+} from "libs/Solana/utils";
 import { transformDescription, timeUntil, sleep } from "libs/utils";
 import { useAccountStore, useMintStore } from "store";
 import { useNftsStore } from "store/nfts";
@@ -106,6 +112,13 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
         setSolBondingTxHasFailedMsg("Error fetching the nft compressed nft metadata, which is needed for the bond");
         setBondingInProgress(false);
       } else {
+        // for the first time user interacts, we need to initialize their rewards PDA
+        const initializeAddressTransaction = await getInitAddressBondsRewardsPdaTransaction(connection, userPublicKey);
+
+        if (initializeAddressTransaction) {
+          await executeTransaction({ transaction: initializeAddressTransaction, customErrorMessage: "Bonding Program address initialization failed" });
+        }
+
         const bondTransaction = await createBondTransaction(mintMeta, userPublicKey, connection, true);
 
         if (!bondTransaction) {
@@ -265,11 +278,15 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                 Bond To Get Liveliness <br />+ Staking Rewards
               </Button>
               <br />
-              ID: {solDataNft.id}
-              <br />
-              Length {solDataNft.grouping.length}
-              <br />
-              Collection {solDataNft.grouping[0].group_value}
+              <Text fontSize="sm">
+                ID: {solDataNft.id}
+                <br />
+                Leaf {solDataNft.compression.leaf_id}
+                <br />
+                Length {solDataNft.grouping.length}
+                <br />
+                Collection {solDataNft.grouping[0].group_value}
+              </Text>
             </Box>
             <Link
               onClick={() => window.open(`${SOLANA_EXPLORER_URL}address/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}
@@ -393,7 +410,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                   cancelBtnText: solBondingTxHasFailedMsg ? "Cancel and Try Again" : "Cancel and Close",
                   proceedBtnColorScheme: "teal",
                 }
-              : { title: "Bonding, please wait...", proceedBtnTxt: "", cancelBtnText: "" }
+              : { title: "Bonding, Please Wait...", proceedBtnTxt: "", cancelBtnText: "" }
           }
         />
       </>

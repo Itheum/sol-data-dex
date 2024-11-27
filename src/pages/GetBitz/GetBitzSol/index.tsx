@@ -121,7 +121,6 @@ const GetBitzSol = (props: any) => {
 
   // Game canvas related
   const [loadBlankGameCanvas, setLoadBlankGameCanvas] = useState<boolean>(false);
-
   const { allDataNfts } = useNftsStore();
   const [solNftsBitz, setSolNftsBitz] = useState<DasApiAsset[]>([]);
   const [populatedBitzStore, setPopulatedBitzStore] = useState<boolean>(false);

@@ -11,12 +11,14 @@ import useThrottle from "components/UtilComps/UseThrottle";
 import WalletAllDataNfts from "components/WalletDataNFTs/WalletAllDataNfts";
 import WalletUnBondedDataNfts from "components/WalletDataNFTs/WalletUnBondedDataNfts";
 import { NFME_ID_COLLECTION_ID } from "libs/config";
+import { sortDataNftsByLeafIdDesc } from "libs/Solana/utils";
 import { useNftsStore } from "store/nfts";
 
 export default function MyDataNFTs({ tabState }: { tabState: number }) {
   const { colorMode } = useColorMode();
   const navigate = useNavigate();
   const { allDataNfts, bondedDataNftIds } = useNftsStore();
+  const [allDataNftsWithBestOrdering, setAllDataNftsWithBestOrdering] = useState<DasApiAsset[]>([]);
   const [unBondedNfMeIds, setUnBondedNfMeIds] = useState<DasApiAsset[]>([]);
   const { isOpen: isBondingSuccessCTAModalOpen, onOpen: onBondingSuccessCTAModalOpen, onClose: onBondingCompleteCTAModalClose } = useDisclosure();
 
@@ -28,8 +30,13 @@ export default function MyDataNFTs({ tabState }: { tabState: number }) {
   }, []);
 
   useEffect(() => {
-    if (allDataNfts.length > 0 && bondedDataNftIds.length > 0) {
-      const _unBondedNeMeIdDataNfts = allDataNfts.filter(
+    if (allDataNfts.length > 0) {
+      const sortedAllDataNfts = sortDataNftsByLeafIdDesc(allDataNfts);
+      console.log(sortedAllDataNfts);
+
+      setAllDataNftsWithBestOrdering(sortedAllDataNfts);
+
+      const _unBondedNeMeIdDataNfts = sortedAllDataNfts.filter(
         (solDataNft) => !bondedDataNftIds.includes(solDataNft.id) && solDataNft.grouping[0].group_value === NFME_ID_COLLECTION_ID
       );
 
@@ -46,7 +53,7 @@ export default function MyDataNFTs({ tabState }: { tabState: number }) {
       tabName: "Your Data NFTs",
       icon: FaBrush,
       isDisabled: false,
-      pieces: allDataNfts?.length,
+      pieces: allDataNftsWithBestOrdering?.length,
     },
     {
       tabName: "Bond on Data NFTs",
@@ -103,14 +110,14 @@ export default function MyDataNFTs({ tabState }: { tabState: number }) {
           <TabPanels>
             {/* Your Data NFTs */}
             <TabPanel mt={2} width={"full"}>
-              {tabState === 1 && allDataNfts?.length > 0 ? (
+              {tabState === 1 && allDataNftsWithBestOrdering?.length > 0 ? (
                 <SimpleGrid
                   columns={{ sm: 1, md: 2, lg: 3, xl: 4 }}
                   spacingY={4}
                   mx={{ base: 0, "2xl": "24 !important" }}
                   mt="5 !important"
                   justifyItems={"center"}>
-                  {allDataNfts.map((item, index) => (
+                  {allDataNftsWithBestOrdering.map((item, index) => (
                     <WalletAllDataNfts key={index} index={index} solDataNft={item} />
                   ))}
                 </SimpleGrid>

@@ -65,15 +65,6 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
       // get bonding / staking program config params
       const programObj = getBondingProgramInterface(connection);
 
-      // const programId = new PublicKey(BONDING_PROGRAM_ID);
-      // const program = new Program<CoreSolBondStakeSc>(IDL, programObj.programId, {
-      //   connection,
-      // });
-      // const programId = new PublicKey(BONDING_PROGRAM_ID);
-      // const program = new Program<CoreSolBondStakeSc>(IDL, programId, {
-      //   connection,
-      // });
-
       fetchBondingConfigSol(programObj.programInterface).then((periodsT: any) => {
         if (periodsT?.error) {
           updateLockPeriodForBond([]);
@@ -101,7 +92,12 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
       )[0];
 
       // getNumberOfBonds for user
+
       const userBondsInfo = await fetchAddressBondsRewards(programObj.programInterface, addressBondsRewardsPda);
+
+      console.log("userBondsInfo");
+      console.log(userBondsInfo);
+
       if (userBondsInfo) {
         const numberOfBonds = userBondsInfo.currentIndex;
 

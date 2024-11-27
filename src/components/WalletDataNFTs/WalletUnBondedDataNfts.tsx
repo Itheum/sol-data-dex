@@ -119,7 +119,13 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
           await executeTransaction({ transaction: initializeAddressTransaction, customErrorMessage: "Bonding Program address initialization failed" });
         }
 
-        const bondTransaction = await createBondTransaction(mintMeta, userPublicKey, connection, true);
+        const createTxResponse = await createBondTransaction(mintMeta, userPublicKey, connection, true);
+
+        let bondTransaction;
+
+        if (createTxResponse) {
+          bondTransaction = createTxResponse.transaction;
+        }
 
         if (!bondTransaction) {
           setSolBondingTxHasFailedMsg("Error creating the bond transaction");

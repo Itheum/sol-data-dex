@@ -40,10 +40,10 @@ type MintingModalProps = {
   mintingSuccessful: boolean;
   // makePrimaryNFMeIdSuccessful: boolean;
   isNFMeIDMint: boolean;
-  // isAutoVault: boolean;
+  isAutoVaultInProgress: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   closeProgressModal: () => void;
-  solBondingTxHasFailed?: boolean;
+  bondingTxHasFailed?: boolean;
   sendSolanaBondingTx?: () => void;
   isFreeMint?: boolean;
 };
@@ -58,10 +58,10 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
     mintingSuccessful,
     // makePrimaryNFMeIdSuccessful,
     isNFMeIDMint,
-    // isAutoVault,
+    isAutoVaultInProgress,
     setIsOpen,
     closeProgressModal,
-    solBondingTxHasFailed,
+    bondingTxHasFailed,
     sendSolanaBondingTx,
     isFreeMint,
   } = props;
@@ -113,8 +113,8 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
                   <HStack>
                     <Box w={6}>{(!saveProgress.s4 && <Spinner size="md" />) || <CheckCircleIcon w={6} h={6} />}</Box>
                     <Text fontSize="lg">
-                      Minting your {isNFMeIDMint ? "NFMe ID" : "Data NFT"} and bonding $ITHEUM to generate your liveliness staking rewards{" "}
-                      {/* {isAutoVault && !isSolWalletConnected ? "& setting it as your primary NFMe ID" : ""} */}
+                      Minting your {isNFMeIDMint ? "NFMe ID" : "Data NFT"}, bonding $ITHEUM to generate your liveliness staking rewards{" "}
+                      {isAutoVaultInProgress ? "and setting it as your vault" : ""}
                     </Text>
                   </HStack>
                 )}
@@ -173,7 +173,7 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
 
             {/* Mint + Bond: NF Minting was a success but the bonding steps failed */}
             <>
-              {!isFreeMint && mintingSuccessful && solBondingTxHasFailed && (
+              {!isFreeMint && mintingSuccessful && bondingTxHasFailed && (
                 <Box textAlign="center" mt={4}>
                   <Text fontSize="lg" colorScheme="teal" color="teal.200" mb={2}>
                     Note: You can only complete the bonding step here.
@@ -192,11 +192,11 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
 
             {/* Mint + Bond: NF Minting AND bonding was a success. So we show the CTAs */}
             <>
-              {!isFreeMint && mintingSuccessful && !solBondingTxHasFailed && (
+              {!isFreeMint && mintingSuccessful && !bondingTxHasFailed && (
                 <Box textAlign="center" mt="2">
                   <Alert status="success" rounded="md">
-                    <Text fontSize="lg" colorScheme="teal">
-                      Success! {isNFMeIDMint ? "NFMe ID" : "Data NFT"} Minted and {isSolWalletConnected ? "bonded" : "set as your NFMe ID"}.
+                    <Text fontSize="lg" colorScheme="teal" m="auto">
+                      Success! {isNFMeIDMint ? "NFMe ID" : "Data NFT"} Minted and {isSolWalletConnected ? "bonded" : "set as your NFMe ID"}
                     </Text>
                   </Alert>
                   <HStack mt="4">
@@ -298,7 +298,7 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
                   </Box>
                 ) : (
                   mintingSuccessful &&
-                  solBondingTxHasFailed && (
+                  bondingTxHasFailed && (
                     <Box textAlign="center" mt={4}>
                       <Text fontSize="lg" colorScheme="teal" color="teal.200" mb={2}>
                         Note: You can only complete the bonding step here.

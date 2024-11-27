@@ -30,8 +30,8 @@ import ShortAddress from "components/UtilComps/ShortAddress";
 import { checkIfFreeDataNftGiftMinted, mintMiscDataNft, getOrCacheAccessNonceAndSignature, fetchSolNfts } from "libs/Solana/utils";
 import { sleep } from "libs/utils/util";
 import { useAccountStore } from "store/account";
-import { useNftsStore } from "store/nfts";
 import { useMintStore } from "store/mint";
+import { useNftsStore } from "store/nfts";
 
 const Dashboard = ({
   onShowConnectWalletModal,

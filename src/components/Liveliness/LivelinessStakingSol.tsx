@@ -40,7 +40,7 @@ import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { BOND_CONFIG_INDEX, SOLANA_EXPLORER_URL } from "libs/Solana/config";
 import { CoreSolBondStakeSc } from "libs/Solana/CoreSolBondStakeSc";
 import { Bond } from "libs/Solana/types";
-import { sendAndConfirmTransaction } from "libs/Solana/utils";
+import { sendAndConfirmTransaction, createAddBondAsVaultTransaction } from "libs/Solana/utils";
 import {
   computeAddressClaimableAmount,
   computeBondScore,
@@ -74,7 +74,7 @@ export const LivelinessStakingSol: React.FC = () => {
   const [globalTotalBond, setGlobalTotalBond] = useState<BN>(new BN(0));
   const [globalRewardsPerBlock, setGlobalRewardsPerBlock] = useState<number>(0);
   const [withdrawPenalty, setWithdrawPenalty] = useState<number>(0);
-  const [programSol, setProgramSol] = useState<Program<CoreSolBondStakeSc> | undefined>();
+  const [bondingProgram, setBondingProgram] = useState<Program<CoreSolBondStakeSc> | undefined>();
   const [bondConfigPda, setBondConfigPda] = useState<PublicKey | undefined>();
   const [addressBondsRewardsPda, setAddressBondsRewardsPda] = useState<PublicKey | undefined>();
   const [rewardsConfigPda, setRewardsConfigPda] = useState<PublicKey | undefined>();
@@ -113,7 +113,7 @@ export const LivelinessStakingSol: React.FC = () => {
       const programObj = getBondingProgramInterface(connection);
       const programId = programObj.programId;
 
-      setProgramSol(programObj.programInterface);
+      setBondingProgram(programObj.programInterface);
 
       async function fetchBondConfigPDAs() {
         const bondConfigPda1 = PublicKey.findProgramAddressSync([Buffer.from("bond_config"), Buffer.from([BOND_CONFIG_INDEX])], programId)[0];
@@ -140,8 +140,9 @@ export const LivelinessStakingSol: React.FC = () => {
     updateIsKeyChainDataForAppLoading(true);
   }, []);
 
+  // At the start and also after each pending TX completes, we get the latest bonds, rewards (staked, vault id etc) and vault data (i.e. total bond)
   useEffect(() => {
-    if (!hasPendingTransaction) {
+    if (bondingProgram && userPublicKey && !hasPendingTransaction) {
       fetchBonds();
       fetchAddressRewardsData();
       fetchVaultConfigData();
@@ -156,7 +157,7 @@ export const LivelinessStakingSol: React.FC = () => {
 
   useEffect(() => {
     async function fetchAccountInfo() {
-      if (programSol && userPublicKey && addressBondsRewardsPda) {
+      if (bondingProgram && userPublicKey && addressBondsRewardsPda) {
         const accountInfo = await connection.getAccountInfo(addressBondsRewardsPda);
         const isExist = accountInfo !== null;
 
@@ -169,7 +170,7 @@ export const LivelinessStakingSol: React.FC = () => {
     }
 
     fetchAccountInfo();
-  }, [addressBondsRewardsPda, programSol]);
+  }, [addressBondsRewardsPda, bondingProgram]);
 
   useEffect(() => {
     fetchBonds();
@@ -190,20 +191,20 @@ export const LivelinessStakingSol: React.FC = () => {
 
   useEffect(() => {
     fetchRewardsConfigData();
-  }, [rewardsConfigPda, programSol]);
+  }, [rewardsConfigPda, bondingProgram]);
 
   useEffect(() => {
-    if (programSol && userPublicKey && bondConfigPda) {
-      programSol?.account.bondConfig.fetch(bondConfigPda).then((data: any) => {
+    if (bondingProgram && userPublicKey && bondConfigPda) {
+      bondingProgram?.account.bondConfig.fetch(bondConfigPda).then((data: any) => {
         setBondConfigData(data);
         setWithdrawPenalty(new BN(data.withdrawPenalty).toNumber() / 100);
       });
     }
-  }, [bondConfigPda, programSol]);
+  }, [bondConfigPda, bondingProgram]);
 
   useEffect(() => {
     fetchVaultConfigData();
-  }, [vaultConfigPda, programSol]);
+  }, [vaultConfigPda, bondingProgram]);
 
   useEffect(() => {
     calculateRewardAprAndEstAnnualRewards();
@@ -222,8 +223,8 @@ export const LivelinessStakingSol: React.FC = () => {
   }
 
   async function fetchRewardsConfigData() {
-    if (programSol && userPublicKey && rewardsConfigPda) {
-      programSol.account.rewardsConfig.fetch(rewardsConfigPda).then((data: any) => {
+    if (bondingProgram && userPublicKey && rewardsConfigPda) {
+      bondingProgram.account.rewardsConfig.fetch(rewardsConfigPda).then((data: any) => {
         setRewardsConfigData(data);
         setGlobalRewardsPerBlock(data.rewardsPerSlot.toNumber());
         setMaxApr(data.maxApr.toNumber() / 100);
@@ -232,8 +233,8 @@ export const LivelinessStakingSol: React.FC = () => {
   }
 
   async function fetchVaultConfigData() {
-    if (programSol && vaultConfigPda) {
-      programSol.account.vaultConfig.fetch(vaultConfigPda).then((data: any) => {
+    if (bondingProgram && vaultConfigPda) {
+      bondingProgram.account.vaultConfig.fetch(vaultConfigPda).then((data: any) => {
         setGlobalTotalBond(data.totalBondAmount);
       });
     }
@@ -254,10 +255,10 @@ export const LivelinessStakingSol: React.FC = () => {
   }
 
   async function fetchAddressRewardsData() {
-    if (!programSol || !addressBondsRewardsPda) return;
+    if (!bondingProgram || !addressBondsRewardsPda) return;
 
     try {
-      const userBondsInfo = await fetchAddressBondsRewards(programSol, addressBondsRewardsPda);
+      const userBondsInfo = await fetchAddressBondsRewards(bondingProgram, addressBondsRewardsPda);
 
       if (userBondsInfo) {
         setAddressBondsRewardsData(userBondsInfo);
@@ -279,10 +280,10 @@ export const LivelinessStakingSol: React.FC = () => {
         }
 
         if (userBondsInfo.vaultBondId != 0) {
-          const vaultBond = await programSol!.account.bond.fetch(
+          const vaultBond = await bondingProgram!.account.bond.fetch(
             PublicKey.findProgramAddressSync(
               [Buffer.from("bond"), userPublicKey!.toBuffer(), new BN(userBondsInfo.vaultBondId).toBuffer("le", 2)],
-              programSol.programId
+              bondingProgram.programId
             )[0]
           );
           if (vaultBond.state === 0) {
@@ -352,8 +353,8 @@ export const LivelinessStakingSol: React.FC = () => {
   }
 
   async function fetchBonds() {
-    if (numberOfBonds && userPublicKey && programSol) {
-      retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, programSol).then(({ myBonds, nftMeIdVault }) => {
+    if (numberOfBonds && userPublicKey && bondingProgram) {
+      retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, bondingProgram).then(({ myBonds, nftMeIdVault }) => {
         setBonds(myBonds);
 
         updateBondedDataNftIds(myBonds.map((i) => i.assetId.toBase58()));
@@ -446,10 +447,10 @@ export const LivelinessStakingSol: React.FC = () => {
     try {
       const bondIdPda = PublicKey.findProgramAddressSync(
         [Buffer.from("bond"), userPublicKey!.toBuffer(), new BN(bondId).toBuffer("le", 2)],
-        programSol!.programId
+        bondingProgram!.programId
       )[0];
 
-      const transaction = await programSol!.methods
+      const transaction = await bondingProgram!.methods
         .renew(BOND_CONFIG_INDEX, bondId)
         .accounts({
           bondConfig: bondConfigPda,
@@ -475,25 +476,39 @@ export const LivelinessStakingSol: React.FC = () => {
 
   async function updateVaultBond(bondId: number, nonce: number) {
     try {
-      const bondIdPda = PublicKey.findProgramAddressSync(
-        [Buffer.from("bond"), userPublicKey!.toBuffer(), new BN(bondId).toBuffer("le", 2)],
-        programSol!.programId
-      )[0];
+      if (!userPublicKey || !bondingProgram) {
+        return;
+      }
+      const createTxResponse = await createAddBondAsVaultTransaction(userPublicKey, bondingProgram, addressBondsRewardsPda, bondConfigPda, bondId, nonce);
 
-      const transaction = await programSol!.methods
-        .updateVaultBond(BOND_CONFIG_INDEX, bondId, new BN(nonce))
-        .accounts({
-          addressBondsRewards: addressBondsRewardsPda,
-          bondConfig: bondConfigPda,
-          bond: bondIdPda,
-          authority: userPublicKey!,
-        })
-        .transaction();
+      if (createTxResponse) {
+        await executeTransaction({
+          transaction: createTxResponse.transaction,
+          customErrorMessage: "Failed to update vault bond",
+        });
+      } else {
+        console.error("Failed to create the vault bond transaction");
+      }
 
-      await executeTransaction({
-        transaction,
-        customErrorMessage: "Failed to update vault bond",
-      });
+      // const bondIdPda = PublicKey.findProgramAddressSync(
+      //   [Buffer.from("bond"), userPublicKey!.toBuffer(), new BN(bondId).toBuffer("le", 2)],
+      //   bondingProgram!.programId
+      // )[0];
+
+      // const transaction = await bondingProgram!.methods
+      //   .updateVaultBond(BOND_CONFIG_INDEX, bondId, new BN(nonce))
+      //   .accounts({
+      //     addressBondsRewards: addressBondsRewardsPda,
+      //     bondConfig: bondConfigPda,
+      //     bond: bondIdPda,
+      //     authority: userPublicKey!,
+      //   })
+      //   .transaction();
+
+      // await executeTransaction({
+      //   transaction,
+      //   customErrorMessage: "Failed to update vault bond",
+      // });
     } catch (error) {
       console.error("Failed to update vault bond:", error);
     }
@@ -508,14 +523,14 @@ export const LivelinessStakingSol: React.FC = () => {
 
       const bondIdPda = PublicKey.findProgramAddressSync(
         [Buffer.from("bond"), userPublicKey!.toBuffer(), new BN(bondId).toBuffer("le", 2)],
-        programSol!.programId
+        bondingProgram!.programId
       )[0];
 
       const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), vaultConfigPda!, true);
       const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), userPublicKey!, true);
       const amountToSend: BN = new BN(amount).mul(BN10_9);
 
-      const transaction = await programSol!.methods
+      const transaction = await bondingProgram!.methods
         .topUp(BOND_CONFIG_INDEX, bondId, amountToSend)
         .accounts({
           addressBondsRewards: addressBondsRewardsPda,
@@ -556,15 +571,15 @@ export const LivelinessStakingSol: React.FC = () => {
 
   async function handleClaimRewardsClick(_vaultBondId: number) {
     try {
-      if (!programSol || !userPublicKey) return;
+      if (!bondingProgram || !userPublicKey) return;
       const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), vaultConfigPda!, true);
       const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), userPublicKey!, true);
       const bondPda = PublicKey.findProgramAddressSync(
         [Buffer.from("bond"), userPublicKey.toBuffer(), new BN(_vaultBondId).toBuffer("le", 2)],
-        programSol.programId
+        bondingProgram.programId
       )[0];
 
-      const transaction = await programSol.methods
+      const transaction = await bondingProgram.methods
         .claimRewards(BOND_CONFIG_INDEX, _vaultBondId)
         .accounts({
           addressBondsRewards: addressBondsRewardsPda,
@@ -593,15 +608,15 @@ export const LivelinessStakingSol: React.FC = () => {
 
   async function handleReinvestRewardsClick(_vaultBondId: number) {
     try {
-      // if (!programSol || !userPublicKey || !nftMeIdBond) return;
-      if (!programSol || !userPublicKey || !_vaultBondId) return;
+      // if (!bondingProgram || !userPublicKey || !nftMeIdBond) return;
+      if (!bondingProgram || !userPublicKey || !_vaultBondId) return;
 
       const bondIdPda = PublicKey.findProgramAddressSync(
         [Buffer.from("bond"), userPublicKey!.toBuffer(), new BN(_vaultBondId).toBuffer("le", 2)],
-        programSol!.programId
+        bondingProgram!.programId
       )[0];
 
-      const transaction = await programSol.methods
+      const transaction = await bondingProgram.methods
         .stakeRewards(BOND_CONFIG_INDEX, _vaultBondId)
         .accounts({
           addressBondsRewards: addressBondsRewardsPda,
@@ -627,16 +642,16 @@ export const LivelinessStakingSol: React.FC = () => {
 
   async function handleWithdrawBondClick(bondId: number, bondAmountToReceive: number) {
     try {
-      if (!programSol || !userPublicKey || bondId <= 0) return;
+      if (!bondingProgram || !userPublicKey || bondId <= 0) return;
 
       const bondIdPda = PublicKey.findProgramAddressSync(
         [Buffer.from("bond"), userPublicKey.toBuffer(), new BN(bondId).toBuffer("le", 2)],
-        programSol.programId
+        bondingProgram.programId
       )[0];
       const vaultAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), vaultConfigPda!, true);
       const userItheumAta = await getAssociatedTokenAddress(new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS), userPublicKey!, true);
 
-      const transaction = await programSol.methods
+      const transaction = await bondingProgram.methods
         .withdraw(BOND_CONFIG_INDEX, bondId)
         .accounts({
           addressBondsRewards: addressBondsRewardsPda,

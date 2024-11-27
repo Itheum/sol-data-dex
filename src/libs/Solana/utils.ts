@@ -189,7 +189,7 @@ export async function createBondTransaction(
   userPublicKey: PublicKey,
   connection: Connection,
   skipDeepParse?: boolean
-): Promise<Transaction | undefined> {
+): Promise<{ transaction: Transaction; bondId: number; nonce: number } | undefined> {
   try {
     const mintMetaJSON = skipDeepParse ? mintMeta : JSON.parse(mintMeta.toString());
     const {
@@ -254,7 +254,45 @@ export async function createBondTransaction(
       })
       .remainingAccounts(proofPathAsAccounts)
       .transaction(); // Creates the unsigned transaction
-    return transaction;
+
+    return {
+      transaction,
+      bondId,
+      nonce,
+    };
+  } catch (error) {
+    console.error("Transaction creation failed:", error);
+    return undefined;
+  }
+}
+
+export async function createAddBondAsVaultTransaction(
+  userPublicKey: PublicKey,
+  programSol: Program<CoreSolBondStakeSc>,
+  addressBondsRewardsPda: PublicKey | undefined,
+  bondConfigPda: PublicKey | undefined,
+  bondId: number,
+  nonce: number
+): Promise<{ transaction: Transaction } | undefined> {
+  try {
+    const bondIdPda = PublicKey.findProgramAddressSync(
+      [Buffer.from("bond"), userPublicKey!.toBuffer(), new BN(bondId).toBuffer("le", 2)],
+      programSol!.programId
+    )[0];
+
+    const transaction = await programSol!.methods
+      .updateVaultBond(BOND_CONFIG_INDEX, bondId, new BN(nonce))
+      .accounts({
+        addressBondsRewards: addressBondsRewardsPda,
+        bondConfig: bondConfigPda,
+        bond: bondIdPda,
+        authority: userPublicKey!,
+      })
+      .transaction();
+
+    return {
+      transaction,
+    };
   } catch (error) {
     console.error("Transaction creation failed:", error);
     return undefined;

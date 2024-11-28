@@ -26,7 +26,6 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { Program, BN } from "@coral-xyz/anchor";
-import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction } from "@solana/web3.js";
@@ -84,13 +83,11 @@ export const LivelinessStakingSol: React.FC = () => {
   const [vaultConfigPda, setVaultConfigPda] = useState<PublicKey | undefined>();
   const [bonds, setBonds] = useState<Bond[]>();
   const [allInfoLoading, setAllInfoLoading] = useState<boolean>(true);
-  // const [nftMeId, setNftMeId] = useState<DasApiAsset>();
   const [numberOfBonds, setNumberOfBonds] = useState<number>();
   const [vaultBondId, setVaultBondId] = useState<number>();
   const [vaultBondData, setVaultBondData] = useState<any>();
   const [claimRewardsConfirmationWorkflow, setClaimRewardsConfirmationWorkflow] = useState<boolean>(false);
   const [reinvestRewardsConfirmationWorkflow, setReinvestRewardsConfirmationWorkflow] = useState<boolean>(false);
-  // const [nftMeIdBond, setNftMeIdBond] = useState<Bond>();
   const { allDataNfts, updateBondedDataNftIds } = useNftsStore();
   const { updateUsersNfMeIdVaultBondId } = useMintStore();
   const { colorMode } = useColorMode();
@@ -175,19 +172,6 @@ export const LivelinessStakingSol: React.FC = () => {
   useEffect(() => {
     fetchBonds();
   }, [numberOfBonds]);
-
-  // useEffect(() => {
-  //   if (nftMeIdBond && allDataNfts.length > 0 && userPublicKey) {
-  //     const _nftMeId = allDataNfts.find((nft) => nft.id == nftMeIdBond.assetId.toString());
-
-  //     if (_nftMeId === undefined) {
-  //       console.error("NftMeID has not been found");
-  //     }
-
-  //     setNftMeId(_nftMeId);
-  //     livelinessPageInfoLoaded();
-  //   }
-  // }, [nftMeIdBond, allDataNfts]);
 
   useEffect(() => {
     fetchRewardsConfigData();
@@ -354,15 +338,10 @@ export const LivelinessStakingSol: React.FC = () => {
 
   async function fetchBonds() {
     if (numberOfBonds && userPublicKey && bondingProgram) {
-      retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, bondingProgram).then(({ myBonds, nftMeIdVault }) => {
+      retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, bondingProgram).then(({ myBonds }) => {
         setBonds(myBonds);
 
         updateBondedDataNftIds(myBonds.map((i) => i.assetId.toBase58()));
-
-        // if (nftMeIdVault) {
-        //   setNftMeIdBond(nftMeIdVault);
-        //   updateUsersNfMeIdVaultBond(nftMeIdVault);
-        // }
 
         livelinessPageInfoLoaded();
       });
@@ -489,26 +468,6 @@ export const LivelinessStakingSol: React.FC = () => {
       } else {
         console.error("Failed to create the vault bond transaction");
       }
-
-      // const bondIdPda = PublicKey.findProgramAddressSync(
-      //   [Buffer.from("bond"), userPublicKey!.toBuffer(), new BN(bondId).toBuffer("le", 2)],
-      //   bondingProgram!.programId
-      // )[0];
-
-      // const transaction = await bondingProgram!.methods
-      //   .updateVaultBond(BOND_CONFIG_INDEX, bondId, new BN(nonce))
-      //   .accounts({
-      //     addressBondsRewards: addressBondsRewardsPda,
-      //     bondConfig: bondConfigPda,
-      //     bond: bondIdPda,
-      //     authority: userPublicKey!,
-      //   })
-      //   .transaction();
-
-      // await executeTransaction({
-      //   transaction,
-      //   customErrorMessage: "Failed to update vault bond",
-      // });
     } catch (error) {
       console.error("Failed to update vault bond:", error);
     }
@@ -608,7 +567,6 @@ export const LivelinessStakingSol: React.FC = () => {
 
   async function handleReinvestRewardsClick(_vaultBondId: number) {
     try {
-      // if (!bondingProgram || !userPublicKey || !nftMeIdBond) return;
       if (!bondingProgram || !userPublicKey || !_vaultBondId) return;
 
       const bondIdPda = PublicKey.findProgramAddressSync(

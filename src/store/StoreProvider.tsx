@@ -1,13 +1,10 @@
 import React, { PropsWithChildren, useEffect } from "react";
-import { Program } from "@coral-xyz/anchor";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { getItheumPriceFromApi } from "libs/Bespoke/api";
-// import { BONDING_PROGRAM_ID } from "libs/Solana/config";
-// import { CoreSolBondStakeSc, IDL } from "libs/Solana/CoreSolBondStakeSc";
 import { IS_DEVNET } from "libs/config";
 import {
   fetchBondingConfigSol,
@@ -28,7 +25,6 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
 
   // STOREs
   const { updateItheumPrice, updateItheumBalance, updateIsKeyChainDataForAppLoading } = useAccountStore();
-  // const updateLockPeriodForBond = useMintStore((state) => state.updateLockPeriodForBond);
   const { updateAllDataNfts, updateBondedDataNftIds, updateBitzDataNfts } = useNftsStore();
   const { updateLockPeriodForBond, updateUserBonds, updateUsersNfMeIdVaultBondId, updateCurrentMaxApr } = useMintStore();
 
@@ -63,13 +59,6 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
       const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
 
       updateAllDataNfts(_allDataNfts);
-
-      // fetchSolNfts(userPublicKey?.toBase58()).then((nfts) => {
-      //   _allDataNfts = nfts;
-      //   updateAllDataNfts(nfts);
-
-      //   console.log("nfts A", nfts);
-      // });
 
       console.log("_allDataNfts", _allDataNfts);
 
@@ -117,14 +106,9 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
 
         updateUsersNfMeIdVaultBondId(userBondsInfo.vaultBondId);
 
-        retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, programObj.programInterface).then(({ myBonds, nftMeIdVault }) => {
+        retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, programObj.programInterface).then(({ myBonds }) => {
           updateUserBonds(myBonds);
           updateBondedDataNftIds(myBonds.map((i) => i.assetId.toBase58()));
-
-          // if (nftMeIdVault) {
-          //   console.log("userBondsInfo D");
-          //   updateUsersNfMeIdVaultBond(nftMeIdVault);
-          // }
         });
       }
       // E: get users bonds

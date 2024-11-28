@@ -84,8 +84,6 @@ const AppHeader = ({
   const isUserLoggedIn = userPublicKey ? true : false;
   const { colorMode, setColorMode } = useColorMode();
   const { pathname } = useLocation();
-  // const bitzBalance = useAccountStore((state) => state.bitzBalance);
-  // const cooldown = useAccountStore((state) => state.cooldown);
   const connectBtnTitle = useBreakpointValue({ base: "Connect Wallet" });
   const [showPlayBitzModal, setShowPlayBitzModal] = useState(false);
   const toast = useToast();
@@ -143,10 +141,6 @@ const AppHeader = ({
       ],
     },
   ];
-  // const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
-  // const solPreaccessSignature = useAccountStore((state: any) => state.solPreaccessSignature);
-  // const solPreaccessTimestamp = useAccountStore((state: any) => state.solPreaccessTimestamp);
-  // const keyChainDataForAppLoading = useAccountStore((state) => state.keyChainDataForAppLoading);
   const { bitzDataNfts } = useNftsStore();
   const { bitzBalance, cooldown, solPreaccessNonce, solPreaccessSignature, solPreaccessTimestamp, keyChainDataForAppLoading } = useAccountStore();
   const { updateBitzBalance, updateGivenBitzSum, updateBonusBitzSum, updateCooldown } = useAccountStore();
@@ -161,13 +155,6 @@ const AppHeader = ({
   // Show the Bitz balance
   useEffect(() => {
     if (bitzDataNfts.length > 0 && solPreaccessNonce !== "" && solPreaccessSignature !== "" && userPublicKey) {
-      // const viewDataArgs = {
-      //   headers: {
-      //     "dmf-custom-only-state": "1",
-      //   },
-      //   fwdHeaderKeys: ["dmf-custom-only-state"],
-      // };
-
       (async () => {
         const getBitzGameResult = await viewDataToOnlyGetReadOnlyBitz(bitzDataNfts[0], solPreaccessNonce, solPreaccessSignature, userPublicKey);
 

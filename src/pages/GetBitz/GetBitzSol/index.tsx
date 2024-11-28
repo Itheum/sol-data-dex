@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-// import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-// import bs58 from "bs58";
+import { PublicKey } from "@solana/web3.js";
 import { motion } from "framer-motion";
 import Countdown from "react-countdown";
 
@@ -45,8 +44,6 @@ import Meme8 from "assets/img/getbitz/memes/8.jpg";
 import Meme9 from "assets/img/getbitz/memes/9.jpg";
 
 import resultLoading from "assets/img/getbitz/pixel-loading.gif";
-// import { IS_DEVNET } from "libs/config";
-// import { itheumSolPreaccess, itheumSolViewData } from "libs/Solana/SolViewData";
 import { itheumSolViewData } from "libs/Solana/SolViewData";
 import { getOrCacheAccessNonceAndSignature } from "libs/Solana/utils";
 import { BlobDataType } from "libs/types";
@@ -54,7 +51,6 @@ import { cn, computeRemainingCooldown, sleep } from "libs/utils";
 import { useAccountStore } from "store";
 import { useNftsStore } from "store/nfts";
 import { BurningImage } from "../common/BurningImage";
-import { PublicKey } from "@solana/web3.js";
 
 const MEME_IMGS = [
   Meme1,
@@ -91,7 +87,6 @@ const GetBitzSol = (props: any) => {
   const address = userPublicKey?.toBase58();
   const [checkingIfHasGameDataNFT, setCheckingIfHasGameDataNFT] = useState<boolean>(true);
   const [hasGameDataNFT, setHasGameDataNFT] = useState<boolean>(false);
-  // const [showMessage, setShowMessage] = useState<boolean>(true);
   const { setVisible } = useWalletModal();
 
   // store based state
@@ -124,7 +119,6 @@ const GetBitzSol = (props: any) => {
   // Game canvas related
   const [loadBlankGameCanvas, setLoadBlankGameCanvas] = useState<boolean>(false);
   const { bitzDataNfts } = useNftsStore();
-  // const [solNftsBitz, setSolNftsBitz] = useState<DasApiAsset[]>([]);
   const [populatedBitzStore, setPopulatedBitzStore] = useState<boolean>(false);
 
   useEffect(() => {
@@ -132,23 +126,7 @@ const GetBitzSol = (props: any) => {
       top: 0,
       behavior: "smooth",
     });
-
-    // const timeout = setTimeout(() => {
-    //   setShowMessage(false);
-    // }, 3000);
-
-    // return () => clearTimeout(timeout);
   }, []);
-
-  // useEffect(() => {
-  //   if (userPublicKey && allDataNfts) {
-  //     setSolNftsBitz(
-  //       IS_DEVNET
-  //         ? allDataNfts.filter((nft) => nft.content.metadata.name.includes("XP"))
-  //         : allDataNfts.filter((nft) => nft.content.metadata.name.includes("IXPG2"))
-  //     );
-  //   }
-  // }, [userPublicKey, allDataNfts]);
 
   useEffect(() => {
     if (bitzDataNfts === undefined) return;
@@ -160,15 +138,7 @@ const GetBitzSol = (props: any) => {
         updateGivenBitzSum(-2);
         setPopulatedBitzStore(true);
 
-        // const viewDataArgs = {
-        //   headers: {
-        //     "dmf-custom-only-state": "1",
-        //   },
-        //   fwdHeaderKeys: ["dmf-custom-only-state"],
-        // };
-
         (async () => {
-          // const getBitzGameResult = await viewData(viewDataArgs, bitzDataNfts[0]);
           const { usedPreAccessNonce, usedPreAccessSignature } = await getOrCacheAccessNonceAndSignature({
             solPreaccessNonce,
             solPreaccessSignature,
@@ -189,11 +159,9 @@ const GetBitzSol = (props: any) => {
             const sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0;
             const sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0;
 
-            // if (sumGivenBits > 0) { // not sure why this there -- but when it was, the bitz score was not updating from -2 start start when sumGivenBits was 0 (when it was a new wallet that never gave bitz)
             updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
             updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
             updateBonusBitzSum(sumBonusBitz);
-            // }
 
             updateCooldown(
               computeRemainingCooldown(
@@ -216,70 +184,10 @@ const GetBitzSol = (props: any) => {
     }
   }, [bitzDataNfts, userPublicKey]);
 
-  // useEffect(() => {
-  //   if (solNftsBitz === undefined) return;
-
-  //   if (!populatedBitzStore) {
-  //     if (userPublicKey && solNftsBitz.length > 0) {
-  //       updateBitzBalance(-2);
-  //       updateCooldown(-2);
-  //       updateGivenBitzSum(-2);
-  //       setPopulatedBitzStore(true);
-
-  //       const viewDataArgs = {
-  //         headers: {
-  //           "dmf-custom-only-state": "1",
-  //         },
-  //         fwdHeaderKeys: ["dmf-custom-only-state"],
-  //       };
-
-  //       (async () => {
-  //         const getBitzGameResult = await viewData(viewDataArgs, solNftsBitz[0]);
-
-  //         if (getBitzGameResult) {
-  //           const bitzBeforePlay = getBitzGameResult.data.gamePlayResult.bitsScoreBeforePlay || 0;
-  //           const sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0;
-  //           const sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0;
-
-  //           // if (sumGivenBits > 0) { // not sure why this there -- but when it was, the bitz score was not updating from -2 start start when sumGivenBits was 0 (when it was a new wallet that never gave bitz)
-  //           updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
-  //           updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
-  //           updateBonusBitzSum(sumBonusBitz);
-  //           // }
-
-  //           updateCooldown(
-  //             computeRemainingCooldown(
-  //               getBitzGameResult.data.gamePlayResult.lastPlayedBeforeThisPlay,
-  //               getBitzGameResult.data.gamePlayResult.configCanPlayEveryMSecs
-  //             )
-  //           );
-  //         }
-  //       })();
-  //     } else {
-  //       updateBitzBalance(-1);
-  //       updateGivenBitzSum(-1);
-  //       updateCooldown(-1);
-  //       updateCollectedBitzSum(-1);
-  //     }
-  //   } else {
-  //     if (!userPublicKey) {
-  //       setPopulatedBitzStore(false);
-  //     }
-  //   }
-  // }, [solNftsBitz, userPublicKey]);
-
-  // useEffect(() => {
-  //   checkIfHasGameDataNft();
-  // }, [address, solNftsBitz]);
-
   useEffect(() => {
     console.log("bitzDataNfts", bitzDataNfts);
     checkIfHasGameDataNft();
   }, [bitzDataNfts]);
-
-  // useEffect(() => {
-  //   checkIfHasGameDataNft();
-  // }, [address, bitzDataNfts]);
 
   useEffect(() => {
     setBurnFireScale(`scale(${burnProgress}) translate(-13px, -15px)`);
@@ -334,7 +242,6 @@ const GetBitzSol = (props: any) => {
 
   // secondly, we get the user's Data NFTs and flag if the user has the required Data NFT for the game in their wallet
   async function checkIfHasGameDataNft() {
-    // const hasRequiredDataNFT = solNftsBitz && solNftsBitz.length > 0;
     const hasRequiredDataNFT = bitzDataNfts && bitzDataNfts.length > 0;
     setHasGameDataNFT(hasRequiredDataNFT ? true : false);
     setCheckingIfHasGameDataNFT(false);
@@ -367,6 +274,7 @@ const GetBitzSol = (props: any) => {
       setGameDataFetched(true);
       setIsFetchingDataMarshal(false);
       setViewDataRes(viewDataPayload);
+
       updateCooldown(
         computeRemainingCooldown(
           Math.max(viewDataPayload.data.gamePlayResult.lastPlayedAndCommitted, viewDataPayload.data.gamePlayResult.lastPlayedBeforeThisPlay),
@@ -385,6 +293,7 @@ const GetBitzSol = (props: any) => {
         updateBitzBalance(viewDataPayload.data.gamePlayResult.bitsScoreBeforePlay + sumBonusBitz - sumGivenBits); // did not win bits, minus given bits from current and show
         updateCollectedBitzSum(viewDataPayload.data.gamePlayResult.bitsScoreBeforePlay);
       }
+
       // how many bonus tries does the user have
       if (viewDataPayload.data.gamePlayResult.bonusTriesAfterThisPlay > -1) {
         updateBonusTries(viewDataPayload.data.gamePlayResult.bonusTriesAfterThisPlay);
@@ -400,6 +309,7 @@ const GetBitzSol = (props: any) => {
     const _gameDataFetched = gameDataFetched;
     const _isFetchingDataMarshal = isFetchingDataMarshal;
     const _isMemeBurnHappening = isMemeBurnHappening;
+
     if (!address) {
       return (
         <img
@@ -412,6 +322,7 @@ const GetBitzSol = (props: any) => {
         />
       );
     }
+
     if ((address && checkingIfHasGameDataNFT && !hasGameDataNFT) || cooldown === -2) {
       return (
         <div className="relative">
@@ -423,6 +334,7 @@ const GetBitzSol = (props: any) => {
         </div>
       );
     }
+
     // user is logged in does not have the data nft, so take them to the marketplace
     if (address && !checkingIfHasGameDataNFT && !hasGameDataNFT) {
       return (
@@ -445,6 +357,7 @@ const GetBitzSol = (props: any) => {
         </div>
       );
     }
+
     const CountDownComplete = () => (
       <div
         className="cursor-pointer relative inline-flex h-12 overflow-hidden rounded-full p-[1px] "
@@ -457,6 +370,7 @@ const GetBitzSol = (props: any) => {
         </span>
       </div>
     );
+
     // Renderer callback with condition
     const countdownRenderer = (props: { hours: number; minutes: number; seconds: number; completed: boolean }) => {
       if (props.completed) {
@@ -472,6 +386,7 @@ const GetBitzSol = (props: any) => {
         );
       }
     };
+
     // user has data nft, so load the "start game" view
     if (!_loadBlankGameCanvas && !_isFetchingDataMarshal) {
       return (
@@ -512,6 +427,7 @@ const GetBitzSol = (props: any) => {
         </div>
       );
     }
+
     // user clicked on the start game view, so load the empty blank game canvas
     if (_loadBlankGameCanvas && !_gameDataFetched) {
       return (
@@ -571,6 +487,7 @@ const GetBitzSol = (props: any) => {
         </div>
       );
     }
+
     // we got the response from the game play
     if (_loadBlankGameCanvas && !_isFetchingDataMarshal && _gameDataFetched) {
       return (

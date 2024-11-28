@@ -538,7 +538,7 @@ const Dashboard = ({
                   isLoading={freeDropCheckLoading}
                   isDisabled={!isUserLoggedIn || !freeMusicGiftClaimed}
                   onClick={() => {
-                    window.open("https://explorer.itheum.io/nftunes?hl=sample", "_blank");
+                    window.open("https://explorer.itheum.io/nftunes?artist-profile=waveborn-luminex&hl=sample", "_blank");
                   }}>
                   Use Music Data NFT on NF-Tunes
                 </Button>

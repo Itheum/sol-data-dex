@@ -25,8 +25,8 @@ import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { WALLETS, SOL_ENV_ENUM } from "libs/config";
 import { useLocalStorage } from "libs/hooks";
-import { gtagGo, getApiDataDex } from "libs/utils";
 import { getOrCacheAccessNonceAndSignature } from "libs/Solana/utils";
+import { gtagGo, getApiDataDex } from "libs/utils";
 import { useAccountStore } from "store/account";
 
 /* 
@@ -47,12 +47,14 @@ function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
   const modelSize = useBreakpointValue({ base: "xs", md: "xl" });
   const toast = useToast();
 
+  // S: Cached Signature Store Items
   const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
   const solPreaccessSignature = useAccountStore((state: any) => state.solPreaccessSignature);
   const solPreaccessTimestamp = useAccountStore((state: any) => state.solPreaccessTimestamp);
   const updateSolPreaccessNonce = useAccountStore((state: any) => state.updateSolPreaccessNonce);
   const updateSolPreaccessTimestamp = useAccountStore((state: any) => state.updateSolPreaccessTimestamp);
   const updateSolSignedPreaccess = useAccountStore((state: any) => state.updateSolSignedPreaccess);
+  // E: Cached Signature Store Items
 
   useEffect(() => {
     console.log("==== effect for addressSol. addressSol = ", addressSol);

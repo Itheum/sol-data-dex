@@ -303,18 +303,13 @@ export async function retrieveBondsAndNftMeIdVault(
   userPublicKey: PublicKey,
   lastIndex: number,
   program?: Program<CoreSolBondStakeSc>
-  // bondConfigData?: any
-): Promise<{ myBonds: Bond[]; nftMeIdVault: Bond | undefined }> {
+): Promise<{ myBonds: Bond[] }> {
   try {
     if (program === undefined) {
       throw new Error("Connection is required to retrieve bonds");
     }
 
     const myBonds: Bond[] = [];
-    let nftMeIdVault: Bond | undefined;
-    // let totalBondAmount = new BN(0);
-    // let totalBondWeight = new BN(0);
-    // const currentTimestamp = Math.floor(Date.now() / 1000);
 
     // TODO THIS CAN BE improved by using a single fetch, only for the modified bond. not all of them if i just top up one
     for (let i = 1; i <= lastIndex; i++) {
@@ -322,28 +317,10 @@ export async function retrieveBondsAndNftMeIdVault(
       const bond = await program.account.bond.fetch(bondPda);
       const bondUpgraded = { ...bond, bondId: i, unbondTimestamp: bond.unbondTimestamp.toNumber(), bondTimestamp: bond.bondTimestamp.toNumber() };
 
-      if (bond.state === 1) {
-        nftMeIdVault = bondUpgraded;
-      }
-
-      // // calculate the correct live Bond score
-      // if (bond.state === 1) {
-      //   // lvb1
-
-      //   const scorePerBond = Math.floor(computeBondScore(bondConfigData?.lockPeriod.toNumber(), currentTimestamp, bond.unbondTimestamp.toNumber()));
-      //   // b1 * lvb1
-      //   const bondWeight = bond.bondAmount.mul(new BN(scorePerBond));
-      //   // b1 * lvb1 + b2 * lvb2 + b3 * lvb3 + ... + bn * lvbn
-      //   totalBondWeight = totalBondWeight.add(bondWeight);
-
-      //   //b1 + b2 + b3 + ... + bn
-      //   totalBondAmount = totalBondAmount.add(bond.bondAmount);
-      // }
-
       myBonds.push(bondUpgraded);
     }
 
-    return { myBonds, nftMeIdVault: nftMeIdVault };
+    return { myBonds };
   } catch (error) {
     console.error("retrieveBondsError", error);
 

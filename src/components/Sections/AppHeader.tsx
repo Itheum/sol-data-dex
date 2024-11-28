@@ -336,10 +336,13 @@ const AppHeader = ({
                   </Link>
                 );
               })}
-              <Button borderColor="teal.200" fontSize="md" variant="outline" display={"initial"} h={"12"} onClick={() => initJupiter()}>
-                {" "}
-                Get $ITHEUM
-              </Button>
+
+              {isUserLoggedIn && (
+                <Button borderColor="teal.200" fontSize="md" variant="outline" display={"initial"} h={"12"} onClick={() => initJupiter()}>
+                  {" "}
+                  Get $ITHEUM
+                </Button>
+              )}
             </HStack>
 
             {isUserLoggedIn && (

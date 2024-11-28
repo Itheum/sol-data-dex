@@ -19,6 +19,7 @@ import {
   useDisclosure,
   useColorMode,
 } from "@chakra-ui/react";
+import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { BsDot } from "react-icons/bs";
 import { BsBookmarkCheckFill } from "react-icons/bs";
@@ -193,9 +194,14 @@ const Dashboard = ({
       }
 
       // update the NFT store now as we have a new NFT
-      fetchSolNfts(userPublicKey?.toBase58()).then((nfts) => {
-        updateAllDataNfts(nfts);
-      });
+      const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
+      updateAllDataNfts(_allDataNfts);
+
+      // fetchSolNfts(userPublicKey?.toBase58()).then((nfts) => {
+      //   console.log("nfts B", nfts);
+
+      //   updateAllDataNfts(nfts);
+      // });
 
       onProgressModalClose();
     } else {
@@ -205,7 +211,7 @@ const Dashboard = ({
     setFreeMintLoading(false);
   };
 
-  console.log("usersNfMeIdVaultBondId", usersNfMeIdVaultBondId);
+  console.log("cooldown", cooldown);
 
   return (
     <Flex mt={{ base: "10", md: "0" }} flexDirection="column" alignItems="center" justifyContent="center" backgroundColor={"xred.800"}>
@@ -340,6 +346,7 @@ const Dashboard = ({
                   display={{ base: "none", md: "inline-flex" }}
                   size={{ md: "md", xl: "md", "2xl": "lg" }}
                   p="8 !important"
+                  onClick={() => onRemoteTriggerOfBiTzPlayModel(true)}
                   isDisabled={!isUserLoggedIn}>
                   <Text fontSize="xl">{bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}</Text>
 
@@ -531,7 +538,7 @@ const Dashboard = ({
                   isLoading={freeDropCheckLoading}
                   isDisabled={!isUserLoggedIn || !freeMusicGiftClaimed}
                   onClick={() => {
-                    window.open("https://explorer.itheum.io/nftunes", "_blank");
+                    window.open("https://explorer.itheum.io/nftunes?hl=sample", "_blank");
                   }}>
                   Use Music Data NFT on NF-Tunes
                 </Button>
@@ -557,7 +564,7 @@ const Dashboard = ({
                   isDisabled={!isUserLoggedIn || !freeMusicGiftClaimed}
                   w="280px"
                   onClick={() => {
-                    window.open("https://explorer.itheum.io/nftunes", "_blank");
+                    window.open("https://explorer.itheum.io/nftunes?hl=sigma", "_blank");
                   }}>
                   Gift BiTz XP on NF-Tunes
                 </Button>

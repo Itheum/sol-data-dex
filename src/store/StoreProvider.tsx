@@ -1,5 +1,6 @@
 import React, { PropsWithChildren, useEffect } from "react";
 import { Program } from "@coral-xyz/anchor";
+import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
@@ -7,6 +8,7 @@ import BigNumber from "bignumber.js";
 import { getItheumPriceFromApi } from "libs/Bespoke/api";
 // import { BONDING_PROGRAM_ID } from "libs/Solana/config";
 // import { CoreSolBondStakeSc, IDL } from "libs/Solana/CoreSolBondStakeSc";
+import { IS_DEVNET } from "libs/config";
 import {
   fetchBondingConfigSol,
   fetchRewardsConfigSol,
@@ -27,7 +29,7 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
   // STOREs
   const { updateItheumPrice, updateItheumBalance, updateIsKeyChainDataForAppLoading } = useAccountStore();
   // const updateLockPeriodForBond = useMintStore((state) => state.updateLockPeriodForBond);
-  const { updateAllDataNfts, updateBondedDataNftIds } = useNftsStore();
+  const { updateAllDataNfts, updateBondedDataNftIds, updateBitzDataNfts } = useNftsStore();
   const { updateLockPeriodForBond, updateUserBonds, updateUsersNfMeIdVaultBondId, updateCurrentMaxApr } = useMintStore();
 
   useEffect(() => {
@@ -57,12 +59,30 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
         else updateItheumBalance(-1);
       })();
 
-      // get users Data NFTs
-      fetchSolNfts(userPublicKey?.toBase58()).then((nfts) => {
-        updateAllDataNfts(nfts);
-      });
+      // get users Data nfts
+      const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
 
-      // get bonding / staking program config params
+      updateAllDataNfts(_allDataNfts);
+
+      // fetchSolNfts(userPublicKey?.toBase58()).then((nfts) => {
+      //   _allDataNfts = nfts;
+      //   updateAllDataNfts(nfts);
+
+      //   console.log("nfts A", nfts);
+      // });
+
+      console.log("_allDataNfts", _allDataNfts);
+
+      // get users bitz data nfts
+      const _bitzDataNfts: DasApiAsset[] = IS_DEVNET
+        ? _allDataNfts.filter((nft) => nft.content.metadata.name.includes("XP"))
+        : _allDataNfts.filter((nft) => nft.content.metadata.name.includes("IXPG2"));
+
+      console.log("_bitzDataNfts", _bitzDataNfts);
+
+      updateBitzDataNfts(_bitzDataNfts);
+
+      // S: get bonding / staking program config params
       const programObj = getBondingProgramInterface(connection);
 
       fetchBondingConfigSol(programObj.programInterface).then((periodsT: any) => {
@@ -82,32 +102,22 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
           updateCurrentMaxApr(rewardsT.maxApr);
         }
       });
+      // E: get bonding / staking program config params
 
-      // S: get users bonds, and nfmeid value bond object
-      // we need programSol, addressBondsRewardsPda, userPublicKey
-
+      // S: get users bonds
       const addressBondsRewardsPda = PublicKey.findProgramAddressSync(
         [Buffer.from("address_bonds_rewards"), userPublicKey?.toBuffer()],
         programObj.programId
       )[0];
 
-      // getNumberOfBonds for user
-
       const userBondsInfo = await fetchAddressBondsRewards(programObj.programInterface, addressBondsRewardsPda);
 
-      console.log("userBondsInfo A");
-      console.log(userBondsInfo);
-
       if (userBondsInfo) {
-        console.log("userBondsInfo B");
-
         const numberOfBonds = userBondsInfo.currentIndex;
 
         updateUsersNfMeIdVaultBondId(userBondsInfo.vaultBondId);
 
         retrieveBondsAndNftMeIdVault(userPublicKey, numberOfBonds, programObj.programInterface).then(({ myBonds, nftMeIdVault }) => {
-          console.log("userBondsInfo C");
-
           updateUserBonds(myBonds);
           updateBondedDataNftIds(myBonds.map((i) => i.assetId.toBase58()));
 
@@ -117,7 +127,7 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
           // }
         });
       }
-      // E: get users bonds, and nfmeid value bond object
+      // E: get users bonds
 
       await sleep(3);
 

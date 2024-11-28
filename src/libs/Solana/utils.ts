@@ -322,8 +322,6 @@ export async function retrieveBondsAndNftMeIdVault(
       const bond = await program.account.bond.fetch(bondPda);
       const bondUpgraded = { ...bond, bondId: i, unbondTimestamp: bond.unbondTimestamp.toNumber(), bondTimestamp: bond.bondTimestamp.toNumber() };
 
-      console.log("bond ", bond);
-
       if (bond.state === 1) {
         nftMeIdVault = bondUpgraded;
       }

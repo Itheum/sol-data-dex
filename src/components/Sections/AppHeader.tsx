@@ -41,7 +41,8 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
-import { useWallet, Wallet } from "@solana/wallet-adapter-react";
+import { NATIVE_MINT } from "@solana/spl-token";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { BsDot } from "react-icons/bs";
 import { FaLaptop, FaUserAstronaut, FaTachometerAlt } from "react-icons/fa";
 import { LuFlaskRound } from "react-icons/lu";
@@ -56,10 +57,11 @@ import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { CHAIN_TOKEN_SYMBOL, CHAINS, MENU, EXPLORER_APP_FOR_TOKEN } from "libs/config";
 import { SolEnvEnum } from "libs/Solana/config";
-import { formatNumberRoundFloor } from "libs/utils";
+import { formatNumberRoundFloor, computeRemainingCooldown } from "libs/utils";
+import { viewDataToOnlyGetReadOnlyBitz } from "pages/GetBitz/GetBitzSol";
 import { PlayBitzModal } from "pages/GetBitz/PlayBitzModal";
 import { useAccountStore } from "store";
-import { NATIVE_MINT } from "@solana/spl-token";
+import { useNftsStore } from "store/nfts";
 
 const AppHeader = ({
   onShowConnectWalletModal,
@@ -82,8 +84,8 @@ const AppHeader = ({
   const isUserLoggedIn = userPublicKey ? true : false;
   const { colorMode, setColorMode } = useColorMode();
   const { pathname } = useLocation();
-  const bitzBalance = useAccountStore((state) => state.bitzBalance);
-  const cooldown = useAccountStore((state) => state.cooldown);
+  // const bitzBalance = useAccountStore((state) => state.bitzBalance);
+  // const cooldown = useAccountStore((state) => state.cooldown);
   const connectBtnTitle = useBreakpointValue({ base: "Connect Wallet" });
   const [showPlayBitzModal, setShowPlayBitzModal] = useState(false);
   const toast = useToast();
@@ -141,17 +143,53 @@ const AppHeader = ({
       ],
     },
   ];
-  const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
-  const solPreaccessSignature = useAccountStore((state: any) => state.solPreaccessSignature);
-  const solPreaccessTimestamp = useAccountStore((state: any) => state.solPreaccessTimestamp);
+  // const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
+  // const solPreaccessSignature = useAccountStore((state: any) => state.solPreaccessSignature);
+  // const solPreaccessTimestamp = useAccountStore((state: any) => state.solPreaccessTimestamp);
+  // const keyChainDataForAppLoading = useAccountStore((state) => state.keyChainDataForAppLoading);
+  const { bitzDataNfts } = useNftsStore();
+  const { bitzBalance, cooldown, solPreaccessNonce, solPreaccessSignature, solPreaccessTimestamp, keyChainDataForAppLoading } = useAccountStore();
+  const { updateBitzBalance, updateGivenBitzSum, updateBonusBitzSum, updateCooldown } = useAccountStore();
 
-  const keyChainDataForAppLoading = useAccountStore((state) => state.keyChainDataForAppLoading);
-
+  // load mini bitz game
   useEffect(() => {
     if (!showPlayBitzModal && triggerBiTzPlayModel) {
       setShowPlayBitzModal(true);
     }
   }, [triggerBiTzPlayModel]);
+
+  // Show the Bitz balance
+  useEffect(() => {
+    if (bitzDataNfts.length > 0 && solPreaccessNonce !== "" && solPreaccessSignature !== "" && userPublicKey) {
+      // const viewDataArgs = {
+      //   headers: {
+      //     "dmf-custom-only-state": "1",
+      //   },
+      //   fwdHeaderKeys: ["dmf-custom-only-state"],
+      // };
+
+      (async () => {
+        const getBitzGameResult = await viewDataToOnlyGetReadOnlyBitz(bitzDataNfts[0], solPreaccessNonce, solPreaccessSignature, userPublicKey);
+
+        if (getBitzGameResult) {
+          const bitzBeforePlay = getBitzGameResult.data.gamePlayResult.bitsScoreBeforePlay || 0;
+          const sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0;
+          const sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0;
+
+          updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
+          updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
+          updateBonusBitzSum(sumBonusBitz);
+
+          updateCooldown(
+            computeRemainingCooldown(
+              getBitzGameResult.data.gamePlayResult.lastPlayedBeforeThisPlay,
+              getBitzGameResult.data.gamePlayResult.configCanPlayEveryMSecs
+            )
+          );
+        }
+      })();
+    }
+  }, [bitzDataNfts, userPublicKey, solPreaccessNonce, solPreaccessSignature]);
 
   const navigateToDiscover = (menuEnum: number) => {
     setMenuItem(menuEnum);

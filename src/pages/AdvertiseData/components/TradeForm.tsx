@@ -39,6 +39,7 @@ import {
 import { Program } from "@coral-xyz/anchor";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CNftSolMinter } from "@itheum/sdk-mx-data-nft/out";
+import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
@@ -67,6 +68,7 @@ import {
   createAddBondAsVaultTransaction,
   getBondingProgramInterface,
 } from "libs/Solana/utils";
+
 import { getApiDataMarshal, isValidNumericCharacter, sleep, timeUntil } from "libs/utils";
 import { useAccountStore, useMintStore } from "store";
 import { useNftsStore } from "store/nfts";
@@ -598,9 +600,12 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           // let's wait 15 seconds, and then we fetch the user NFTs again as the new NFT should appear
           await sleep(15);
 
-          fetchSolNfts(userPublicKey?.toBase58()).then((nfts) => {
-            updateAllDataNfts(nfts);
-          });
+          const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
+          updateAllDataNfts(_allDataNfts);
+
+          // fetchSolNfts(userPublicKey?.toBase58()).then((nfts) => {
+          //   updateAllDataNfts(nfts);
+          // });
 
           if (isFreeMint) {
             // in a free mint, we are now done...

@@ -58,10 +58,10 @@ import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationPro
 import { CHAIN_TOKEN_SYMBOL, CHAINS, MENU, EXPLORER_APP_FOR_TOKEN } from "libs/config";
 import { SolEnvEnum } from "libs/Solana/config";
 import { formatNumberRoundFloor, computeRemainingCooldown } from "libs/utils";
-import { viewDataToOnlyGetReadOnlyBitz } from "pages/GetBitz/GetBitzSol";
+// import { viewDataToOnlyGetReadOnlyBitz } from "pages/GetBitz/GetBitzSol";
 import { PlayBitzModal } from "pages/GetBitz/PlayBitzModal";
 import { useAccountStore } from "store";
-import { useNftsStore } from "store/nfts";
+// import { useNftsStore } from "store/nfts";
 
 const AppHeader = ({
   onShowConnectWalletModal,
@@ -84,7 +84,7 @@ const AppHeader = ({
   const isUserLoggedIn = userPublicKey ? true : false;
   const { colorMode, setColorMode } = useColorMode();
   const { pathname } = useLocation();
-  const connectBtnTitle = useBreakpointValue({ base: "Connect Wallet" });
+  const connectBtnTitle = useBreakpointValue({ base: "Login via Wallet" });
   const [showPlayBitzModal, setShowPlayBitzModal] = useState(false);
   const toast = useToast();
   const exploreRouterMenu = [
@@ -115,7 +115,7 @@ const AppHeader = ({
           menuEnum: MENU.NFTMINE,
           path: "/datanfts/wallet",
           label: "Data NFT Wallet",
-          shortLbl: "Wallet",
+          shortLbl: "Data Wallet",
           Icon: MdAccountBalanceWallet,
           needToBeLoggedIn: true,
           isHidden: false,
@@ -127,7 +127,7 @@ const AppHeader = ({
           shortLbl: "NFMe ID",
           Icon: FaUserAstronaut,
           needToBeLoggedIn: false,
-          isHidden: false,
+          isHidden: true,
         },
         {
           menuEnum: MENU.LIVELINESS,
@@ -141,9 +141,9 @@ const AppHeader = ({
       ],
     },
   ];
-  const { bitzDataNfts } = useNftsStore();
+  // const { bitzDataNfts } = useNftsStore();
   const { bitzBalance, cooldown, solPreaccessNonce, solPreaccessSignature, solPreaccessTimestamp, keyChainDataForAppLoading } = useAccountStore();
-  const { updateBitzBalance, updateGivenBitzSum, updateBonusBitzSum, updateCooldown } = useAccountStore();
+  // const { updateBitzBalance, updateGivenBitzSum, updateBonusBitzSum, updateCooldown } = useAccountStore();
 
   // load mini bitz game
   useEffect(() => {
@@ -152,31 +152,31 @@ const AppHeader = ({
     }
   }, [triggerBiTzPlayModel]);
 
-  // Show the Bitz balance
-  useEffect(() => {
-    if (bitzDataNfts.length > 0 && solPreaccessNonce !== "" && solPreaccessSignature !== "" && userPublicKey) {
-      (async () => {
-        const getBitzGameResult = await viewDataToOnlyGetReadOnlyBitz(bitzDataNfts[0], solPreaccessNonce, solPreaccessSignature, userPublicKey);
+  // // Show the Bitz balance
+  // useEffect(() => {
+  //   if (bitzDataNfts.length > 0 && solPreaccessNonce !== "" && solPreaccessSignature !== "" && userPublicKey) {
+  //     (async () => {
+  //       const getBitzGameResult = await viewDataToOnlyGetReadOnlyBitz(bitzDataNfts[0], solPreaccessNonce, solPreaccessSignature, userPublicKey);
 
-        if (getBitzGameResult) {
-          const bitzBeforePlay = getBitzGameResult.data.gamePlayResult.bitsScoreBeforePlay || 0;
-          const sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0;
-          const sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0;
+  //       if (getBitzGameResult) {
+  //         const bitzBeforePlay = getBitzGameResult.data.gamePlayResult.bitsScoreBeforePlay || 0;
+  //         const sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0;
+  //         const sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0;
 
-          updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
-          updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
-          updateBonusBitzSum(sumBonusBitz);
+  //         updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
+  //         updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
+  //         updateBonusBitzSum(sumBonusBitz);
 
-          updateCooldown(
-            computeRemainingCooldown(
-              getBitzGameResult.data.gamePlayResult.lastPlayedBeforeThisPlay,
-              getBitzGameResult.data.gamePlayResult.configCanPlayEveryMSecs
-            )
-          );
-        }
-      })();
-    }
-  }, [bitzDataNfts, userPublicKey, solPreaccessNonce, solPreaccessSignature]);
+  //         updateCooldown(
+  //           computeRemainingCooldown(
+  //             getBitzGameResult.data.gamePlayResult.lastPlayedBeforeThisPlay,
+  //             getBitzGameResult.data.gamePlayResult.configCanPlayEveryMSecs
+  //           )
+  //         );
+  //       }
+  //     })();
+  //   }
+  // }, [bitzDataNfts, userPublicKey, solPreaccessNonce, solPreaccessSignature]);
 
   const navigateToDiscover = (menuEnum: number) => {
     setMenuItem(menuEnum);
@@ -298,7 +298,7 @@ const AppHeader = ({
                   <Link
                     as={ReactRouterLink}
                     to={path}
-                    mx={"4px"}
+                    mx={"2px"}
                     style={{ textDecoration: "none" }}
                     key={path}
                     display={shouldDisplayQuickMenuItem(quickMenuItem, isUserLoggedIn)}>
@@ -325,14 +325,14 @@ const AppHeader = ({
               })}
 
               {isUserLoggedIn && (
-                <Button borderColor="teal.200" fontSize="md" variant="outline" display={"initial"} h={"12"} onClick={() => initJupiter()}>
+                <Button mx={"2px"} borderColor="teal.200" fontSize="md" variant="outline" display={"initial"} h={"12"} onClick={() => initJupiter()}>
                   {" "}
                   Get $ITHEUM
                 </Button>
               )}
             </HStack>
 
-            {isUserLoggedIn && (
+            {isUserLoggedIn ? (
               <>
                 <ItheumTokenBalanceBadge displayParams={["none", null, "block"]} connectedChain={connectedChain} />
                 <LoggedInChainBadge chain={chainFriendlyName} displayParams={["none", null, "block"]} />
@@ -387,8 +387,9 @@ const AppHeader = ({
                   <PopoverTrigger>
                     <Button display={{ base: "none", md: "inline-flex" }} size={{ md: "md", xl: "md", "2xl": "lg" }} p="2 !important">
                       {bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}
-                      <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />
-
+                      <FlaskBottleAnimation cooldown={cooldown} />
+                      {/* <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />
+                      cooldown = {cooldown}
                       {cooldown <= 0 && cooldown != -2 && (
                         <>
                           {" "}
@@ -425,7 +426,7 @@ const AppHeader = ({
                             animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
                             style={{ animationDelay: "1s" }}></Box>{" "}
                         </>
-                      )}
+                      )} */}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent backgroundColor={colorMode === "dark" ? "bgDark" : "white"} w="25rem">
@@ -440,11 +441,11 @@ const AppHeader = ({
                       </Flex>
 
                       <Text textAlign="center" fontFamily="Clash-Medium" fontSize="2xl">
-                        What is {`<BiTz>`} XP?
+                        What is {`BiTz`} XP?
                       </Text>
                       <Text fontSize="md" lineHeight="1.5rem" fontFamily="Satoshi-Regular" py={4} px={3}>
-                        {`<BiTz>`} are Itheum Protocol XP. {`<BiTz>`} can be collected every few hours by playing the Get {`<BiTz>`} game Data Widget. Top
-                        LEADERBOARD climbers get special perks and drops!
+                        {`BiTz`} are Itheum Protocol XP. {`BiTz`} can be collected every few hours by playing the Get {`BiTz`} game Data Widget. Top LEADERBOARD
+                        climbers get special perks and drops!
                       </Text>
                       <Button
                         onClick={() => setShowPlayBitzModal(true)}
@@ -459,7 +460,7 @@ const AppHeader = ({
                           ) : cooldown > 0 ? (
                             <Countdown unixTime={cooldown} />
                           ) : (
-                            <span> Claim Your {`<BiTz>`} XP</span>
+                            <span> Claim Your {`BiTz`} XP</span>
                           )}
                         </span>
                       </Button>
@@ -467,6 +468,55 @@ const AppHeader = ({
                   </PopoverContent>
                 </Popover>
               </>
+            ) : (
+              <Button
+                display={{ base: "none", md: "inline-flex" }}
+                size={{ md: "md", xl: "md", "2xl": "lg" }}
+                p="5 !important"
+                onClick={() => {
+                  // localStorage?.removeItem("itm-datacat-linked");
+                  onShowConnectWalletModal("sol");
+                }}>
+                <FlaskBottleAnimation cooldown={cooldown} />
+                {/* <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />
+                {cooldown <= 0 && cooldown != -2 && (
+                  <>
+                    {" "}
+                    <Box
+                      position={"absolute"}
+                      w={"full"}
+                      h={"full"}
+                      right="-15px"
+                      top="-15px"
+                      as={BsDot}
+                      color="#03c797"
+                      size="15px"
+                      animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"></Box>{" "}
+                    <Box
+                      position={"absolute"}
+                      w={"full"}
+                      h={"full"}
+                      right="-8px"
+                      top="-18px"
+                      as={BsDot}
+                      color="#03c797"
+                      size="15px"
+                      animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
+                      style={{ animationDelay: "0.5s" }}></Box>{" "}
+                    <Box
+                      position={"absolute"}
+                      w={"full"}
+                      h={"full"}
+                      right="-12px"
+                      top="-25px"
+                      as={BsDot}
+                      color="#03c797"
+                      size="55px"
+                      animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
+                      style={{ animationDelay: "1s" }}></Box>{" "}
+                  </>
+                )} */}
+              </Button>
             )}
 
             {onShowConnectWalletModal && !isUserLoggedIn && (
@@ -476,7 +526,7 @@ const AppHeader = ({
                   fontSize={{ base: "sm", md: "md" }}
                   size={{ base: "sm", lg: "lg" }}
                   onClick={() => {
-                    localStorage?.removeItem("itm-datacat-linked");
+                    // localStorage?.removeItem("itm-datacat-linked");
                     onShowConnectWalletModal("sol");
                   }}>
                   {connectBtnTitle}
@@ -551,7 +601,8 @@ const AppHeader = ({
                       <Popover>
                         <PopoverTrigger>
                           <Flex px={4} pb={1.5} position={"relative"} w={"100px"} mt={3}>
-                            {cooldown <= 0 && cooldown != -2 && (
+                            <FlaskBottleAnimation cooldown={cooldown} />
+                            {/* {cooldown <= 0 && cooldown != -2 && (
                               <>
                                 <Box
                                   position={"absolute"}
@@ -587,7 +638,7 @@ const AppHeader = ({
                                   style={{ animationDelay: "1s" }}></Box>{" "}
                               </>
                             )}
-                            <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />{" "}
+                            <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />{" "} */}
                             {bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}
                           </Flex>
                         </PopoverTrigger>
@@ -602,10 +653,10 @@ const AppHeader = ({
                               </Box>
                             </Flex>
                             <Text textAlign="center" fontFamily="Clash-Medium" fontSize="2xl">
-                              What is {`<BiTz>`} XP?
+                              What is {`BiTz`} XP?
                             </Text>
                             <Text fontSize="md" lineHeight="1.5rem" fontFamily="Satoshi-Regular" py={4} px={3}>
-                              {`<BiTz>`} are Itheum Protocol XP. {`<BiTz>`} can be collected every few hours by playing the Get {`<BiTz>`} game Data Widget. Top
+                              {`BiTz`} are Itheum Protocol XP. {`BiTz`} can be collected every few hours by playing the Get {`BiTz`} game Data Widget. Top
                               LEADERBOARD climbers get special perks and drops!
                             </Text>
                             <Link as={ReactRouterLink} isExternal to={`${EXPLORER_APP_FOR_TOKEN[connectedChain]["bitzgame"]}`}>
@@ -615,7 +666,7 @@ const AppHeader = ({
                                 rounded="full"
                                 w="full"
                                 _hover={{ backgroundImage: "linear-gradient(345deg, #171717, #03c797)" }}>
-                                Get {`<BiTz>`}
+                                Get {`BiTz`}
                               </Button>
                             </Link>
                           </PopoverBody>
@@ -745,6 +796,53 @@ function LoggedInChainBadge({ chain, displayParams }: { chain: any; displayParam
       padding={{ md: "6px 5px", xl: "6px 11px" }}>
       {chain || "..."}
     </Box>
+  );
+}
+
+function FlaskBottleAnimation(props: any) {
+  const { cooldown } = props;
+
+  return (
+    <>
+      <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />
+      {cooldown <= 0 && cooldown != -2 && (
+        <>
+          {" "}
+          <Box
+            position={"absolute"}
+            w={"full"}
+            h={"full"}
+            right="-15px"
+            top="-15px"
+            as={BsDot}
+            color="#03c797"
+            size="15px"
+            animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"></Box>{" "}
+          <Box
+            position={"absolute"}
+            w={"full"}
+            h={"full"}
+            right="-8px"
+            top="-18px"
+            as={BsDot}
+            color="#03c797"
+            size="15px"
+            animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
+            style={{ animationDelay: "0.5s" }}></Box>{" "}
+          <Box
+            position={"absolute"}
+            w={"full"}
+            h={"full"}
+            right="-12px"
+            top="-25px"
+            as={BsDot}
+            color="#03c797"
+            size="55px"
+            animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
+            style={{ animationDelay: "1s" }}></Box>{" "}
+        </>
+      )}
+    </>
   );
 }
 

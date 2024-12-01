@@ -1,5 +1,5 @@
-import { BondContract } from "@itheum/sdk-mx-data-nft/out";
-import { IS_DEVNET } from "libs/config";
+// import { BondContract } from "@itheum/sdk-mx-data-nft/out";
+// import { IS_DEVNET } from "libs/config";
 
 export const qsParams = () => {
   const urlSearchParams = new URLSearchParams(window.location.search);
@@ -68,7 +68,7 @@ export const clearAppSessionsLaunchMode = () => {
   localStorage?.removeItem("itm-wallet-used");
   localStorage?.removeItem("itm-launch-mode");
   localStorage?.removeItem("itm-launch-env");
-  localStorage?.removeItem("itm-datacat-linked");
+  // localStorage?.removeItem("itm-datacat-linked");
   sessionStorage.removeItem("persist:sdk-dapp-signedMessageInfo"); // clear signedSessions
   localStorage?.removeItem("network"); // clear solana network
 };

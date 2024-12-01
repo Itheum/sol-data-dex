@@ -36,7 +36,7 @@ these vars are used to detect a "new login", i.e a logged out user logged in. we
 */
 let solGotConnected = false;
 
-function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
+function ModalAuthPicker({ openConnectModal, onShowConnectWalletModal }: { openConnectModal: boolean; onShowConnectWalletModal: any }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { publicKey: userPublicKey, signMessage } = useWallet();
@@ -57,7 +57,7 @@ function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
   // E: Cached Signature Store Items
 
   useEffect(() => {
-    console.log("==== effect for addressSol. addressSol = ", addressSol);
+    // console.log("==== effect for addressSol. addressSol = ", addressSol);
 
     if (!addressSol) {
       solGotConnected = false;
@@ -65,7 +65,7 @@ function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
       if (!solGotConnected) {
         // the user came to the unlock page without a solana connection and then connected a wallet,
         // ... i.e a non-logged in user, just logged in using SOL
-        console.log("==== User JUST logged in with addressSol = ", addressSol);
+        // console.log("==== User JUST logged in with addressSol = ", addressSol);
 
         // redirect user to the dashboard if there are from home or other certain routes
         if (pathname === "/") {
@@ -103,6 +103,7 @@ function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
   }
 
   const handleProgressModalClose = () => {
+    onShowConnectWalletModal("no-auth");
     onProgressModalClose();
   };
 

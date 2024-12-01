@@ -121,7 +121,7 @@ const ClaimCTAs = ({ onShowConnectWalletModal }: { onShowConnectWalletModal?: an
               onShowConnectWalletModal();
             }
           }}>
-          {connectedSolWallet ? "Mint NFMe ID" : "Connect Wallet to Start"}
+          {connectedSolWallet ? "Mint NFMe ID" : "Login via Wallet to Start"}
         </Button>
       </Flex>
     </Flex>

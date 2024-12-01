@@ -114,7 +114,7 @@ const GetBitzSol = (props: any) => {
   const [burnFireGlow, setBurnFireGlow] = useState<number>(0);
   const [burnProgress, setBurnProgress] = useState(0);
   const [randomMeme, setRandomMeme] = useState<any>(Meme1);
-  const tweetText = `url=https://explorer.itheum.io/getbitz?v=3&text=${viewDataRes?.data.gamePlayResult.bitsWon > 0 ? "I just played the Get <BiTz> XP Game on %23itheum and won " + viewDataRes?.data.gamePlayResult.bitsWon + " <BiTz> points 🙌!%0A%0APlay now and get your own <BiTz>! %23GetBiTz %23DRiP %23Solana" : "Oh no, I got rugged getting <BiTz> points this time. Maybe you will have better luck?%0A%0ATry here to %23GetBiTz %23itheum %0A"}`;
+  const tweetText = `url=https://explorer.itheum.io/getbitz?v=3&text=${viewDataRes?.data.gamePlayResult.bitsWon > 0 ? "I just played the Get BiTz XP Game on %23itheum and won " + viewDataRes?.data.gamePlayResult.bitsWon + " BiTz points 🙌!%0A%0APlay now and get your own BiTz! %23GetBiTz %23DRiP %23Solana" : "Oh no, I got rugged getting BiTz points this time. Maybe you will have better luck?%0A%0ATry here to %23GetBiTz %23itheum %0A"}`;
 
   // Game canvas related
   const [loadBlankGameCanvas, setLoadBlankGameCanvas] = useState<boolean>(false);
@@ -150,14 +150,41 @@ const GetBitzSol = (props: any) => {
             updateSolPreaccessTimestamp,
           });
 
-          const getBitzGameResult = await viewDataToOnlyGetReadOnlyBitz(bitzDataNfts[0], usedPreAccessNonce, usedPreAccessSignature, userPublicKey);
+          const viewDataArgs = {
+            headers: {
+              "dmf-custom-only-state": "1",
+              "dmf-custom-sol-collection-id": bitzDataNfts[0].grouping[0].group_value,
+            },
+            fwdHeaderKeys: ["dmf-custom-only-state", "dmf-custom-sol-collection-id"],
+          };
+
+          const getBitzGameResult = await viewDataToOnlyGetReadOnlyBitz(
+            bitzDataNfts[0],
+            usedPreAccessNonce,
+            usedPreAccessSignature,
+            userPublicKey,
+            viewDataArgs
+          );
 
           setIsFetchingDataMarshal(false);
 
           if (getBitzGameResult) {
-            const bitzBeforePlay = getBitzGameResult.data.gamePlayResult.bitsScoreBeforePlay || 0;
-            const sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0;
-            const sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0;
+            let bitzBeforePlay = getBitzGameResult.data.gamePlayResult.bitsScoreBeforePlay || 0; // first play: 0
+            let sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0; // first play: -1
+            let sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0; // first play: 0
+
+            // some values can be -1 during first play or other situations, so we make it 0 or else we get weird numbers like 1 for the some coming up
+            // if (bitzBeforePlay < 0) {
+            //   bitzBeforePlay = 0;
+            // }
+
+            // if (sumGivenBits < 0) {
+            //   sumGivenBits = 0;
+            // }
+
+            // if (sumBonusBitz < 0) {
+            //   sumBonusBitz = 0;
+            // }
 
             updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
             updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
@@ -329,7 +356,7 @@ const GetBitzSol = (props: any) => {
           <img
             className={cn("-z-1 rounded-[3rem] w-full cursor-pointer", modalMode ? "rounded" : "")}
             src={ImgLoadingGame}
-            alt={"Checking if you have <BiTz> Data NFT"}
+            alt={"Checking if you have BiTz Data NFT"}
           />
         </div>
       );
@@ -352,7 +379,7 @@ const GetBitzSol = (props: any) => {
           <img
             className={cn("z-5 rounded-[3rem] w-full cursor-pointer", modalMode ? "rounded" : "")}
             src={ImgGetDataNFT}
-            alt={"Get <BiTz> Data NFT from Data NFT Marketplace"}
+            alt={"Get BiTz Data NFT from Data NFT Marketplace"}
           />
         </div>
       );
@@ -452,9 +479,9 @@ const GetBitzSol = (props: any) => {
                   }}>
                   <p className="lg:text-md">Welcome Back Itheum OG!</p>
                   <p className="lg:text-md mt-2 lg:mt-5">
-                    Ready to grab yourself some of them <span className=" lg:text-3xl">🤤</span> {`<BiTz>`} points?
+                    Ready to grab yourself some of them <span className=" lg:text-3xl">🤤</span> {`BiTz`} points?
                   </p>
-                  <p className="font-bold lg:text-2xl mt-5">But the {`<BiTz>`} Generator God will need a Meme 🔥 Sacrifice from you to proceed!</p>
+                  <p className="font-bold lg:text-2xl mt-5">But the {`BiTz`} Generator God will need a Meme 🔥 Sacrifice from you to proceed!</p>
                   <p className="font-bold mt-2 lg:mt-5">Click here when you are ready...</p>
                   <img className="w-[40px] m-auto" src={FingerPoint} alt={"Click to Start"} />
                 </div>
@@ -477,7 +504,7 @@ const GetBitzSol = (props: any) => {
             {_isFetchingDataMarshal && (
               <div>
                 <p className="text-center text-md text-gray-950 text-foreground lg:text-xl mb-[1rem]">
-                  Did the {`<BiTz>`} Generator God like that Meme Sacrifice? Only time will tell...
+                  Did the {`BiTz`} Generator God like that Meme Sacrifice? Only time will tell...
                 </p>
                 <p className="text-gray-950 text-sm text-center mb-[1rem]">Hang tight, result incoming</p>
                 <img className="w-[160px] lg:w-[230px] m-auto" src={resultLoading} alt={"Result loading"} />
@@ -492,7 +519,7 @@ const GetBitzSol = (props: any) => {
     if (_loadBlankGameCanvas && !_isFetchingDataMarshal && _gameDataFetched) {
       return (
         <div className="relative overflow-hidden">
-          <img className={cn("rounded-[3rem] w-full cursor-pointer", modalMode ? "rounded" : "")} src={ImgGameCanvas} alt={"Get <BiTz> Points"} />
+          <img className={cn("rounded-[3rem] w-full cursor-pointer", modalMode ? "rounded" : "")} src={ImgGameCanvas} alt={"Get BiTz Points"} />
           <div
             className={cn(
               "flex justify-center items-center mt-[2rem] w-[100%] h-[350px] rounded-[3rem] bg-slate-50 text-gray-950 p-[1rem] border border-primary/50 static lg:absolute lg:p-[2rem] lg:pb-[.5rem] lg:w-[500px] lg:h-[400px] lg:mt-0 lg:top-[40%] lg:left-[50%] lg:-translate-x-1/2 lg:-translate-y-1/2",
@@ -548,7 +575,7 @@ const GetBitzSol = (props: any) => {
                       <>
                         <p className="text-2xl text-gray-950">w👀t! w👀t! You have won:</p>
                         <p className="text-4xl mt-[2rem] text-gray-950">
-                          {_viewDataRes.data.gamePlayResult.bitsWon} {` <BiTz>`}
+                          {_viewDataRes.data.gamePlayResult.bitsWon} {` BiTz`}
                         </p>
                         <div className="bg-black rounded-full p-[10px]">
                           <a
@@ -614,7 +641,7 @@ const GetBitzSol = (props: any) => {
           <img
             className={cn("-z-1 rounded-[3rem] w-full cursor-pointer", modalMode ? "rounded" : "")}
             src={ImgLoadingGame}
-            alt={"Checking if you have <BiTz> Data NFT"}
+            alt={"Checking if you have BiTz Data NFT"}
           />
         </div>
         {gamePlayImageSprites()}
@@ -627,17 +654,18 @@ export async function viewDataToOnlyGetReadOnlyBitz(
   requiredDataNFT: any,
   usedPreAccessNonce: string,
   usedPreAccessSignature: string,
-  userPublicKey: PublicKey
+  userPublicKey: PublicKey,
+  viewDataArgs: any
 ) {
   try {
     if (!userPublicKey) throw new Error("Missing data for viewData");
 
-    const viewDataArgs = {
-      headers: {
-        "dmf-custom-only-state": "1",
-      },
-      fwdHeaderKeys: ["dmf-custom-only-state"],
-    };
+    // const viewDataArgs = {
+    //   headers: {
+    //     "dmf-custom-only-state": "1",
+    //   },
+    //   fwdHeaderKeys: ["dmf-custom-only-state"],
+    // };
 
     const res = await itheumSolViewData(
       requiredDataNFT.id,

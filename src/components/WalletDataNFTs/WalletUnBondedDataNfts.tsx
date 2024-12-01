@@ -24,7 +24,7 @@ import {
 import { CNftSolPostMintMetaType } from "@itheum/sdk-mx-data-nft/out";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { Transaction } from "@solana/web3.js";
+import { Transaction, PublicKey } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { MdOutlineInfo } from "react-icons/md";
 import NftMediaComponent from "components/NftMediaComponent";
@@ -32,13 +32,15 @@ import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
 import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
-import { SOLANA_EXPLORER_URL } from "libs/Solana/config";
+import { SOLANA_EXPLORER_URL, BOND_CONFIG_INDEX } from "libs/Solana/config";
 import {
   createBondTransaction,
   getNftMetaForDelayedBonding,
   getOrCacheAccessNonceAndSignature,
   sendAndConfirmTransaction,
   getInitAddressBondsRewardsPdaTransaction,
+  getBondingProgramInterface,
+  createAddBondAsVaultTransaction,
 } from "libs/Solana/utils";
 import { transformDescription, timeUntil, sleep } from "libs/utils";
 import { useAccountStore, useMintStore } from "store";
@@ -64,6 +66,9 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
   const lockPeriod = useMintStore((state) => state.lockPeriodForBond);
   const { bondedDataNftIds, updateBondedDataNftIds } = useNftsStore();
   const { currentMaxApr } = useMintStore();
+  const { usersNfMeIdVaultBondId } = useMintStore();
+  const [nextBondId, setNextBondId] = useState<number | undefined>(undefined); // if the bond tx passes, this will be the bond id of the new bond
+  const [dataNftNonce, setDataNftNonce] = useState<number | undefined>(undefined); // is the nonce (leaf_id) of the data nft we just minted
 
   // S: Cached Signature Store Items
   const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
@@ -125,6 +130,8 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
 
         if (createTxResponse) {
           bondTransaction = createTxResponse.transaction;
+          setDataNftNonce(createTxResponse.nonce);
+          setNextBondId(createTxResponse.bondId);
         }
 
         if (!bondTransaction) {
@@ -160,6 +167,57 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
             const _bondedDataNftIds: string[] = [...bondedDataNftIds];
             _bondedDataNftIds.push(reEstablishBondConfirmationWorkflow.dataNftId);
             updateBondedDataNftIds(_bondedDataNftIds);
+
+            // if the user already does NOT have a vault, we also auto-vault now
+
+            // S: AUTO-VAULT STEP
+            // as the bonding is a success, if the usersNfMeIdVaultBondId is 0 and we have nextBondId (which we should always have if the bonding tx was done) -- we can auto vault the bond
+            if (usersNfMeIdVaultBondId === 0 && nextBondId) {
+              const programObj = getBondingProgramInterface(connection);
+
+              const bondingProgram = programObj.programInterface;
+              const bondingProgramIdPubKey = programObj.programId;
+
+              if (userPublicKey && bondingProgram && dataNftNonce) {
+                try {
+                  const addressBondsRewardsPda = PublicKey.findProgramAddressSync(
+                    [Buffer.from("address_bonds_rewards"), userPublicKey?.toBuffer()],
+                    bondingProgramIdPubKey
+                  )[0];
+                  const bondConfigPda = PublicKey.findProgramAddressSync(
+                    [Buffer.from("bond_config"), Buffer.from([BOND_CONFIG_INDEX])],
+                    bondingProgramIdPubKey
+                  )[0];
+
+                  const createTxResponse = await createAddBondAsVaultTransaction(
+                    userPublicKey,
+                    bondingProgram,
+                    addressBondsRewardsPda,
+                    bondConfigPda,
+                    nextBondId,
+                    dataNftNonce
+                  );
+
+                  if (createTxResponse) {
+                    const vaultTxSig = await executeTransaction({
+                      transaction: createTxResponse.transaction,
+                      customErrorMessage: "Failed to make the bond a Vault",
+                    });
+
+                    if (!vaultTxSig) {
+                      console.error("Error: Vault transaction signature was not returned");
+                    }
+                  } else {
+                    console.error("Failed to create the vault bond transaction");
+                  }
+                } catch (err) {
+                  console.error(err);
+                }
+              } else {
+                console.error(new Error("We should auto vault the last minted data nft, but we could not as we did not have the required parameters"));
+              }
+            }
+            // E: AUTO-VAULT STEP
           }
 
           setReEstablishBondConfirmationWorkflow(undefined);
@@ -378,7 +436,8 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                   ) : (
                     <>
                       <Text fontSize="sm" pb={3} opacity=".8">
-                        {`Let's`} establish a bond for Data NFT ID {reEstablishBondConfirmationWorkflow?.dataNftId}
+                        {`Let's`} establish a bond for Data NFT ID {reEstablishBondConfirmationWorkflow?.dataNftId}. usersNfMeIdVaultBondId ={" "}
+                        {usersNfMeIdVaultBondId}
                       </Text>
                       <Text fontWeight="bold" pb={3} opacity="1">
                         This Data NFT has no active {`"Bond."`} You can bond {BigNumber(lockPeriod[0]?.amount).toNumber()} $ITHEUM to boost your Web3 Reputation

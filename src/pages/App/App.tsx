@@ -38,7 +38,7 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
       setMenuItem(PATHS[path as keyof typeof PATHS]?.[0] as number);
     }
 
-    console.log(consoleNotice);
+    // console.log(consoleNotice);
   }, []);
 
   // const resetCommonStoreValuesBitzContext = () => {

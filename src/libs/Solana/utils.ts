@@ -85,7 +85,7 @@ export async function fetchBondingConfigSol(programSol: any) {
       merkleTree: res.merkleTree,
     };
   } catch (error) {
-    console.error("fetchBondingConfigError", error);
+    // console.error("fetchBondingConfigError", error);
     return {
       error: true,
     };
@@ -109,7 +109,7 @@ export async function fetchRewardsConfigSol(programSol: any) {
       maxApr: res.maxApr.toNumber() / 100,
     };
   } catch (error) {
-    console.error("fetchRewardsConfigError", error);
+    // console.error("fetchRewardsConfigError", error);
     return {
       error: true,
     };
@@ -336,7 +336,7 @@ export async function fetchAddressBondsRewards(programSol: Program<CoreSolBondSt
 
     return data;
   } catch (error) {
-    console.error("Failed to fetch address rewards data, might be a new user who never bonded:", error);
+    // console.error("Failed to fetch address rewards data, might be a new user who never bonded:", error);
     return null;
   }
 }
@@ -485,9 +485,9 @@ export async function getOrCacheAccessNonceAndSignature({
     usedPreAccessNonce = preAccessNonce;
     usedPreAccessSignature = encodedSignature;
 
-    console.log("------> Access NOT FROM Cache");
+    // console.log("------> Signature Session NOT FROM Cache");
   } else {
-    console.log("------> Access FROM Cache");
+    // console.log("------> Signature Session FROM Cache");
   }
 
   return {

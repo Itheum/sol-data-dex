@@ -49,7 +49,7 @@ const Countdown: React.FC<CountdownProps> = ({ unixTime }) => {
   return (
     <Box>
       {timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0 ? (
-        <span> Claim Your {`<BiTz>`} XP</span>
+        <span> Claim Your {`BiTz`} XP</span>
       ) : (
         <Text>
           Play again in {timeLeft.hours > 0 ? <>{`${timeLeft.hours} ${timeLeft.hours === 1 ? " Hour " : " Hours "}`}</> : ""}

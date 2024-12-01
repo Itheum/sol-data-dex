@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { WarningTwoIcon, SunIcon } from "@chakra-ui/icons";
 import {
   Accordion,
@@ -35,15 +35,18 @@ import {
   Spinner,
   Stack,
   Text,
+  Tooltip,
   useBreakpointValue,
   useColorMode,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
+import { NATIVE_MINT } from "@solana/spl-token";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { BsDot } from "react-icons/bs";
 import { FaLaptop, FaUserAstronaut, FaTachometerAlt } from "react-icons/fa";
 import { LuFlaskRound } from "react-icons/lu";
-import { MdAccountBalanceWallet, MdDarkMode, MdMenu, MdSpaceDashboard } from "react-icons/md";
+import { MdAccountBalanceWallet, MdDarkMode, MdMenu, MdSpaceDashboard, MdOutlineDownloading, MdCheckCircle } from "react-icons/md";
 import { RiExchangeFill } from "react-icons/ri";
 import { TiArrowSortedDown } from "react-icons/ti";
 import { Link as ReactRouterLink, useLocation } from "react-router-dom";
@@ -54,23 +57,36 @@ import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { CHAIN_TOKEN_SYMBOL, CHAINS, MENU, EXPLORER_APP_FOR_TOKEN } from "libs/config";
 import { SolEnvEnum } from "libs/Solana/config";
-import { formatNumberRoundFloor } from "libs/utils";
+import { formatNumberRoundFloor, computeRemainingCooldown } from "libs/utils";
+import { viewDataToOnlyGetReadOnlyBitz } from "pages/GetBitz/GetBitzSol";
 import { PlayBitzModal } from "pages/GetBitz/PlayBitzModal";
 import { useAccountStore } from "store";
+import { useNftsStore } from "store/nfts";
 
-const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { onShowConnectWalletModal?: any; setMenuItem: any; handleLogout: any }) => {
+const AppHeader = ({
+  onShowConnectWalletModal,
+  setMenuItem,
+  handleLogout,
+  onRemoteTriggerOfBiTzPlayModel,
+  triggerBiTzPlayModel,
+}: {
+  onShowConnectWalletModal?: any;
+  setMenuItem: any;
+  handleLogout: any;
+  onRemoteTriggerOfBiTzPlayModel: any;
+  triggerBiTzPlayModel?: boolean;
+}) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { networkConfiguration } = useNetworkConfiguration();
-  const { publicKey: solPubKey } = useWallet();
-  const solAddress = solPubKey?.toBase58();
+  const { publicKey: userPublicKey, wallet } = useWallet();
+  const solAddress = userPublicKey?.toBase58();
   const connectedChain = networkConfiguration === "devnet" ? SolEnvEnum.devnet : SolEnvEnum.mainnet;
-  const isUserLoggedIn = solPubKey ? true : false;
+  const isUserLoggedIn = userPublicKey ? true : false;
   const { colorMode, setColorMode } = useColorMode();
   const { pathname } = useLocation();
-  const bitzBalance = useAccountStore((state) => state.bitzBalance);
-  const cooldown = useAccountStore((state) => state.cooldown);
   const connectBtnTitle = useBreakpointValue({ base: "Connect Wallet" });
   const [showPlayBitzModal, setShowPlayBitzModal] = useState(false);
+  const toast = useToast();
   const exploreRouterMenu = [
     {
       sectionId: "MainSections",
@@ -80,7 +96,7 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
           menuEnum: MENU.HOME,
           path: "/dashboard",
           label: "Dashboard",
-          shortLbl: "Dash",
+          shortLbl: "Dashboard",
           Icon: MdSpaceDashboard,
           needToBeLoggedIn: true,
           isHidden: false,
@@ -125,6 +141,42 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
       ],
     },
   ];
+  const { bitzDataNfts } = useNftsStore();
+  const { bitzBalance, cooldown, solPreaccessNonce, solPreaccessSignature, solPreaccessTimestamp, keyChainDataForAppLoading } = useAccountStore();
+  const { updateBitzBalance, updateGivenBitzSum, updateBonusBitzSum, updateCooldown } = useAccountStore();
+
+  // load mini bitz game
+  useEffect(() => {
+    if (!showPlayBitzModal && triggerBiTzPlayModel) {
+      setShowPlayBitzModal(true);
+    }
+  }, [triggerBiTzPlayModel]);
+
+  // Show the Bitz balance
+  useEffect(() => {
+    if (bitzDataNfts.length > 0 && solPreaccessNonce !== "" && solPreaccessSignature !== "" && userPublicKey) {
+      (async () => {
+        const getBitzGameResult = await viewDataToOnlyGetReadOnlyBitz(bitzDataNfts[0], solPreaccessNonce, solPreaccessSignature, userPublicKey);
+
+        if (getBitzGameResult) {
+          const bitzBeforePlay = getBitzGameResult.data.gamePlayResult.bitsScoreBeforePlay || 0;
+          const sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0;
+          const sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0;
+
+          updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
+          updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
+          updateBonusBitzSum(sumBonusBitz);
+
+          updateCooldown(
+            computeRemainingCooldown(
+              getBitzGameResult.data.gamePlayResult.lastPlayedBeforeThisPlay,
+              getBitzGameResult.data.gamePlayResult.configCanPlayEveryMSecs
+            )
+          );
+        }
+      })();
+    }
+  }, [bitzDataNfts, userPublicKey, solPreaccessNonce, solPreaccessSignature]);
 
   const navigateToDiscover = (menuEnum: number) => {
     setMenuItem(menuEnum);
@@ -156,6 +208,33 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
   };
 
   const chainFriendlyName = CHAINS[connectedChain as keyof typeof CHAINS];
+
+  const initJupiter = () => {
+    if (!wallet) return;
+
+    window.Jupiter.init({
+      onSuccess: ({ txid, swapResult }) => {
+        console.log({ txid });
+        toast({
+          title: "Swap Successful",
+          description: "Swap was successful",
+          status: "info",
+          duration: 15000,
+          isClosable: true,
+        });
+      },
+      endpoint: import.meta.env.VITE_ENV_SOLANA_NETWORK_RPC,
+      passThroughWallet: wallet,
+      containerStyles: { maxHeight: "60vh" },
+      formProps: {
+        fixedOutputMint: true,
+        swapMode: "ExactInOut",
+        initialAmount: "100000000",
+        initialOutputMint: import.meta.env.VITE_ENV_ITHEUM_SOL_TOKEN_ADDRESS,
+        initialInputMint: NATIVE_MINT.toBase58(),
+      },
+    });
+  };
 
   return (
     <>
@@ -244,6 +323,13 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                   </Link>
                 );
               })}
+
+              {isUserLoggedIn && (
+                <Button borderColor="teal.200" fontSize="md" variant="outline" display={"initial"} h={"12"} onClick={() => initJupiter()}>
+                  {" "}
+                  Get $ITHEUM
+                </Button>
+              )}
             </HStack>
 
             {isUserLoggedIn && (
@@ -301,7 +387,8 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                   <PopoverTrigger>
                     <Button display={{ base: "none", md: "inline-flex" }} size={{ md: "md", xl: "md", "2xl": "lg" }} p="2 !important">
                       {bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}
-                      <LuFlaskRound fontSize={"1.4rem"} fill="#38bdf8" />
+                      <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />
+
                       {cooldown <= 0 && cooldown != -2 && (
                         <>
                           {" "}
@@ -312,7 +399,7 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                             right="-15px"
                             top="-15px"
                             as={BsDot}
-                            color="#38bdf8"
+                            color="#03c797"
                             size="15px"
                             animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"></Box>{" "}
                           <Box
@@ -322,7 +409,7 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                             right="-8px"
                             top="-18px"
                             as={BsDot}
-                            color="#38bdf8"
+                            color="#03c797"
                             size="15px"
                             animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
                             style={{ animationDelay: "0.5s" }}></Box>{" "}
@@ -333,7 +420,7 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                             right="-12px"
                             top="-25px"
                             as={BsDot}
-                            color="#38bdf8"
+                            color="#03c797"
                             size="55px"
                             animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
                             style={{ animationDelay: "1s" }}></Box>{" "}
@@ -345,9 +432,9 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                     <PopoverCloseButton />
                     <PopoverBody pt={5} justifyContent="center" alignItems="center" w="full">
                       <Flex w="full" justifyContent="center" alignItems="center" py={4}>
-                        <Box shadow="#38bdf8" boxShadow="inset 0 2px 4px 0 #38bdf8" w="3.5rem" h="3.5rem" rounded="lg">
+                        <Box shadow="#03c797" boxShadow="inset 0 2px 4px 0 #03c797" w="3.5rem" h="3.5rem" rounded="lg">
                           <Flex w="full" justifyContent="center" alignItems="center" h="3.5rem">
-                            <LuFlaskRound fontSize={"1.7rem"} fill="#38bdf8" />
+                            <LuFlaskRound fontSize={"1.7rem"} fill="#03c797" />
                           </Flex>
                         </Box>
                       </Flex>
@@ -362,10 +449,10 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                       <Button
                         onClick={() => setShowPlayBitzModal(true)}
                         variant="outline"
-                        borderColor="#38bdf8"
+                        borderColor="#03c797"
                         rounded="full"
                         w="full"
-                        _hover={{ backgroundImage: "linear-gradient(345deg, #171717, #38bdf8)" }}>
+                        _hover={{ backgroundImage: "linear-gradient(345deg, #171717, #03c797)" }}>
                         <span>
                           {cooldown === -2 ? (
                             <span>Check XP Balance & Play</span>
@@ -397,6 +484,7 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
               </>
             )}
 
+            {/* Data / Light Mode */}
             <Box
               display={{
                 base: isUserLoggedIn ? "block" : "none",
@@ -434,9 +522,16 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                 </MenuList>
               </Menu>
             </Box>
+            {keyChainDataForAppLoading ? <MdOutlineDownloading size={"1.3em"} /> : <MdCheckCircle size={"1.3em"} />}
           </HStack>
         </Flex>
       </Flex>
+
+      <Box backgroundColor={"#5d3d0d"}>
+        <Text textAlign={"center"} fontSize={"small"}>{`preaccessNonce = ${solPreaccessNonce.substring(0, 8)},
+       preaccessSig = ${solPreaccessSignature.substring(0, 8)},
+      preaccessTS = ${solPreaccessTimestamp > -2 ? new Date(solPreaccessTimestamp).toUTCString() : solPreaccessTimestamp}`}</Text>
+      </Box>
 
       <Drawer placement={"left"} onClose={onClose} isOpen={isOpen} blockScrollOnMount={false}>
         <DrawerOverlay />
@@ -465,7 +560,7 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                                   left="-20px"
                                   top="-16px"
                                   as={BsDot}
-                                  color="#38bdf8"
+                                  color="#03c797"
                                   size="15px"
                                   animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"></Box>{" "}
                                 <Box
@@ -475,7 +570,7 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                                   left="-25px"
                                   top="-18px"
                                   as={BsDot}
-                                  color="#38bdf8"
+                                  color="#03c797"
                                   size="15px"
                                   animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
                                   style={{ animationDelay: "0.5s" }}></Box>{" "}
@@ -486,13 +581,13 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                                   left="-23px"
                                   top="-25px"
                                   as={BsDot}
-                                  color="#38bdf8"
+                                  color="#03c797"
                                   size="55px"
                                   animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
                                   style={{ animationDelay: "1s" }}></Box>{" "}
                               </>
                             )}
-                            <LuFlaskRound fontSize={"1.4rem"} fill="#38bdf8" />{" "}
+                            <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />{" "}
                             {bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}
                           </Flex>
                         </PopoverTrigger>
@@ -500,9 +595,9 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                           <PopoverCloseButton />
                           <PopoverBody pt={5} justifyContent="center" alignItems="center" w="full">
                             <Flex w="full" justifyContent="center" alignItems="center" py={4}>
-                              <Box shadow="#38bdf8" boxShadow="inset 0 2px 4px 0 #38bdf8" w="3.5rem" h="3.5rem" rounded="lg">
+                              <Box shadow="#03c797" boxShadow="inset 0 2px 4px 0 #03c797" w="3.5rem" h="3.5rem" rounded="lg">
                                 <Flex w="full" justifyContent="center" alignItems="center" h="3.5rem">
-                                  <LuFlaskRound fontSize={"1.7rem"} fill="#38bdf8" />
+                                  <LuFlaskRound fontSize={"1.7rem"} fill="#03c797" />
                                 </Flex>
                               </Box>
                             </Flex>
@@ -516,10 +611,10 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
                             <Link as={ReactRouterLink} isExternal to={`${EXPLORER_APP_FOR_TOKEN[connectedChain]["bitzgame"]}`}>
                               <Button
                                 variant="outline"
-                                borderColor="#38bdf8"
+                                borderColor="#03c797"
                                 rounded="full"
                                 w="full"
-                                _hover={{ backgroundImage: "linear-gradient(345deg, #171717, #38bdf8)" }}>
+                                _hover={{ backgroundImage: "linear-gradient(345deg, #171717, #03c797)" }}>
                                 Get {`<BiTz>`}
                               </Button>
                             </Link>
@@ -589,7 +684,15 @@ const AppHeader = ({ onShowConnectWalletModal, setMenuItem, handleLogout }: { on
         </DrawerContent>
       </Drawer>
 
-      {showPlayBitzModal && <PlayBitzModal showPlayBitzModel={showPlayBitzModal} handleHideBitzModel={() => setShowPlayBitzModal(false)} />}
+      {showPlayBitzModal && (
+        <PlayBitzModal
+          showPlayBitzModel={showPlayBitzModal}
+          handleHideBitzModel={() => {
+            onRemoteTriggerOfBiTzPlayModel(false);
+            setShowPlayBitzModal(false);
+          }}
+        />
+      )}
     </>
   );
 };

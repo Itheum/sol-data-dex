@@ -36,7 +36,7 @@ const NFMeIdCTA = () => {
           mt={7}
           onClick={() => {
             if (isSolWalletConnected) {
-              navigate("/mintdata?launchTemplate=nfmeidvault");
+              navigate("/mintdata?launchTemplate=nfMeIdWithBond");
             } else {
               navigate("/NFMeId");
             }

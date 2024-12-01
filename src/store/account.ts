@@ -1,6 +1,12 @@
 import { create } from "zustand";
 
+/*
+This store holds things related to the user account and app experience (itheum price, is the minimum data ready etc)
+*/
+
 type State = {
+  itheumPrice: number;
+
   itheumBalance: number;
   accessToken: string;
   favoriteNfts: Array<string>;
@@ -15,9 +21,13 @@ type State = {
   solPreaccessNonce: string;
   solPreaccessSignature: string;
   solPreaccessTimestamp: number;
+
+  keyChainDataForAppLoading: boolean;
 };
 
 type Action = {
+  updateItheumPrice: (itheumPrice: State["itheumPrice"]) => void;
+
   updateItheumBalance: (itheumBalance: State["itheumBalance"]) => void;
   updateAccessToken: (accessToken: State["accessToken"]) => void;
   updateFavoriteNfts: (favoriteNfts: State["favoriteNfts"]) => void;
@@ -32,9 +42,15 @@ type Action = {
   updateSolPreaccessNonce: (solPreaccessNonce: State["solPreaccessNonce"]) => void;
   updateSolSignedPreaccess: (solSignedPreaccess: State["solPreaccessSignature"]) => void;
   updateSolPreaccessTimestamp: (solPreaccessTimestamp: State["solPreaccessTimestamp"]) => void;
+
+  // we should set this below value to true and false anywhere in the app, were we get on-chain data
+  updateIsKeyChainDataForAppLoading: (isLoading: boolean) => void;
 };
 
 export const useAccountStore = create<State & Action>((set) => ({
+  itheumPrice: 0,
+  updateItheumPrice: (value: number) => set((state) => ({ ...state, itheumPrice: value })),
+
   itheumBalance: 0,
   updateItheumBalance: (value: number) => set(() => ({ itheumBalance: value })),
   accessToken: "",
@@ -60,4 +76,7 @@ export const useAccountStore = create<State & Action>((set) => ({
   updateSolPreaccessNonce: (value: string) => set(() => ({ solPreaccessNonce: value })),
   updateSolSignedPreaccess: (value: string) => set(() => ({ solPreaccessSignature: value })),
   updateSolPreaccessTimestamp: (value: number) => set(() => ({ solPreaccessTimestamp: value })),
+
+  keyChainDataForAppLoading: false,
+  updateIsKeyChainDataForAppLoading: (value: boolean) => set(() => ({ keyChainDataForAppLoading: value })),
 }));

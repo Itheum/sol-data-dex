@@ -25,7 +25,9 @@ import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { WALLETS, SOL_ENV_ENUM } from "libs/config";
 import { useLocalStorage } from "libs/hooks";
+import { getOrCacheAccessNonceAndSignature } from "libs/Solana/utils";
 import { gtagGo, getApiDataDex } from "libs/utils";
+import { useAccountStore } from "store/account";
 
 /* 
 we use global vars here so we can maintain this state across routing back and forth to this unlock page
@@ -37,13 +39,22 @@ let solGotConnected = false;
 function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { publicKey: solPubKey } = useWallet();
-  const addressSol = solPubKey?.toBase58();
+  const { publicKey: userPublicKey, signMessage } = useWallet();
+  const addressSol = userPublicKey?.toBase58();
   const { isOpen: isProgressModalOpen, onOpen: onProgressModalOpen, onClose: onProgressModalClose } = useDisclosure();
   const [, setWalletUsedSession] = useLocalStorage("itm-wallet-used", null);
   const { colorMode } = useColorMode();
   const modelSize = useBreakpointValue({ base: "xs", md: "xl" });
   const toast = useToast();
+
+  // S: Cached Signature Store Items
+  const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
+  const solPreaccessSignature = useAccountStore((state: any) => state.solPreaccessSignature);
+  const solPreaccessTimestamp = useAccountStore((state: any) => state.solPreaccessTimestamp);
+  const updateSolPreaccessNonce = useAccountStore((state: any) => state.updateSolPreaccessNonce);
+  const updateSolPreaccessTimestamp = useAccountStore((state: any) => state.updateSolPreaccessTimestamp);
+  const updateSolSignedPreaccess = useAccountStore((state: any) => state.updateSolSignedPreaccess);
+  // E: Cached Signature Store Items
 
   useEffect(() => {
     console.log("==== effect for addressSol. addressSol = ", addressSol);
@@ -65,6 +76,7 @@ function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
 
         const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SOL_ENV_ENUM.devnet : SOL_ENV_ENUM.mainnet;
         logUserLoggedInInUserAccounts(addressSol, chainId);
+        cacheSignatureSessions();
       }
 
       solGotConnected = true;
@@ -76,6 +88,19 @@ function ModalAuthPicker({ openConnectModal }: { openConnectModal: boolean }) {
       onProgressModalOpen();
     }
   }, [openConnectModal]);
+
+  async function cacheSignatureSessions() {
+    const { usedPreAccessNonce, usedPreAccessSignature } = await getOrCacheAccessNonceAndSignature({
+      solPreaccessNonce,
+      solPreaccessSignature,
+      solPreaccessTimestamp,
+      signMessage,
+      publicKey: userPublicKey,
+      updateSolPreaccessNonce,
+      updateSolSignedPreaccess,
+      updateSolPreaccessTimestamp,
+    });
+  }
 
   const handleProgressModalClose = () => {
     onProgressModalClose();

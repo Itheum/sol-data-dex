@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { NftMedia } from "libs/types";
 import Card3DAnimation from "./Card3DAnimation";
-import { useWallet } from "@solana/wallet-adapter-react";
 
 interface NftMediaComponentProps {
   imageUrls?: string[];
@@ -49,7 +48,6 @@ const NftMediaComponent: React.FC<NftMediaComponentProps> = (props) => {
   const [nextImageIndex, setNextImageIndex] = useState(0);
   const makeFlip = nextImageIndex !== imageIndex;
   const isMobile = window.innerWidth <= 480;
-  const { connected: isConnectedOnSol } = useWallet();
 
   useEffect(() => {
     if (autoSlide && media.length > 1 && !switchedImageManually) {
@@ -223,7 +221,6 @@ const NftMediaComponent: React.FC<NftMediaComponentProps> = (props) => {
           whileHover={{ opacity: 1, backdropFilter: "blur(1px)", backgroundColor: "#1b1b1ba0" }}
           transition={isMobile ? { duration: 1.2 } : { duration: 0.3 }}>
           <Text border="1px solid" borderColor="teal.400" borderRadius="5px" w={"140px"} fontWeight="400" textColor="white" textAlign={"center"} mx={"auto"}>
-            {/* {isConnectedOnSol ? "View on Explorer" : "Details"} */}
             Details
           </Text>
         </motion.button>

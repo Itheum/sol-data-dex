@@ -1,3 +1,4 @@
+//https://github.com/effectussoftware/react-custom-roulette
 import React, { useEffect, useState } from "react";
 import { useColorMode } from "@chakra-ui/react";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -26,6 +27,8 @@ export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
     document.documentElement.classList.toggle(colorMode);
   }, [colorMode]);
 
+  console.log("bitzBalance", bitzBalance);
+
   return (
     <div
       id="static-modal"
@@ -37,7 +40,7 @@ export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Play To Get BiTz XP</h3>
             <div className="flex flex-row text-gray-900 dark:text-white ">
               {bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}
-              <LuFlaskRound fontSize={"1.4rem"} fill="#38bdf8" />
+              <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />
             </div>
             <div>
               <Link target="_blank" to={`${EXPLORER_APP_FOR_TOKEN[chainId]["bitzgame"]}`} onClick={handleHideBitzModel}>

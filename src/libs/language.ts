@@ -12,5 +12,6 @@ export const labels = {
     "Unable to get bonding and rewards config from the Solana blockchain so you cannot proceed with the mint. Please reload the page to try again. (ER-36)",
   "ERR_MINT_FORM_NOT_ENOUGH_BOND": "You have insufficient ITHEUM tokens for the Liveliness Bonding.",
   "ERR_SUCCESS_MINT_BUT_BOND_NOT_CREATED": "Your mint was a success, but could not create a bonding transaction. (ER-34)",
-  "ERR_SUCCESS_MINT_BUT_BONDING_TRANSACTION_FAILED": "Your mint was a success, but the bonding transaction has failed (ER-35)",
+  "ERR_SUCCESS_MINT_BUT_BONDING_TRANSACTION_FAILED":
+    "Your mint was a success, but the bonding transaction has failed. You can try and re-bond by going to your 'Wallet' (ER-35)",
 };

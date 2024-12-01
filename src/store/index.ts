@@ -1,3 +1,3 @@
 export * from "./account";
-export * from "./market";
+export * from "./nfts";
 export * from "./mint";

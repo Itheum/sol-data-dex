@@ -28,13 +28,13 @@ import { useNavigate } from "react-router-dom";
 import nfMeIDVault from "assets/img/nfme/nfme-id-avatar.png";
 import Countdown from "components/CountDown";
 import ShortAddress from "components/UtilComps/ShortAddress";
+import { EXPLORER_APP_FOR_TOKEN } from "libs/config";
+import { SolEnvEnum } from "libs/Solana/config";
 import { checkIfFreeDataNftGiftMinted, mintMiscDataNft, getOrCacheAccessNonceAndSignature, fetchSolNfts } from "libs/Solana/utils";
 import { sleep } from "libs/utils/util";
 import { useAccountStore } from "store/account";
 import { useMintStore } from "store/mint";
 import { useNftsStore } from "store/nfts";
-import { EXPLORER_APP_FOR_TOKEN } from "libs/config";
-import { SolEnvEnum } from "libs/Solana/config";
 
 const Dashboard = ({
   onShowConnectWalletModal,
@@ -158,12 +158,24 @@ const Dashboard = ({
     }
   }, [bitzDataNfts]);
 
+  useEffect(() => {
+    (async () => {
+      if (freeMintBitzXpGameComingUp) {
+        await sleep(10);
+        setFreeMintBitzXpGameComingUp(false);
+        onProgressModalClose();
+        onRemoteTriggerOfBiTzPlayModel(true);
+      }
+    })();
+  }, [freeMintBitzXpGameComingUp]);
+
   const handleProgressModalClose = () => {
     setFreeDropCheckLoading(false);
     setErrFreeMintGeneric(null);
     setFreeMintLoading(false);
     setFreeMintBitzXpLoading(false);
     onProgressModalClose();
+    setFreeMintBitzXpGameComingUp(false);
   };
 
   const handleFreeMint = async (mintTemplate: string) => {
@@ -236,41 +248,46 @@ const Dashboard = ({
       updateSolPreaccessTimestamp,
     });
 
-    const miscMintRes = await mintMiscDataNft("bitzxp", userPublicKey.toBase58(), usedPreAccessSignature, usedPreAccessNonce);
+    let _errInWorkflow = null;
 
-    if (miscMintRes.error) {
-      setErrFreeMintGeneric(miscMintRes.error || miscMintRes?.e?.toString() || "unknown error");
-    } else if (miscMintRes?.newDBLogEntryCreateFailed) {
-      setErrFreeMintGeneric("Misc mint passed, but the db log failed");
-    }
+    try {
+      const miscMintRes = await mintMiscDataNft("bitzxp", userPublicKey.toBase58(), usedPreAccessSignature, usedPreAccessNonce);
 
-    if (miscMintRes?.assetId) {
-      // check 15 seconds and check if the API in the backend to mark the free mint as done
-      await sleep(15);
-
-      setFreeDropCheckNeededForBitz(freeDropCheckNeededForBitz + 1);
-
-      // update the NFT store now as we have a new NFT
-      const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
-      updateAllDataNfts(_allDataNfts);
-    } else {
-      setErrFreeMintGeneric("Free minting has failed");
-    }
-
-    setFreeMintBitzXpLoading(false);
-    setFreeMintBitzXpGameComingUp(true); // show a message for 10 seconds that the game is coming
-  };
-
-  useEffect(() => {
-    (async () => {
-      if (freeMintBitzXpGameComingUp) {
-        await sleep(10);
-        setFreeMintBitzXpGameComingUp(false);
-        onProgressModalClose();
-        onRemoteTriggerOfBiTzPlayModel(true);
+      if (miscMintRes.error) {
+        setErrFreeMintGeneric(miscMintRes.error || miscMintRes?.e?.toString() || "unknown error");
+      } else if (miscMintRes?.newDBLogEntryCreateFailed) {
+        _errInWorkflow = "Misc mint passed, but the db log failed";
       }
-    })();
-  }, [freeMintBitzXpGameComingUp]);
+
+      if (miscMintRes?.assetId) {
+        // check 15 seconds and check if the API in the backend to mark the free mint as done
+        await sleep(15);
+
+        setFreeDropCheckNeededForBitz(freeDropCheckNeededForBitz + 1);
+
+        // update the NFT store now as we have a new NFT
+        const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
+        updateAllDataNfts(_allDataNfts);
+      } else {
+        if (miscMintRes?.error) {
+          _errInWorkflow = "Error! " + miscMintRes?.error;
+        } else {
+          _errInWorkflow = "Error! Free minting has failed, have you met all the requirements below? if so, please try again.";
+        }
+      }
+    } catch (e: any) {
+      _errInWorkflow = e.toString();
+    }
+
+    if (!_errInWorkflow) {
+      await sleep(5);
+      setFreeMintBitzXpLoading(false);
+      setFreeMintBitzXpGameComingUp(true); // show a message for 10 seconds that the game is coming
+    } else {
+      setFreeMintBitzXpLoading(false);
+      setErrFreeMintGeneric(_errInWorkflow);
+    }
+  };
 
   return (
     <Flex mt={{ base: "10", md: "0" }} flexDirection="column" alignItems="center" justifyContent="center" backgroundColor={"xred.800"}>
@@ -378,8 +395,10 @@ const Dashboard = ({
                 p={2}
                 borderBottom="1px solid"
                 borderColor="teal.200"
-                opacity={!isUserLoggedIn || !freeNfMeIdClaimed ? 0.5 : "initial"}
-                pointerEvents={!isUserLoggedIn || !freeNfMeIdClaimed ? "none" : "initial"}>
+                opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
+                pointerEvents={!isUserLoggedIn || !hasBitzNft ? "none" : "initial"}>
+                {isUserLoggedIn && freeBitzClaimed && !freeNfMeIdClaimed && <FocusOnThisEffect />}
+
                 <Heading as="h3" size="md" textAlign="center">
                   Get a Free NFMe ID
                 </Heading>
@@ -538,7 +557,7 @@ const Dashboard = ({
                 p={2}
                 opacity={!isUserLoggedIn || !freeNfMeIdClaimed ? 0.5 : "initial"}
                 pointerEvents={!isUserLoggedIn || !freeNfMeIdClaimed ? "none" : "initial"}>
-                {isUserLoggedIn && usersNfMeIdVaultBondId === 0 && <FocusOnThisEffect />}
+                {isUserLoggedIn && hasBitzNft && freeNfMeIdClaimed && usersNfMeIdVaultBondId === 0 && <FocusOnThisEffect />}
 
                 <Heading as="h3" size="md" textAlign="center">
                   Boost Your Proof-of-Reputation
@@ -627,6 +646,8 @@ const Dashboard = ({
                   1.
                 </Text>
 
+                {isUserLoggedIn && hasBitzNft && <FocusOnThisEffect />}
+
                 <Heading as="h3" size="md" textAlign="center">
                   Get Free Music Data NFT
                 </Heading>
@@ -703,7 +724,7 @@ const Dashboard = ({
                   fontSize={{ base: "sm", md: "md" }}
                   size={{ base: "sm", lg: "lg" }}
                   isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn || !freeMusicGiftClaimed}
+                  isDisabled={!isUserLoggedIn || bitzBalance === 0}
                   w="280px"
                   onClick={() => {
                     window.open(`${EXPLORER_APP_FOR_TOKEN[chainId]["nftunes"]}?artist-profile=waveborn-luminex&hl=sigma`, "_blank");
@@ -803,29 +824,50 @@ const Dashboard = ({
                   {`BiTz`} are Itheum XP stored in a Data NFT in your wallet. Collect them to curate, power-up, and like data—and earn rewards! Your BiTz NFT is
                   your gateway to the Itheum Protocol and the Web3 AI Data Era {`we're`} enabling.
                 </Text>
-                {!freeMintBitzXpGameComingUp ? (
-                  <Button
-                    m="auto"
-                    mt="5"
-                    colorScheme="teal"
-                    variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
-                    fontSize={{ base: "sm", md: "md" }}
-                    size={{ base: "sm", lg: "lg" }}
-                    w="280px"
-                    disabled={freeMintBitzXpLoading}
-                    isLoading={freeMintBitzXpLoading}
-                    onClick={() => {
-                      handleFreeMintBitzXP();
-                    }}>
-                    LFG! Give Me My Airdrop!
-                  </Button>
-                ) : (
-                  <Alert status={"success"} mt={5} rounded="md" mb={8}>
+
+                {!errFreeMintGeneric && !freeNfMeIdClaimed && (
+                  <>
+                    {!freeMintBitzXpGameComingUp ? (
+                      <Button
+                        m="auto"
+                        mt="5"
+                        colorScheme="teal"
+                        variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
+                        fontSize={{ base: "sm", md: "md" }}
+                        size={{ base: "sm", lg: "lg" }}
+                        w="280px"
+                        disabled={freeMintBitzXpLoading}
+                        isLoading={freeMintBitzXpLoading}
+                        onClick={() => {
+                          handleFreeMintBitzXP();
+                        }}>
+                        LFG! Give Me My Airdrop!
+                      </Button>
+                    ) : (
+                      <Alert status={"success"} mt={5} rounded="md" mb={8}>
+                        <AlertIcon />
+                        <Box>
+                          <Text> Success! {`Let's`} get you for first BiTz XP, game coming up in 3,2,1...</Text>
+                        </Box>
+                      </Alert>
+                    )}
+                  </>
+                )}
+
+                {errFreeMintGeneric && (
+                  <Alert status="error" mt={5} rounded="md" mb={8}>
                     <AlertIcon />
                     <Box>
-                      <Text> Success! {`Let's`} get you for first BiTz XP, game coming up in 3,2,1...</Text>
+                      <Text>{errFreeMintGeneric}</Text>
                     </Box>
                   </Alert>
+                )}
+
+                {((!freeNfMeIdClaimed && !freeMintBitzXpGameComingUp) || errFreeMintGeneric) && (
+                  <Text fontSize="xs" textAlign="center" mt="2">
+                    Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which will NOT be used but is to make sure your
+                    wallet exists and can receive the NFT.
+                  </Text>
                 )}
               </Flex>
             )}
@@ -834,15 +876,6 @@ const Dashboard = ({
               <Flex w="100%" h="5rem" justifyContent="center" alignItems="center">
                 <Spinner size="xl" color="teal.200" />
               </Flex>
-            )}
-
-            {errFreeMintGeneric && (
-              <Alert status="error" mt={5} rounded="md" mb={8}>
-                <AlertIcon />
-                <Box>
-                  <Text>{errFreeMintGeneric} </Text>
-                </Box>
-              </Alert>
             )}
           </ModalBody>
         </ModalContent>

@@ -5,14 +5,13 @@ import { Outlet, Route, Routes, useLocation } from "react-router-dom";
 import AppFooter from "components/Sections/AppFooter";
 import AppHeader from "components/Sections/AppHeader";
 import AppSettings from "components/UtilComps/AppSettings";
-import { consoleNotice, MENU, PATHS } from "libs/config";
+import { MENU, PATHS } from "libs/config";
 import { clearAppSessionsLaunchMode, gtagGo } from "libs/utils";
 import MyDataNFTs from "pages/DataNFT/MyDataNFTs";
 import { GetNFMeID } from "pages/GetNFMeID";
 import MyHome from "pages/Home/MyHome";
 import LandingPage from "pages/LandingPage";
 import MyLiveliness from "pages/Liveliness/MyLiveliness";
-// import { useAccountStore } from "store";
 import { TradeData } from "../AdvertiseData/TradeData";
 
 function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
@@ -27,9 +26,6 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
   const { pathname } = useLocation();
   let path = pathname?.split("/")[pathname?.split("/")?.length - 1]; // handling Route Path
   const { connected: isSolLoggedIn, disconnect: disconnectSolWallet } = useWallet();
-  // const updateBitzBalance = useAccountStore((state: any) => state.updateBitzBalance);
-  // const updateItheumBalance = useAccountStore((state: any) => state.updateItheumBalance);
-  // const updateCooldown = useAccountStore((state: any) => state.updateCooldown);
   const [triggerBiTzPlayModelAndIsOpen, setTriggerBiTzPlayModelAndIsOpen] = useState<boolean>(false);
 
   useEffect(() => {
@@ -41,15 +37,8 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
     // console.log(consoleNotice);
   }, []);
 
-  // const resetCommonStoreValuesBitzContext = () => {
-  //   updateBitzBalance(-2);
-  //   updateItheumBalance(-1);
-  //   updateCooldown(-2);
-  // };
-
   const handleLogout = async () => {
     clearAppSessionsLaunchMode();
-    // resetCommonStoreValuesBitzContext();
     gtagGo("auth", "logout", "el");
 
     // if we are connected to solana

@@ -15,11 +15,11 @@ import {
   getBondingProgramInterface,
   retrieveBondsAndNftMeIdVault,
 } from "libs/Solana/utils";
+import { computeRemainingCooldown } from "libs/utils";
 import { sleep } from "libs/utils/util";
+import { viewDataToOnlyGetReadOnlyBitz } from "pages/GetBitz/GetBitzSol";
 import { useAccountStore, useMintStore } from "store";
 import { useNftsStore } from "./nfts";
-import { computeRemainingCooldown } from "libs/utils";
-import { viewDataToOnlyGetReadOnlyBitz } from "pages/GetBitz/GetBitzSol";
 
 export const StoreProvider = ({ children }: PropsWithChildren) => {
   const { publicKey: userPublicKey } = useWallet();
@@ -70,13 +70,6 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
       const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
 
       updateAllDataNfts(_allDataNfts);
-
-      // // get users bitz data nfts
-      // const _bitzDataNfts: DasApiAsset[] = IS_DEVNET
-      //   ? _allDataNfts.filter((nft) => nft.content.metadata.name.includes("XP"))
-      //   : _allDataNfts.filter((nft) => nft.content.metadata.name.includes("IXPG2"));
-
-      // updateBitzDataNfts(_bitzDataNfts);
 
       // S: get bonding / staking program config params
       const programObj = getBondingProgramInterface(connection);
@@ -138,7 +131,7 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
       // get users bitz data nfts
       const _bitzDataNfts: DasApiAsset[] = IS_DEVNET
         ? allDataNfts.filter((nft) => nft.content.metadata.name.includes("XP"))
-        : allDataNfts.filter((nft) => nft.content.metadata.name.includes("IXPG2"));
+        : allDataNfts.filter((nft) => nft.content.metadata.name.includes("IXPG")); // @TODO, what is the user has multiple BiTz? IXPG2 was from drip and IXPG3 will be from us direct via the airdrop
 
       updateBitzDataNfts(_bitzDataNfts);
 
@@ -170,17 +163,17 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
           let sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0; // first play: 0
 
           // some values can be -1 during first play or other situations, so we make it 0 or else we get weird numbers like 1 for the some coming up
-          // if (bitzBeforePlay < 0) {
-          //   bitzBeforePlay = 0;
-          // }
+          if (bitzBeforePlay < 0) {
+            bitzBeforePlay = 0;
+          }
 
-          // if (sumGivenBits < 0) {
-          //   sumGivenBits = 0;
-          // }
+          if (sumGivenBits < 0) {
+            sumGivenBits = 0;
+          }
 
-          // if (sumBonusBitz < 0) {
-          //   sumBonusBitz = 0;
-          // }
+          if (sumBonusBitz < 0) {
+            sumBonusBitz = 0;
+          }
 
           updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
           updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups

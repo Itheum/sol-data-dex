@@ -2,8 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
+import { confetti } from "@tsparticles/confetti";
+import { Container } from "@tsparticles/engine";
+import { fireworks } from "@tsparticles/fireworks";
 import { motion } from "framer-motion";
 import Countdown from "react-countdown";
+import "../common/GetBitz.css";
 
 // Image Layers
 import { LuMousePointerClick } from "react-icons/lu";
@@ -212,14 +216,15 @@ const GetBitzSol = (props: any) => {
   }, [bitzDataNfts, userPublicKey]);
 
   useEffect(() => {
-    console.log("bitzDataNfts", bitzDataNfts);
     checkIfHasGameDataNft();
   }, [bitzDataNfts]);
 
   useEffect(() => {
     setBurnFireScale(`scale(${burnProgress}) translate(-13px, -15px)`);
     setBurnFireGlow(burnProgress * 0.1);
-    if (burnProgress === 10) {
+
+    // we can slow the burn by updating the value here...
+    if (burnProgress === 25) {
       setIsMemeBurnHappening(false);
       playGame();
     }
@@ -301,6 +306,33 @@ const GetBitzSol = (props: any) => {
     const viewDataPayload = await viewData(viewDataArgs, bitzDataNfts[0]);
 
     if (viewDataPayload) {
+      let animation;
+
+      if (viewDataPayload.data.gamePlayResult.bitsWon > 0) {
+        if (viewDataPayload.data.gamePlayResult.userWonMaxBits === 1) {
+          animation = await fireworks({
+            background: "transparent",
+            sounds: true,
+          });
+        } else {
+          animation = await confetti({
+            spread: 360,
+            ticks: 100,
+            gravity: 0,
+            decay: 0.94,
+            startVelocity: 30,
+            particleCount: 200,
+            scalar: 2,
+            shapes: ["emoji"],
+            shapeOptions: {
+              emoji: {
+                value: ["🤲🏼", "💎", "🤲🏼", "💎", "🎊", "🐸", "🐸", "🐸", "🐸", "🐹", "🐹"],
+              },
+            },
+          });
+        }
+      }
+
       setGameDataFetched(true);
       setIsFetchingDataMarshal(false);
       setViewDataRes(viewDataPayload);
@@ -342,6 +374,15 @@ const GetBitzSol = (props: any) => {
         updateBonusTries(viewDataPayload.data.gamePlayResult.bonusTriesAfterThisPlay);
       } else {
         updateBonusTries(viewDataPayload.data.gamePlayResult.bonusTriesBeforeThisPlay || 0);
+      }
+
+      if (animation) {
+        await sleep(10);
+        animation.stop();
+        // if its confetti, then we have to destroy it
+        if ((animation as unknown as Container).destroy) {
+          (animation as unknown as Container).destroy();
+        }
       }
     }
   }

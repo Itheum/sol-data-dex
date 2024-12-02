@@ -25,6 +25,7 @@ import { BsDot } from "react-icons/bs";
 import { BsBookmarkCheckFill } from "react-icons/bs";
 import { LuFlaskRound } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
+import MusicGiftPreview from "assets/img/music-data-nft-gift-preview.png";
 import nfMeIDVault from "assets/img/nfme/nfme-id-avatar.png";
 import Countdown from "components/CountDown";
 import ShortAddress from "components/UtilComps/ShortAddress";
@@ -50,13 +51,14 @@ const Dashboard = ({
   const modelSize = useBreakpointValue({ base: "xs", md: "xl" });
   const { isOpen: isProgressModalOpen, onOpen: onProgressModalOpen, onClose: onProgressModalClose } = useDisclosure();
   const { colorMode } = useColorMode();
-  const [freeMintLoading, setFreeMintLoading] = useState<boolean>(false);
   const [freeMintBitzXpIntroToAction, setFreeMintBitzXpIntroToAction] = useState<boolean>(false);
   const [freeMintBitzXpLoading, setFreeMintBitzXpLoading] = useState<boolean>(false);
   const [freeMintBitzXpGameComingUp, setFreeMintBitzXpGameComingUp] = useState<boolean>(false);
-  const [freeNfMeIdClaimed, setFreeNfMeIdClaimed] = useState<boolean>(false);
   const [freeBitzClaimed, setFreeBitzClaimed] = useState<boolean>(false);
+  const [freeNfMeIdClaimed, setFreeNfMeIdClaimed] = useState<boolean>(false);
   const [freeMusicGiftClaimed, setFreeMusicGiftClaimed] = useState<boolean>(false);
+  const [freeMintMusicGiftIntroToAction, setFreeMintMusicGiftIntroToAction] = useState<boolean>(false);
+  const [freeMintMusicGiftLoading, setFreeMintMusicGiftLoading] = useState<boolean>(false);
   const [freeDropCheckLoading, setFreeDropCheckLoading] = useState<boolean>(false);
   const [freeDropCheckNeededForBitz, setFreeDropCheckNeededForBitz] = useState<number>(0);
   const [freeDropCheckNeededForMusicGift, setFreeDropCheckNeededForMusicGift] = useState<number>(0);
@@ -172,62 +174,9 @@ const Dashboard = ({
   const handleProgressModalClose = () => {
     setFreeDropCheckLoading(false);
     setErrFreeMintGeneric(null);
-    setFreeMintLoading(false);
     setFreeMintBitzXpLoading(false);
     onProgressModalClose();
     setFreeMintBitzXpGameComingUp(false);
-  };
-
-  const handleFreeMint = async (mintTemplate: string) => {
-    if (!userPublicKey) {
-      return;
-    }
-
-    setFreeMintLoading(true);
-    onProgressModalOpen();
-    await sleep(1);
-
-    const { usedPreAccessNonce, usedPreAccessSignature } = await getOrCacheAccessNonceAndSignature({
-      solPreaccessNonce,
-      solPreaccessSignature,
-      solPreaccessTimestamp,
-      signMessage,
-      publicKey: userPublicKey,
-      updateSolPreaccessNonce,
-      updateSolSignedPreaccess,
-      updateSolPreaccessTimestamp,
-    });
-
-    const miscMintRes = await mintMiscDataNft(mintTemplate, userPublicKey.toBase58(), usedPreAccessSignature, usedPreAccessNonce);
-
-    if (miscMintRes.error) {
-      setErrFreeMintGeneric(miscMintRes.error || miscMintRes?.e?.toString() || "unknown error");
-    } else if (miscMintRes?.newDBLogEntryCreateFailed) {
-      setErrFreeMintGeneric("Misc mint passed, but the db log failed");
-    }
-
-    if (miscMintRes?.assetId) {
-      // check 10 seconds and check if the API in the backend to mark the free mint as done
-      await sleep(10);
-
-      switch (mintTemplate) {
-        case "musicgift":
-          setFreeDropCheckNeededForMusicGift(freeDropCheckNeededForMusicGift + 1);
-          break;
-        default:
-          break;
-      }
-
-      // update the NFT store now as we have a new NFT
-      const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
-      updateAllDataNfts(_allDataNfts);
-
-      onProgressModalClose();
-    } else {
-      setErrFreeMintGeneric("Free minting has failed");
-    }
-
-    setFreeMintLoading(false);
   };
 
   const handleFreeMintBitzXP = async () => {
@@ -285,6 +234,66 @@ const Dashboard = ({
       setFreeMintBitzXpGameComingUp(true); // show a message for 10 seconds that the game is coming
     } else {
       setFreeMintBitzXpLoading(false);
+      setErrFreeMintGeneric(_errInWorkflow);
+    }
+  };
+
+  const handleFreeMintMusicGift = async () => {
+    if (!userPublicKey) {
+      return;
+    }
+
+    setFreeMintMusicGiftLoading(true);
+
+    const { usedPreAccessNonce, usedPreAccessSignature } = await getOrCacheAccessNonceAndSignature({
+      solPreaccessNonce,
+      solPreaccessSignature,
+      solPreaccessTimestamp,
+      signMessage,
+      publicKey: userPublicKey,
+      updateSolPreaccessNonce,
+      updateSolSignedPreaccess,
+      updateSolPreaccessTimestamp,
+    });
+
+    let _errInWorkflow = null;
+
+    sleep(5);
+
+    try {
+      const miscMintRes = await mintMiscDataNft("musicgift", userPublicKey.toBase58(), usedPreAccessSignature, usedPreAccessNonce);
+
+      if (miscMintRes.error) {
+        setErrFreeMintGeneric(miscMintRes.error || miscMintRes?.e?.toString() || "unknown error");
+      } else if (miscMintRes?.newDBLogEntryCreateFailed) {
+        _errInWorkflow = "Misc mint passed, but the db log failed";
+      }
+
+      if (miscMintRes?.assetId) {
+        // check 15 seconds and check if the API in the backend to mark the free mint as done
+        await sleep(15);
+
+        setFreeDropCheckNeededForMusicGift(freeDropCheckNeededForMusicGift + 1);
+
+        // update the NFT store now as we have a new NFT
+        const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
+        updateAllDataNfts(_allDataNfts);
+      } else {
+        if (miscMintRes?.error) {
+          _errInWorkflow = "Error! " + miscMintRes?.error;
+        } else {
+          _errInWorkflow = "Error! Free minting has failed, have you met all the requirements below? if so, please try again.";
+        }
+      }
+    } catch (e: any) {
+      _errInWorkflow = e.toString();
+    }
+
+    if (!_errInWorkflow) {
+      await sleep(5);
+      setFreeMintMusicGiftLoading(false);
+    } else {
+      setFreeMintMusicGiftLoading(false);
       setErrFreeMintGeneric(_errInWorkflow);
     }
   };
@@ -664,7 +673,8 @@ const Dashboard = ({
                   isDisabled={!isUserLoggedIn || freeMusicGiftClaimed}
                   w="280px"
                   onClick={() => {
-                    handleFreeMint("musicgift");
+                    setFreeMintMusicGiftIntroToAction(true);
+                    onProgressModalOpen();
                   }}>
                   {freeMusicGiftClaimed ? "Claimed" : "Free Mint Now"}
                 </Button>
@@ -810,9 +820,10 @@ const Dashboard = ({
         blockScrollOnMount={false}>
         <ModalOverlay backdropFilter="blur(10px)" />
         <ModalContent bgColor={colorMode === "dark" ? "#181818" : "bgWhite"}>
-          {!freeMintBitzXpLoading && <ModalCloseButton />}
+          {!freeMintBitzXpLoading && !freeMintMusicGiftLoading && <ModalCloseButton />}
           <ModalHeader mt={5} textAlign="center" fontSize="2xl" color="teal.200">
-            {freeMintBitzXpIntroToAction ? "Get Your Free BiTz XP Data NFT Airdrop!" : "Free Mint Loading..."}
+            {freeMintBitzXpIntroToAction ? "Get Your Free BiTz XP Data NFT Airdrop!" : ""}
+            {freeMintMusicGiftIntroToAction ? "Get Your Free Sample Music Data NFT Airdrop!" : ""}
           </ModalHeader>
           <ModalBody pb={6}>
             {freeMintBitzXpIntroToAction && (
@@ -872,9 +883,74 @@ const Dashboard = ({
               </Flex>
             )}
 
-            {freeMintLoading && (
-              <Flex w="100%" h="5rem" justifyContent="center" alignItems="center">
-                <Spinner size="xl" color="teal.200" />
+            {freeMintMusicGiftIntroToAction && (
+              <Flex flexDirection="column">
+                <Image margin="auto" boxSize="auto" w={{ base: "60%", md: "60%" }} src={MusicGiftPreview} alt="Music Data NFT Preview" />
+                <Text fontSize="2xl" fontWeight="bold" textAlign="center" mt="5">
+                  Revolutionizing Music with AI
+                </Text>
+                <Text mt="5" textAlign="center">
+                  Itheum connects AI Agents, musicians, and fans to amplify music and train AI models, empowering real-world artists and enhancing music
+                  content. Get your free Music Data NFT and join this initiative!
+                </Text>
+
+                {!errFreeMintGeneric && (
+                  <>
+                    {!freeMusicGiftClaimed ? (
+                      <Button
+                        m="auto"
+                        mt="5"
+                        colorScheme="teal"
+                        variant={"outline"}
+                        fontSize={{ base: "sm", md: "md" }}
+                        size={{ base: "sm", lg: "lg" }}
+                        w="280px"
+                        disabled={freeMintMusicGiftLoading}
+                        isLoading={freeMintMusicGiftLoading}
+                        onClick={() => {
+                          handleFreeMintMusicGift();
+                        }}>
+                        LFG! Give Me My Airdrop!
+                      </Button>
+                    ) : (
+                      <Alert status={"success"} mt={5} rounded="md" mb={8}>
+                        <AlertIcon />
+                        <Box>
+                          <Text> Success! Try it out now!</Text>
+                          <Button
+                            margin="auto"
+                            colorScheme="teal"
+                            variant="outline"
+                            fontSize={{ base: "sm", md: "md" }}
+                            size={{ base: "sm", lg: "lg" }}
+                            w="280px"
+                            mt={3}
+                            onClick={() => {
+                              window.open(`${EXPLORER_APP_FOR_TOKEN[chainId]["nftunes"]}?artist-profile=waveborn-luminex&hl=sample`, "_blank");
+                            }}>
+                            Use Music Data NFT on NF-Tunes
+                          </Button>
+                        </Box>
+                      </Alert>
+                    )}
+                  </>
+                )}
+
+                {errFreeMintGeneric && (
+                  <Alert status="error" mt={5} rounded="md" mb={8}>
+                    <AlertIcon />
+                    <Box>
+                      <Text>{errFreeMintGeneric}</Text>
+                    </Box>
+                  </Alert>
+                )}
+
+                {(!freeMusicGiftClaimed || errFreeMintGeneric) && (
+                  <Text fontSize="xs" textAlign="center" mt="2">
+                    Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which will NOT be used but is to make sure your
+                    wallet exists and can receive the NFT.
+                  </Text>
+                )}
               </Flex>
             )}
           </ModalBody>

@@ -1,7 +1,6 @@
 //https://github.com/effectussoftware/react-custom-roulette
 import React, { useEffect, useState } from "react";
 import { useColorMode } from "@chakra-ui/react";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { LuFlaskRound } from "react-icons/lu";
 import { Link } from "react-router-dom";
 import { EXPLORER_APP_FOR_TOKEN } from "libs/config";
@@ -16,7 +15,6 @@ type PathwaysModalProps = {
 
 export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
   const { showPlayBitzModel, handleHideBitzModel } = props;
-  const { connected } = useWallet();
   const bitzBalance = useAccountStore((state: any) => state.bitzBalance);
   const { colorMode } = useColorMode();
   const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SolEnvEnum.devnet : SolEnvEnum.mainnet;
@@ -26,8 +24,6 @@ export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
     document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.toggle(colorMode);
   }, [colorMode]);
-
-  console.log("bitzBalance", bitzBalance);
 
   return (
     <div

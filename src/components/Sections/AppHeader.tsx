@@ -57,11 +57,9 @@ import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { CHAIN_TOKEN_SYMBOL, CHAINS, MENU, EXPLORER_APP_FOR_TOKEN } from "libs/config";
 import { SolEnvEnum } from "libs/Solana/config";
-import { formatNumberRoundFloor, computeRemainingCooldown } from "libs/utils";
-// import { viewDataToOnlyGetReadOnlyBitz } from "pages/GetBitz/GetBitzSol";
+import { formatNumberRoundFloor } from "libs/utils";
 import { PlayBitzModal } from "pages/GetBitz/PlayBitzModal";
 import { useAccountStore } from "store";
-// import { useNftsStore } from "store/nfts";
 
 const AppHeader = ({
   onShowConnectWalletModal,
@@ -141,9 +139,8 @@ const AppHeader = ({
       ],
     },
   ];
-  // const { bitzDataNfts } = useNftsStore();
+
   const { bitzBalance, cooldown, solPreaccessNonce, solPreaccessSignature, solPreaccessTimestamp, keyChainDataForAppLoading } = useAccountStore();
-  // const { updateBitzBalance, updateGivenBitzSum, updateBonusBitzSum, updateCooldown } = useAccountStore();
 
   // load mini bitz game
   useEffect(() => {
@@ -151,32 +148,6 @@ const AppHeader = ({
       setShowPlayBitzModal(true);
     }
   }, [triggerBiTzPlayModel]);
-
-  // // Show the Bitz balance
-  // useEffect(() => {
-  //   if (bitzDataNfts.length > 0 && solPreaccessNonce !== "" && solPreaccessSignature !== "" && userPublicKey) {
-  //     (async () => {
-  //       const getBitzGameResult = await viewDataToOnlyGetReadOnlyBitz(bitzDataNfts[0], solPreaccessNonce, solPreaccessSignature, userPublicKey);
-
-  //       if (getBitzGameResult) {
-  //         const bitzBeforePlay = getBitzGameResult.data.gamePlayResult.bitsScoreBeforePlay || 0;
-  //         const sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0;
-  //         const sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0;
-
-  //         updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
-  //         updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
-  //         updateBonusBitzSum(sumBonusBitz);
-
-  //         updateCooldown(
-  //           computeRemainingCooldown(
-  //             getBitzGameResult.data.gamePlayResult.lastPlayedBeforeThisPlay,
-  //             getBitzGameResult.data.gamePlayResult.configCanPlayEveryMSecs
-  //           )
-  //         );
-  //       }
-  //     })();
-  //   }
-  // }, [bitzDataNfts, userPublicKey, solPreaccessNonce, solPreaccessSignature]);
 
   const navigateToDiscover = (menuEnum: number) => {
     setMenuItem(menuEnum);
@@ -283,7 +254,7 @@ const AppHeader = ({
                   Itheum
                 </Heading>
                 <Heading fontSize={{ base: "sm", xl: "lg" }} fontFamily="Clash-Medium" fontWeight="400" color="teal.200" onClick={onClose}>
-                  Data DEX
+                  AI Data Workforce
                 </Heading>
               </Flex>
             </HStack>
@@ -388,45 +359,6 @@ const AppHeader = ({
                     <Button display={{ base: "none", md: "inline-flex" }} size={{ md: "md", xl: "md", "2xl": "lg" }} p="2 !important">
                       {bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}
                       <FlaskBottleAnimation cooldown={cooldown} />
-                      {/* <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />
-                      cooldown = {cooldown}
-                      {cooldown <= 0 && cooldown != -2 && (
-                        <>
-                          {" "}
-                          <Box
-                            position={"absolute"}
-                            w={"full"}
-                            h={"full"}
-                            right="-15px"
-                            top="-15px"
-                            as={BsDot}
-                            color="#03c797"
-                            size="15px"
-                            animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"></Box>{" "}
-                          <Box
-                            position={"absolute"}
-                            w={"full"}
-                            h={"full"}
-                            right="-8px"
-                            top="-18px"
-                            as={BsDot}
-                            color="#03c797"
-                            size="15px"
-                            animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
-                            style={{ animationDelay: "0.5s" }}></Box>{" "}
-                          <Box
-                            position={"absolute"}
-                            w={"full"}
-                            h={"full"}
-                            right="-12px"
-                            top="-25px"
-                            as={BsDot}
-                            color="#03c797"
-                            size="55px"
-                            animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
-                            style={{ animationDelay: "1s" }}></Box>{" "}
-                        </>
-                      )} */}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent backgroundColor={colorMode === "dark" ? "bgDark" : "white"} w="25rem">
@@ -474,48 +406,9 @@ const AppHeader = ({
                 size={{ md: "md", xl: "md", "2xl": "lg" }}
                 p="5 !important"
                 onClick={() => {
-                  // localStorage?.removeItem("itm-datacat-linked");
                   onShowConnectWalletModal("sol");
                 }}>
                 <FlaskBottleAnimation cooldown={cooldown} />
-                {/* <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />
-                {cooldown <= 0 && cooldown != -2 && (
-                  <>
-                    {" "}
-                    <Box
-                      position={"absolute"}
-                      w={"full"}
-                      h={"full"}
-                      right="-15px"
-                      top="-15px"
-                      as={BsDot}
-                      color="#03c797"
-                      size="15px"
-                      animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"></Box>{" "}
-                    <Box
-                      position={"absolute"}
-                      w={"full"}
-                      h={"full"}
-                      right="-8px"
-                      top="-18px"
-                      as={BsDot}
-                      color="#03c797"
-                      size="15px"
-                      animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
-                      style={{ animationDelay: "0.5s" }}></Box>{" "}
-                    <Box
-                      position={"absolute"}
-                      w={"full"}
-                      h={"full"}
-                      right="-12px"
-                      top="-25px"
-                      as={BsDot}
-                      color="#03c797"
-                      size="55px"
-                      animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
-                      style={{ animationDelay: "1s" }}></Box>{" "}
-                  </>
-                )} */}
               </Button>
             )}
 
@@ -526,7 +419,6 @@ const AppHeader = ({
                   fontSize={{ base: "sm", md: "md" }}
                   size={{ base: "sm", lg: "lg" }}
                   onClick={() => {
-                    // localStorage?.removeItem("itm-datacat-linked");
                     onShowConnectWalletModal("sol");
                   }}>
                   {connectBtnTitle}

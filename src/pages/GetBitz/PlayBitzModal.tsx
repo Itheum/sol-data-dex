@@ -18,6 +18,7 @@ export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
   const bitzBalance = useAccountStore((state: any) => state.bitzBalance);
   const { colorMode } = useColorMode();
   const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SolEnvEnum.devnet : SolEnvEnum.mainnet;
+  const [isFetchingDataMarshal, setIsFetchingDataMarshal] = useState<boolean>(false);
 
   // add the dark class for tailwind css
   useEffect(() => {
@@ -48,7 +49,7 @@ export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
               </Link>
               <button
                 type="button"
-                className="text-gray-400 ml-2 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                className={` ${isFetchingDataMarshal ? "opacity-30 pointer-events-none" : "text-gray-400"} text-gray-400 ml-2 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white`}
                 onClick={handleHideBitzModel}
                 data-modal-hide="static-modal">
                 <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
@@ -59,7 +60,12 @@ export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
             </div>
           </div>
           <div className="min-h-[23rem]">
-            <GetBitz modalMode={true} />
+            <GetBitz
+              modalMode={true}
+              onIsDataMarshalFetching={(isFetching: boolean) => {
+                setIsFetchingDataMarshal(isFetching);
+              }}
+            />
           </div>
         </div>
       </div>

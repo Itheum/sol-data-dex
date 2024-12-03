@@ -4,6 +4,8 @@ import { CNftSolPostMintMetaType } from "@itheum/sdk-mx-data-nft/out";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { SPL_ACCOUNT_COMPRESSION_PROGRAM_ID } from "@solana/spl-account-compression";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { NATIVE_MINT } from "@solana/spl-token";
 import { AccountMeta, Connection, PublicKey, Transaction, TransactionConfirmationStrategy, Commitment } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { SOL_ENV_ENUM } from "libs/config";
@@ -44,6 +46,7 @@ function bufferToArray(buffer: Buffer): number[] {
 function decode(stuff: string) {
   return bufferToArray(bs58.decode(stuff));
 }
+
 const mapProof = (proof: string[]): AccountMeta[] => {
   return proof.map((node) => ({
     pubkey: new PublicKey(node),
@@ -568,3 +571,37 @@ export async function getInitAddressBondsRewardsPdaTransaction(connection: Conne
 
   return transactionInitializeAddress;
 }
+
+export const getItheumBalanceOnSolana = async (connection: Connection, userPublicKey: PublicKey) => {
+  try {
+    const itheumTokenMint = new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS);
+    const addressAta = getAssociatedTokenAddressSync(itheumTokenMint, userPublicKey!, false);
+    const balance = await connection.getTokenAccountBalance(addressAta);
+    return balance.value.uiAmount;
+  } catch (error) {
+    console.error("Error fetching Itheum" + ITHEUM_SOL_TOKEN_ADDRESS + "  balance on Solana " + import.meta.env.VITE_ENV_NETWORK + " blockchain:", error);
+    throw error;
+  }
+};
+
+export const swapForItheumTokensOnJupiter = (wallet: any, onSuccessCallback: any) => {
+  if (!wallet) return;
+
+  window.Jupiter.init({
+    onSuccess: ({ txid, swapResult }) => {
+      console.log({ txid });
+
+      onSuccessCallback();
+    },
+    endpoint: import.meta.env.VITE_ENV_SOLANA_NETWORK_RPC,
+    passThroughWallet: wallet,
+    containerStyles: { maxHeight: "60vh" },
+    formProps: {
+      fixedOutputMint: true,
+      swapMode: "ExactInOut",
+      initialAmount: "100000000",
+      initialOutputMint: import.meta.env.VITE_ENV_ITHEUM_SOL_TOKEN_ADDRESS,
+      initialInputMint: NATIVE_MINT.toBase58(),
+    },
+  });
+};

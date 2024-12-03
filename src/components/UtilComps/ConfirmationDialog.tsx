@@ -12,12 +12,14 @@ import {
 
 export function ConfirmationDialog({
   dialogData: { title, proceedBtnTxt, cancelBtnText, proceedBtnColorScheme },
+  isCentered,
   bodyContent,
   isOpen,
   onCancel,
   onProceed,
 }: {
   dialogData: { title: string; proceedBtnTxt: string; cancelBtnText: string; proceedBtnColorScheme?: string };
+  isCentered?: boolean;
   bodyContent: React.ReactNode;
   isOpen: boolean;
   onCancel: () => void;
@@ -27,7 +29,13 @@ export function ConfirmationDialog({
 
   return (
     <>
-      <AlertDialog motionPreset="slideInBottom" leastDestructiveRef={cancelRef} onClose={onCancel} isOpen={isOpen} isCentered size={{ base: "md", md: "lg" }}>
+      <AlertDialog
+        motionPreset="slideInBottom"
+        leastDestructiveRef={cancelRef}
+        onClose={onCancel}
+        isOpen={isOpen}
+        isCentered={isCentered === false ? false : true}
+        size={{ base: "md", md: "lg" }}>
         <AlertDialogOverlay />
 
         <AlertDialogContent>

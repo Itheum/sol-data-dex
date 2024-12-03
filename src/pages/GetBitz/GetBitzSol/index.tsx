@@ -86,7 +86,7 @@ const MEME_IMGS = [
 ];
 
 const GetBitzSol = (props: any) => {
-  const { modalMode } = props;
+  const { modalMode, onIsDataMarshalFetching } = props;
   const { publicKey: userPublicKey, signMessage } = useWallet();
   const address = userPublicKey?.toBase58();
   const [checkingIfHasGameDataNFT, setCheckingIfHasGameDataNFT] = useState<boolean>(true);
@@ -143,6 +143,8 @@ const GetBitzSol = (props: any) => {
         setPopulatedBitzStore(true);
 
         (async () => {
+          // setIsFetchingDataMarshal(true);
+
           const { usedPreAccessNonce, usedPreAccessSignature } = await getOrCacheAccessNonceAndSignature({
             solPreaccessNonce,
             solPreaccessSignature,
@@ -218,6 +220,10 @@ const GetBitzSol = (props: any) => {
   useEffect(() => {
     checkIfHasGameDataNft();
   }, [bitzDataNfts]);
+
+  useEffect(() => {
+    onIsDataMarshalFetching(isFetchingDataMarshal);
+  }, [isFetchingDataMarshal]);
 
   useEffect(() => {
     setBurnFireScale(`scale(${burnProgress}) translate(-13px, -15px)`);

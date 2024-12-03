@@ -67,8 +67,9 @@ import {
   getInitAddressBondsRewardsPdaTransaction,
   createAddBondAsVaultTransaction,
   getBondingProgramInterface,
+  swapForItheumTokensOnJupiter,
+  getItheumBalanceOnSolana,
 } from "libs/Solana/utils";
-
 import { getApiDataMarshal, isValidNumericCharacter, sleep, timeUntil } from "libs/utils";
 import { useAccountStore, useMintStore } from "store";
 import { useNftsStore } from "store/nfts";
@@ -105,7 +106,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   const { isFreeMint } = dataToPrefill;
   const showInlineErrorsBeforeAction = false;
   const enableBondingInputForm = false;
-  const { publicKey: userPublicKey, sendTransaction, signMessage } = useWallet();
+  const { publicKey: userPublicKey, sendTransaction, signMessage, wallet } = useWallet();
   const { connection } = useConnection();
   const { networkConfiguration } = useNetworkConfiguration();
   const [bondTransaction, setBondTransaction] = useState<Transaction | undefined>(undefined);
@@ -1309,20 +1310,41 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
                 <Box>
                   {itheumBalance < bondingAmount && (
-                    <Alert status="error" mt={5} rounded="md" mb={8}>
+                    <Alert status="error" rounded="md" mb={4}>
                       <AlertIcon />
                       <Box>
                         <Text>{labels.ERR_MINT_FORM_NOT_ENOUGH_BOND} </Text>
                         <Text mt="2" fontWeight="bold">
-                          You can get some ITHEUM tokens on
-                          <Link
-                            href="https://raydium.io/swap/?inputMint=sol&outputMint=iTHSaXjdqFtcnLK4EFEs7mqYQbJb6B7GostqWbBQwaV"
-                            isExternal
-                            textDecoration="underline"
-                            _hover={{ textDecoration: "none" }}
-                            ml={1}>
-                            Raydium here
-                          </Link>
+                          <Button
+                            w={"300px"}
+                            size={"md"}
+                            p={5}
+                            colorScheme="teal"
+                            onClick={() => {
+                              closeTradeFormModal();
+
+                              swapForItheumTokensOnJupiter(wallet, async () => {
+                                toast({
+                                  title: "Swap Successful",
+                                  description: "$ITHEUM token swap was successful",
+                                  status: "info",
+                                  duration: 15000,
+                                  isClosable: true,
+                                });
+
+                                // update token balance
+                                await sleep(2);
+
+                                const itheumTokens = await getItheumBalanceOnSolana(connection, userPublicKey!);
+                                if (itheumTokens != undefined) {
+                                  updateItheumBalance(itheumTokens);
+                                } else {
+                                  updateItheumBalance(-1);
+                                }
+                              });
+                            }}>
+                            Swap For Some $ITHEUM Tokens Now
+                          </Button>
                         </Text>
                       </Box>
                     </Alert>

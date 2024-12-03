@@ -2,12 +2,14 @@ import React from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { Box, Text, Flex, HStack, Link, Heading, useColorMode } from "@chakra-ui/react";
 import { getSentryProfile } from "libs/utils";
+import { useAccountStore } from "store";
 
 const dataDexVersion = import.meta.env.VITE_APP_VERSION ?? "version number unknown";
 const nonProdEnv = `env:${getSentryProfile()}`;
 
 export default function () {
   const { colorMode } = useColorMode();
+  const { solPreaccessNonce, solPreaccessSignature, solPreaccessTimestamp } = useAccountStore();
 
   return (
     <Flex
@@ -19,6 +21,11 @@ export default function () {
       pt={10}
       flexDirection={{ base: "column", md: "row" }}>
       <Flex flex="1" flexDir="column" alignItems="center" justifyContent="center" height="100%" mt={5} pr={5}>
+        <Box backgroundColor={"#5d3d0d"}>
+          <Text textAlign={"center"} fontSize={"small"}>{`preaccessNonce = ${solPreaccessNonce.substring(0, 8)},
+       preaccessSig = ${solPreaccessSignature.substring(0, 8)},
+      preaccessTS = ${solPreaccessTimestamp > -2 ? new Date(solPreaccessTimestamp).toUTCString() : solPreaccessTimestamp}`}</Text>
+        </Box>
         <Box>
           <Heading size={"lg"} fontFamily="Clash-Medium" color={"teal.200"}>
             Solana Data DEX

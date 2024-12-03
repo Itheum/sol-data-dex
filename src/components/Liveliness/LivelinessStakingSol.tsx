@@ -39,7 +39,7 @@ import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { BOND_CONFIG_INDEX, SOLANA_EXPLORER_URL } from "libs/Solana/config";
 import { CoreSolBondStakeSc } from "libs/Solana/CoreSolBondStakeSc";
 import { Bond } from "libs/Solana/types";
-import { sendAndConfirmTransaction, createAddBondAsVaultTransaction } from "libs/Solana/utils";
+import { sendAndConfirmTransaction, createAddBondAsVaultTransaction, checkIfFreeDataNftGiftMinted } from "libs/Solana/utils";
 import {
   computeAddressClaimableAmount,
   computeBondScore,
@@ -89,7 +89,7 @@ export const LivelinessStakingSol: React.FC = () => {
   const [claimRewardsConfirmationWorkflow, setClaimRewardsConfirmationWorkflow] = useState<boolean>(false);
   const [reinvestRewardsConfirmationWorkflow, setReinvestRewardsConfirmationWorkflow] = useState<boolean>(false);
   const { allDataNfts, updateBondedDataNftIds } = useNftsStore();
-  const { updateUsersNfMeIdVaultBondId } = useMintStore();
+  const { updateUsersNfMeIdVaultBondId, updateFreeNfMeIdClaimed, freeNfMeIdClaimed } = useMintStore();
   const { colorMode } = useColorMode();
   const [claimableAmount, setClaimableAmount] = useState<number>(0);
   const [withdrawBondConfirmationWorkflow, setWithdrawBondConfirmationWorkflow] = useState<{ bondId: number; bondAmount: number; bondExpired: boolean }>();
@@ -99,12 +99,23 @@ export const LivelinessStakingSol: React.FC = () => {
   const [dateNowTS, setDateNowTS] = useState<number>(0); // we use Date.now() or .getTime() in various parts of the code that need to be synced. It's best we only use one so its all in sync. BUT only for parts that need syncing (e.g. vault liveliness)
 
   useEffect(() => {
+    if (!userPublicKey) return;
+
     async function bootstrapLogicAfterDelay() {
       await sleep(3);
+
+      if (!userPublicKey) return;
 
       // for performance, if the user jumped tabs, abort all the bootstrap logic below. Should do this for any pages that have heavy PRC logic
       if (!window.location.href.includes("/liveliness")) {
         return;
+      }
+
+      // check if the user has done a "free mint" as the CTAs will change based on this
+      const freeNfMeIdMinted = await checkIfFreeDataNftGiftMinted("nfmeid", userPublicKey.toBase58());
+
+      if (freeNfMeIdMinted.alreadyGifted) {
+        updateFreeNfMeIdClaimed(true);
       }
 
       const programObj = getBondingProgramInterface(connection);
@@ -135,7 +146,7 @@ export const LivelinessStakingSol: React.FC = () => {
 
     bootstrapLogicAfterDelay();
     updateIsKeyChainDataForAppLoading(true);
-  }, []);
+  }, [userPublicKey]);
 
   // At the start and also after each pending TX completes, we get the latest bonds, rewards (staked, vault id etc) and vault data (i.e. total bond)
   useEffect(() => {
@@ -253,7 +264,7 @@ export const LivelinessStakingSol: React.FC = () => {
 
         updateUsersNfMeIdVaultBondId(userBondsInfo.vaultBondId); // update the store as well
 
-        if (userBondsInfo.vaultBondId == 0) {
+        if (numberOfBonds && numberOfBonds > 0 && userBondsInfo.vaultBondId === 0) {
           toast({
             title: "NFMe ID Vault Warning",
             description: "You have not set a NFMe ID as your 'vault' yet",
@@ -901,27 +912,48 @@ export const LivelinessStakingSol: React.FC = () => {
                   <>
                     <Alert status="info" mt={2} rounded="md">
                       <AlertIcon />
-                      <Box>
-                        <Text fontWeight="bold">No NFMe ID yet?</Text>
-                        <Text mt="1">Mint one now to:</Text>
-                        <Text mt={2}>
-                          <ul>
-                            <li>- Get a cool, unique NFMe ID Data NFT Avatar</li>
-                            <li>- Bond $ITHEUM tokens</li>
-                            <li>- Build your Liveliness</li>
-                            <li>- Earn awesome staking rewards</li>
-                          </ul>
-                        </Text>
-                        <Button
-                          colorScheme="teal"
-                          borderRadius="12px"
-                          variant="outline"
-                          size="lg"
-                          mt="5"
-                          onClick={() => navigate("/mintdata?launchTemplate=nfMeIdWithBond")}>
-                          <Text px={2}>Mint NFMe ID</Text>
-                        </Button>
-                      </Box>
+                      {freeNfMeIdClaimed ? (
+                        <Box>
+                          <Text fontWeight="bold">
+                            You have not Bonded $ITHEUM of your NFMe ID yet? numberOfBonds = {numberOfBonds} freeNfMeIdClaimed ={freeNfMeIdClaimed.toString()}
+                          </Text>
+                          <Text mt="1">Bond now to:</Text>
+                          <Text mt={2}>
+                            <ul>
+                              <li>- Build your Liveliness</li>
+                              <li>- Earn awesome staking rewards</li>
+                              <li>- Convert it to a {`"Vault"`} and top-up extra, for more rewards</li>
+                            </ul>
+                          </Text>
+                          <Button colorScheme="teal" borderRadius="12px" variant="outline" size="lg" mt="5" onClick={() => navigate("/datanfts/unbonded")}>
+                            <Text px={2}>Bond $ITHEUM on your NFMe ID</Text>
+                          </Button>
+                        </Box>
+                      ) : (
+                        <Box>
+                          <Text fontWeight="bold">
+                            No NFMe ID yet? bonds = {bonds?.length.toString()} freeNfMeIdClaimed ={freeNfMeIdClaimed.toString()}
+                          </Text>
+                          <Text mt="1">Mint one now to:</Text>
+                          <Text mt={2}>
+                            <ul>
+                              <li>- Get a cool, unique NFMe ID Data NFT Avatar</li>
+                              <li>- Bond $ITHEUM tokens</li>
+                              <li>- Build your Liveliness</li>
+                              <li>- Earn awesome staking rewards</li>
+                            </ul>
+                          </Text>
+                          <Button
+                            colorScheme="teal"
+                            borderRadius="12px"
+                            variant="outline"
+                            size="lg"
+                            mt="5"
+                            onClick={() => navigate("/mintdata?launchTemplate=nfMeIdWithBond")}>
+                            <Text px={2}>Mint NFMe ID</Text>
+                          </Button>
+                        </Box>
+                      )}
                     </Alert>
                   </>
                 )}

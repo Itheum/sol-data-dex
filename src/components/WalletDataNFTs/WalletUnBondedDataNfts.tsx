@@ -31,6 +31,7 @@ import NftMediaComponent from "components/NftMediaComponent";
 import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
 import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
+import { labels } from "libs/language";
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { SOLANA_EXPLORER_URL, BOND_CONFIG_INDEX } from "libs/Solana/config";
 import {
@@ -41,6 +42,8 @@ import {
   getInitAddressBondsRewardsPdaTransaction,
   getBondingProgramInterface,
   createAddBondAsVaultTransaction,
+  swapForItheumTokensOnJupiter,
+  getItheumBalanceOnSolana,
 } from "libs/Solana/utils";
 import { transformDescription, timeUntil, sleep } from "libs/utils";
 import { useAccountStore, useMintStore } from "store";
@@ -55,7 +58,7 @@ interface WalletUnBondedDataNftsProps {
 const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, solDataNft, onShowBondingSuccessModal }) => {
   const { networkConfiguration } = useNetworkConfiguration();
   const [reEstablishBondConfirmationWorkflow, setReEstablishBondConfirmationWorkflow] = useState<{ dataNftId: string }>();
-  const { publicKey: userPublicKey, sendTransaction, signMessage } = useWallet();
+  const { publicKey: userPublicKey, sendTransaction, signMessage, wallet } = useWallet();
   const [bondingInProgress, setBondingInProgress] = useState<boolean>(false);
   const [solBondingTxHasFailedMsg, setSolBondingTxHasFailedMsg] = useState<string | undefined>(undefined);
   const [solanaBondTransaction, setSolanaBondTransaction] = useState<Transaction | undefined>(undefined);
@@ -159,8 +162,6 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
           setBondingInProgress(false);
 
           if (reEstablishBondConfirmationWorkflow) {
-            onShowBondingSuccessModal(); // ask the parent to show the success model CTA
-
             await sleep(2);
 
             // we can assume the bonding passed here, so to keep it simple (or else we need to sync a lot of state to store), we re just remove the dataNftId from global store BondedDataNftIds
@@ -218,6 +219,10 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
               }
             }
             // E: AUTO-VAULT STEP
+
+            await sleep(2);
+
+            onShowBondingSuccessModal(); // ask the parent to show the success model CTA
           }
 
           setReEstablishBondConfirmationWorkflow(undefined);
@@ -299,6 +304,8 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
   }
 
   const amountOfTime = lockPeriod.length > 0 ? timeUntil(lockPeriod[0]?.lockPeriod) : { count: -1, unit: "-1" };
+
+  const userHasEnoughItheumTokensForBond = itheumBalance >= BigNumber(lockPeriod[0]?.amount).toNumber();
 
   return (
     <>
@@ -408,6 +415,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
       <>
         <ConfirmationDialog
           isOpen={typeof reEstablishBondConfirmationWorkflow !== "undefined"}
+          isCentered={false}
           onCancel={() => {
             setSolBondingTxHasFailedMsg(undefined);
             setBondingInProgress(false);
@@ -435,6 +443,51 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                     </Alert>
                   ) : (
                     <>
+                      {/* Does user have enough ITHEUM for the bond? */}
+                      <Box>
+                        {!userHasEnoughItheumTokensForBond && (
+                          <Alert status="error" rounded="md" mb={4}>
+                            <AlertIcon />
+                            <Box>
+                              <Text>{labels.ERR_MINT_FORM_NOT_ENOUGH_BOND} </Text>
+                              <Text mt="2" fontWeight="bold">
+                                <Button
+                                  w={"300px"}
+                                  size={"md"}
+                                  p={5}
+                                  colorScheme="teal"
+                                  onClick={() => {
+                                    setSolBondingTxHasFailedMsg(undefined);
+                                    setBondingInProgress(false);
+                                    setReEstablishBondConfirmationWorkflow(undefined);
+
+                                    swapForItheumTokensOnJupiter(wallet, async () => {
+                                      toast({
+                                        title: "Swap Successful",
+                                        description: "$ITHEUM token swap was successful",
+                                        status: "info",
+                                        duration: 15000,
+                                        isClosable: true,
+                                      });
+
+                                      // update token balance
+                                      await sleep(2);
+
+                                      const itheumTokens = await getItheumBalanceOnSolana(connection, userPublicKey!);
+                                      if (itheumTokens != undefined) {
+                                        updateItheumBalance(itheumTokens);
+                                      } else {
+                                        updateItheumBalance(-1);
+                                      }
+                                    });
+                                  }}>
+                                  Swap For Some $ITHEUM Tokens Now
+                                </Button>
+                              </Text>
+                            </Box>
+                          </Alert>
+                        )}
+                      </Box>
                       <Text fontSize="sm" pb={3} opacity=".8">
                         {`Let's`} establish a bond for Data NFT ID {reEstablishBondConfirmationWorkflow?.dataNftId}. usersNfMeIdVaultBondId ={" "}
                         {usersNfMeIdVaultBondId}
@@ -471,7 +524,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
             !bondingInProgress
               ? {
                   title: "Bond ITHEUM tokens to get more Liveliness?",
-                  proceedBtnTxt: solBondingTxHasFailedMsg ? "" : "Proceed with Bond",
+                  proceedBtnTxt: solBondingTxHasFailedMsg || !userHasEnoughItheumTokensForBond ? "" : "Proceed with Bond",
                   cancelBtnText: solBondingTxHasFailedMsg ? "Cancel and Try Again" : "Cancel and Close",
                   proceedBtnColorScheme: "teal",
                 }

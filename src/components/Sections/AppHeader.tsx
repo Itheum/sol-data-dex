@@ -41,8 +41,7 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
-import { NATIVE_MINT } from "@solana/spl-token";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { BsDot } from "react-icons/bs";
 import { FaLaptop, FaUserAstronaut, FaTachometerAlt } from "react-icons/fa";
 import { LuFlaskRound } from "react-icons/lu";
@@ -57,6 +56,8 @@ import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { CHAIN_TOKEN_SYMBOL, CHAINS, MENU, EXPLORER_APP_FOR_TOKEN } from "libs/config";
 import { SolEnvEnum } from "libs/Solana/config";
+import { swapForItheumTokensOnJupiter, getItheumBalanceOnSolana } from "libs/Solana/utils";
+import { sleep } from "libs/utils";
 import { formatNumberRoundFloor } from "libs/utils";
 import { PlayBitzModal } from "pages/GetBitz/PlayBitzModal";
 import { useAccountStore } from "store";
@@ -139,8 +140,9 @@ const AppHeader = ({
       ],
     },
   ];
-
-  const { bitzBalance, cooldown, solPreaccessNonce, solPreaccessSignature, solPreaccessTimestamp, keyChainDataForAppLoading } = useAccountStore();
+  const { bitzBalance, cooldown, keyChainDataForAppLoading } = useAccountStore();
+  const updateItheumBalance = useAccountStore((state) => state.updateItheumBalance);
+  const { connection } = useConnection();
 
   // load mini bitz game
   useEffect(() => {
@@ -179,33 +181,6 @@ const AppHeader = ({
   };
 
   const chainFriendlyName = CHAINS[connectedChain as keyof typeof CHAINS];
-
-  const initJupiter = () => {
-    if (!wallet) return;
-
-    window.Jupiter.init({
-      onSuccess: ({ txid, swapResult }) => {
-        console.log({ txid });
-        toast({
-          title: "Swap Successful",
-          description: "Swap was successful",
-          status: "info",
-          duration: 15000,
-          isClosable: true,
-        });
-      },
-      endpoint: import.meta.env.VITE_ENV_SOLANA_NETWORK_RPC,
-      passThroughWallet: wallet,
-      containerStyles: { maxHeight: "60vh" },
-      formProps: {
-        fixedOutputMint: true,
-        swapMode: "ExactInOut",
-        initialAmount: "100000000",
-        initialOutputMint: import.meta.env.VITE_ENV_ITHEUM_SOL_TOKEN_ADDRESS,
-        initialInputMint: NATIVE_MINT.toBase58(),
-      },
-    });
-  };
 
   return (
     <>
@@ -296,7 +271,34 @@ const AppHeader = ({
               })}
 
               {isUserLoggedIn && (
-                <Button mx={"2px"} borderColor="teal.200" fontSize="md" variant="outline" display={"initial"} h={"12"} onClick={() => initJupiter()}>
+                <Button
+                  mx={"2px"}
+                  borderColor="teal.200"
+                  fontSize="md"
+                  variant="outline"
+                  display={"initial"}
+                  h={"12"}
+                  onClick={() => {
+                    swapForItheumTokensOnJupiter(wallet, async () => {
+                      toast({
+                        title: "Swap Successful",
+                        description: "$ITHEUM token swap was successful",
+                        status: "info",
+                        duration: 15000,
+                        isClosable: true,
+                      });
+
+                      // update token balance
+                      await sleep(2);
+
+                      const itheumTokens = await getItheumBalanceOnSolana(connection, userPublicKey!);
+                      if (itheumTokens != undefined) {
+                        updateItheumBalance(itheumTokens);
+                      } else {
+                        updateItheumBalance(-1);
+                      }
+                    });
+                  }}>
                   {" "}
                   Get $ITHEUM
                 </Button>
@@ -468,12 +470,6 @@ const AppHeader = ({
           </HStack>
         </Flex>
       </Flex>
-
-      <Box backgroundColor={"#5d3d0d"}>
-        <Text textAlign={"center"} fontSize={"small"}>{`preaccessNonce = ${solPreaccessNonce.substring(0, 8)},
-       preaccessSig = ${solPreaccessSignature.substring(0, 8)},
-      preaccessTS = ${solPreaccessTimestamp > -2 ? new Date(solPreaccessTimestamp).toUTCString() : solPreaccessTimestamp}`}</Text>
-      </Box>
 
       <Drawer placement={"left"} onClose={onClose} isOpen={isOpen} blockScrollOnMount={false}>
         <DrawerOverlay />

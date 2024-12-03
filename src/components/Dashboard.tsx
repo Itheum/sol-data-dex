@@ -36,6 +36,57 @@ import { sleep } from "libs/utils/util";
 import { useAccountStore } from "store/account";
 import { useMintStore } from "store/mint";
 import { useNftsStore } from "store/nfts";
+import { motion, Variants } from "framer-motion";
+import { keyframes } from "@emotion/react";
+
+const food: [string, number, number][] = [
+  ["🍅", 340, 10],
+  ["🍊", 20, 40],
+  ["🍋", 60, 90],
+  ["🍐", 80, 120],
+  ["🍏", 100, 140],
+  ["🫐", 205, 245],
+  ["🍆", 260, 290],
+  ["🍇", 290, 320],
+];
+
+const cardVariants: Variants = {
+  offscreen: {
+    y: 300,
+  },
+  onscreen: {
+    y: 50,
+    rotate: -10,
+    transition: {
+      type: "spring",
+      bounce: 0.4,
+      duration: 0.8,
+    },
+  },
+};
+
+const hue = (h: number) => `hsl(${h}, 100%, 50%)`;
+
+interface Props {
+  emoji: string;
+  hueA: number;
+  hueB: number;
+}
+
+function Card({ emoji, hueA, hueB }: Props) {
+  const background = `linear-gradient(306deg, ${hue(hueA)}, ${hue(hueB)})`;
+  // const background = `linear-gradient(180deg)`;
+
+  return (
+    <motion.div className="card-container" initial="offscreen" whileInView="onscreen" viewport={{ once: true, amount: 0.8 }}>
+      <div className="splash" style={{ background }} />
+      <motion.div className="card" variants={cardVariants}>
+        {/* {emoji} */}
+        <motion.img className="rounded-[.1rem] w-[250px] max-h-[250px] md:w-[310px] md:max-h-[310px] m-auto -z-1" src={nfMeIDVault} />
+      </motion.div>
+    </motion.div>
+  );
+}
 
 const Dashboard = ({
   onShowConnectWalletModal,
@@ -55,7 +106,7 @@ const Dashboard = ({
   const [freeMintBitzXpLoading, setFreeMintBitzXpLoading] = useState<boolean>(false);
   const [freeMintBitzXpGameComingUp, setFreeMintBitzXpGameComingUp] = useState<boolean>(false);
   const [freeBitzClaimed, setFreeBitzClaimed] = useState<boolean>(false);
-  const [freeNfMeIdClaimed, setFreeNfMeIdClaimed] = useState<boolean>(false);
+  // const [freeNfMeIdClaimed, setFreeNfMeIdClaimed] = useState<boolean>(false);
   const [freeMusicGiftClaimed, setFreeMusicGiftClaimed] = useState<boolean>(false);
   const [freeMintMusicGiftIntroToAction, setFreeMintMusicGiftIntroToAction] = useState<boolean>(false);
   const [freeMintMusicGiftLoading, setFreeMintMusicGiftLoading] = useState<boolean>(false);
@@ -66,7 +117,7 @@ const Dashboard = ({
   const bitzBalance = useAccountStore((state) => state.bitzBalance);
   const cooldown = useAccountStore((state) => state.cooldown);
   const { updateAllDataNfts, bondedDataNftIds, bitzDataNfts } = useNftsStore();
-  const { usersNfMeIdVaultBondId } = useMintStore();
+  const { usersNfMeIdVaultBondId, updateFreeNfMeIdClaimed, freeNfMeIdClaimed } = useMintStore();
   const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SolEnvEnum.devnet : SolEnvEnum.mainnet;
 
   // conditional displays
@@ -88,7 +139,8 @@ const Dashboard = ({
         const freeNfMeIdMinted = await checkIfFreeDataNftGiftMinted("nfmeid", userPublicKey.toBase58());
 
         if (freeNfMeIdMinted.alreadyGifted) {
-          setFreeNfMeIdClaimed(true);
+          // setFreeNfMeIdClaimed(true);
+          updateFreeNfMeIdClaimed(true);
         }
 
         await sleep(1);
@@ -298,20 +350,65 @@ const Dashboard = ({
     }
   };
 
+  const animationKeyframes = keyframes`
+  0% { transform: scale(1) rotate(0); border-radius: 20%; }
+  25% { transform: scale(2) rotate(0); border-radius: 20%; }
+  50% { transform: scale(2) rotate(270deg); border-radius: 50%; }
+  75% { transform: scale(1) rotate(270deg); border-radius: 50%; }
+  100% { transform: scale(1) rotate(0); border-radius: 20%; }
+`;
+
+  // const animation = `${animationKeyframes} 2s ease-in-out infinite`;
+
+  // const background = `linear-gradient(306deg, ${hue(food[1])}, ${hue(food[2])})`;
+
   return (
     <Flex mt={{ base: "10", md: "0" }} flexDirection="column" alignItems="center" justifyContent="center" backgroundColor={"xred.800"}>
       <Box width={"100%"} backgroundColor={"xblue.900"} padding={5} textAlign="center">
+        {/* <motion.div className="card-container" initial="offscreen" whileInView="onscreen" viewport={{ once: true, amount: 0.8 }}>
+          <div className="splash" style={{ background }} />
+          <motion.div className="card" variants={cardVariants}>
+            food[0]
+          </motion.div>
+        </motion.div> */}
+
+        {/* {food.map(([emoji, hueA, hueB]) => (
+          <Card emoji={emoji} hueA={hueA} hueB={hueB} key={emoji} />
+        ))} */}
+
+        {/* <Box
+          as={motion.div}
+          animation={animation}
+          // not work: transition={{ ... }}
+          padding="2"
+          bgGradient="linear(to-l, #7928CA, #FF0080)"
+          width="12"
+          height="12"
+          display="flex"
+        /> */}
+        {/* <motion.img transition={spring} className="rounded-[.1rem] w-[250px] max-h-[250px] md:w-[310px] md:max-h-[310px] m-auto -z-1" src={nfMeIDVault} /> */}
+
         <Heading as="h1" size="xl" fontFamily="Satoshi-Regular">
           Hello Human,
         </Heading>
         <Heading as="h1" size="lg" fontFamily="Satoshi-Regular" w="70%" textAlign="center" margin="auto">
-          Join the AI Data Workforce, prove your reputation, co-create creative data with me and get rewarded
+          {/* Join the AI Data Workforce, prove your reputation,  creative data with me and get rewarded */}
+          Join the AI Data Workforce, prove your reputation, co-create and accelerate creative data with me and get rewarded
         </Heading>
+        {/* <Image
+          as={motion.img}
+          // animation={animation}
+          margin="auto"
+          boxSize="auto"
+          w={{ base: "60%", md: "50%" }}
+          src={nfMeIDVault}
+          alt="Data NFTs Illustration"
+        /> */}
+
         <Box display="inline-flex" mt="5">
           <Text>Pulsating orbs guide you to your next task</Text>
           <FocusOnThisEffect />
         </Box>
-        <Image hidden margin="auto" boxSize="auto" w={{ base: "60%", md: "50%" }} src={nfMeIDVault} alt="Data NFTs Illustration" />
       </Box>
       <Box width={"100%"} backgroundColor={"xblue.800"} minH="400px" padding={5}>
         <Flex backgroundColor={"xblue.700"} flexDirection={["column", null, "row"]} gap={2} minH="90%">
@@ -599,7 +696,7 @@ const Dashboard = ({
                   size={{ base: "sm", lg: "lg" }}
                   w="280px"
                   isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn || usersNfMeIdVaultBondId > 0}
+                  isDisabled={!isUserLoggedIn || bondedDataNftIds.length === 0 || usersNfMeIdVaultBondId > 0}
                   onClick={() => {
                     navigate("/liveliness?hl=makevault");
                   }}>

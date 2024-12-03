@@ -1,6 +1,6 @@
 import React, { PropsWithChildren, useEffect } from "react";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+// import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
@@ -10,10 +10,11 @@ import {
   fetchBondingConfigSol,
   fetchRewardsConfigSol,
   fetchSolNfts,
-  ITHEUM_SOL_TOKEN_ADDRESS,
+  // ITHEUM_SOL_TOKEN_ADDRESS,
   fetchAddressBondsRewards,
   getBondingProgramInterface,
   retrieveBondsAndNftMeIdVault,
+  getItheumBalanceOnSolana,
 } from "libs/Solana/utils";
 import { computeRemainingCooldown } from "libs/utils";
 import { sleep } from "libs/utils/util";
@@ -61,9 +62,12 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
 
       // get users sol ITHEUM Balance
       (async () => {
-        const itheumTokens = await getItheumBalanceOnSolana();
-        if (itheumTokens != undefined) updateItheumBalance(itheumTokens);
-        else updateItheumBalance(-1);
+        const itheumTokens = await getItheumBalanceOnSolana(connection, userPublicKey);
+        if (itheumTokens != undefined) {
+          updateItheumBalance(itheumTokens);
+        } else {
+          updateItheumBalance(-1);
+        }
       })();
 
       // get users Data nfts
@@ -206,17 +210,17 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
     updateBonusBitzSum(-2);
   }
 
-  const getItheumBalanceOnSolana = async () => {
-    try {
-      const itheumTokenMint = new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS);
-      const addressAta = getAssociatedTokenAddressSync(itheumTokenMint, userPublicKey!, false);
-      const balance = await connection.getTokenAccountBalance(addressAta);
-      return balance.value.uiAmount;
-    } catch (error) {
-      console.error("Error fetching Itheum" + ITHEUM_SOL_TOKEN_ADDRESS + "  balance on Solana " + import.meta.env.VITE_ENV_NETWORK + " blockchain:", error);
-      throw error;
-    }
-  };
+  // const getItheumBalanceOnSolana = async () => {
+  //   try {
+  //     const itheumTokenMint = new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS);
+  //     const addressAta = getAssociatedTokenAddressSync(itheumTokenMint, userPublicKey!, false);
+  //     const balance = await connection.getTokenAccountBalance(addressAta);
+  //     return balance.value.uiAmount;
+  //   } catch (error) {
+  //     console.error("Error fetching Itheum" + ITHEUM_SOL_TOKEN_ADDRESS + "  balance on Solana " + import.meta.env.VITE_ENV_NETWORK + " blockchain:", error);
+  //     throw error;
+  //   }
+  // };
 
   const getItheumPrice = () => {
     (async () => {

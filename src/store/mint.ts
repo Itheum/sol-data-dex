@@ -13,6 +13,7 @@ type State = {
   userBonds: Array<Bond>;
   usersNfMeIdVaultBondId: number;
   currentMaxApr: number;
+  freeNfMeIdClaimed: boolean;
 };
 
 type Action = {
@@ -21,6 +22,7 @@ type Action = {
   updateUserBonds: (userBonds: State["userBonds"]) => void;
   updateUsersNfMeIdVaultBondId: (usersNfMeIdVaultBondId: State["usersNfMeIdVaultBondId"]) => void;
   updateCurrentMaxApr: (currentMaxApr: State["currentMaxApr"]) => void;
+  updateFreeNfMeIdClaimed: (freeNfMeIdClaimed: State["freeNfMeIdClaimed"]) => void;
 };
 
 export const useMintStore = create<State & Action>((set) => ({
@@ -29,9 +31,11 @@ export const useMintStore = create<State & Action>((set) => ({
   userBonds: [],
   usersNfMeIdVaultBondId: 0,
   currentMaxApr: -1,
+  freeNfMeIdClaimed: false,
   updateUserData: (value: UserDataType | undefined) => set(() => ({ userData: value })),
   updateLockPeriodForBond: (value: Array<{ lockPeriod: number; amount: BigNumber.Value }>) => set(() => ({ lockPeriodForBond: value })),
   updateUserBonds: (value: Bond[]) => set(() => ({ userBonds: value })),
   updateUsersNfMeIdVaultBondId: (value: number) => set(() => ({ usersNfMeIdVaultBondId: value })),
   updateCurrentMaxApr: (value: number) => set(() => ({ currentMaxApr: value })),
+  updateFreeNfMeIdClaimed: (value: boolean) => set(() => ({ freeNfMeIdClaimed: value })),
 }));

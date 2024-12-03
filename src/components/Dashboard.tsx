@@ -21,6 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { motion, useScroll, useSpring, useTransform, useMotionValueEvent } from "framer-motion";
 import { BsDot } from "react-icons/bs";
 import { BsBookmarkCheckFill } from "react-icons/bs";
 import { LuFlaskRound } from "react-icons/lu";
@@ -36,57 +37,11 @@ import { sleep } from "libs/utils/util";
 import { useAccountStore } from "store/account";
 import { useMintStore } from "store/mint";
 import { useNftsStore } from "store/nfts";
-import { motion, Variants } from "framer-motion";
-import { keyframes } from "@emotion/react";
 
-const food: [string, number, number][] = [
-  ["🍅", 340, 10],
-  ["🍊", 20, 40],
-  ["🍋", 60, 90],
-  ["🍐", 80, 120],
-  ["🍏", 100, 140],
-  ["🫐", 205, 245],
-  ["🍆", 260, 290],
-  ["🍇", 290, 320],
-];
-
-const cardVariants: Variants = {
-  offscreen: {
-    y: 300,
-  },
-  onscreen: {
-    y: 50,
-    rotate: -10,
-    transition: {
-      type: "spring",
-      bounce: 0.4,
-      duration: 0.8,
-    },
-  },
+const parentVariants = {
+  visible: { opacity: 1, y: 0 },
+  hidden: { opacity: 0, y: "10rem" },
 };
-
-const hue = (h: number) => `hsl(${h}, 100%, 50%)`;
-
-interface Props {
-  emoji: string;
-  hueA: number;
-  hueB: number;
-}
-
-function Card({ emoji, hueA, hueB }: Props) {
-  const background = `linear-gradient(306deg, ${hue(hueA)}, ${hue(hueB)})`;
-  // const background = `linear-gradient(180deg)`;
-
-  return (
-    <motion.div className="card-container" initial="offscreen" whileInView="onscreen" viewport={{ once: true, amount: 0.8 }}>
-      <div className="splash" style={{ background }} />
-      <motion.div className="card" variants={cardVariants}>
-        {/* {emoji} */}
-        <motion.img className="rounded-[.1rem] w-[250px] max-h-[250px] md:w-[310px] md:max-h-[310px] m-auto -z-1" src={nfMeIDVault} />
-      </motion.div>
-    </motion.div>
-  );
-}
 
 const Dashboard = ({
   onShowConnectWalletModal,
@@ -106,7 +61,6 @@ const Dashboard = ({
   const [freeMintBitzXpLoading, setFreeMintBitzXpLoading] = useState<boolean>(false);
   const [freeMintBitzXpGameComingUp, setFreeMintBitzXpGameComingUp] = useState<boolean>(false);
   const [freeBitzClaimed, setFreeBitzClaimed] = useState<boolean>(false);
-  // const [freeNfMeIdClaimed, setFreeNfMeIdClaimed] = useState<boolean>(false);
   const [freeMusicGiftClaimed, setFreeMusicGiftClaimed] = useState<boolean>(false);
   const [freeMintMusicGiftIntroToAction, setFreeMintMusicGiftIntroToAction] = useState<boolean>(false);
   const [freeMintMusicGiftLoading, setFreeMintMusicGiftLoading] = useState<boolean>(false);
@@ -139,7 +93,6 @@ const Dashboard = ({
         const freeNfMeIdMinted = await checkIfFreeDataNftGiftMinted("nfmeid", userPublicKey.toBase58());
 
         if (freeNfMeIdMinted.alreadyGifted) {
-          // setFreeNfMeIdClaimed(true);
           updateFreeNfMeIdClaimed(true);
         }
 
@@ -350,562 +303,557 @@ const Dashboard = ({
     }
   };
 
-  const animationKeyframes = keyframes`
-  0% { transform: scale(1) rotate(0); border-radius: 20%; }
-  25% { transform: scale(2) rotate(0); border-radius: 20%; }
-  50% { transform: scale(2) rotate(270deg); border-radius: 50%; }
-  75% { transform: scale(1) rotate(270deg); border-radius: 50%; }
-  100% { transform: scale(1) rotate(0); border-radius: 20%; }
-`;
+  /* S: Animation
+  https://codesandbox.io/p/sandbox/framer-motion-nav-show-hide-2024-updated-version-5j7gc9?file=%2Fsrc%2FNav.tsx%3A3%2C18-3%2C37&from-embed
+  */
+  const { scrollY } = useScroll();
+  const [hidden, setHidden] = useState(false);
+  const [prevScroll, setPrevScroll] = useState(0);
 
-  // const animation = `${animationKeyframes} 2s ease-in-out infinite`;
+  function update(latest: number, prev: number): void {
+    if (latest < prev) {
+      setHidden(false);
+      // console.log("visible");
+    } else if (latest > 100 && latest > prev) {
+      setHidden(true);
+      // console.log("hidden");
+    }
+  }
 
-  // const background = `linear-gradient(306deg, ${hue(food[1])}, ${hue(food[2])})`;
+  useMotionValueEvent(scrollY, "change", (latest: number) => {
+    update(latest, prevScroll);
+    setPrevScroll(latest);
+  });
+  // E: Animation
 
   return (
     <Flex mt={{ base: "10", md: "0" }} flexDirection="column" alignItems="center" justifyContent="center" backgroundColor={"xred.800"}>
       <Box width={"100%"} backgroundColor={"xblue.900"} padding={5} textAlign="center">
-        {/* <motion.div className="card-container" initial="offscreen" whileInView="onscreen" viewport={{ once: true, amount: 0.8 }}>
-          <div className="splash" style={{ background }} />
-          <motion.div className="card" variants={cardVariants}>
-            food[0]
-          </motion.div>
-        </motion.div> */}
+        <motion.nav
+          variants={parentVariants}
+          animate={hidden ? "hidden" : "visible"}
+          transition={{
+            ease: [0.1, 0.25, 0.3, 1],
+            duration: 2,
+            staggerChildren: 0.05,
+          }}>
+          <div className="navLinksWrapper">
+            <motion.img className="rounded-[.1rem] m-auto -z-1 w-[50%] h-[100%]" src={nfMeIDVault} />
+          </div>
+        </motion.nav>
 
-        {/* {food.map(([emoji, hueA, hueB]) => (
-          <Card emoji={emoji} hueA={hueA} hueB={hueB} key={emoji} />
-        ))} */}
-
-        {/* <Box
-          as={motion.div}
-          animation={animation}
-          // not work: transition={{ ... }}
-          padding="2"
-          bgGradient="linear(to-l, #7928CA, #FF0080)"
-          width="12"
-          height="12"
-          display="flex"
-        /> */}
-        {/* <motion.img transition={spring} className="rounded-[.1rem] w-[250px] max-h-[250px] md:w-[310px] md:max-h-[310px] m-auto -z-1" src={nfMeIDVault} /> */}
-
-        <Heading as="h1" size="xl" fontFamily="Satoshi-Regular">
-          Hello Human,
-        </Heading>
-        <Heading as="h1" size="lg" fontFamily="Satoshi-Regular" w="70%" textAlign="center" margin="auto">
-          {/* Join the AI Data Workforce, prove your reputation,  creative data with me and get rewarded */}
-          Join the AI Data Workforce, prove your reputation, co-create and accelerate creative data with me and get rewarded
-        </Heading>
-        {/* <Image
-          as={motion.img}
-          // animation={animation}
-          margin="auto"
-          boxSize="auto"
-          w={{ base: "60%", md: "50%" }}
-          src={nfMeIDVault}
-          alt="Data NFTs Illustration"
-        /> */}
-
-        <Box display="inline-flex" mt="5">
-          <Text>Pulsating orbs guide you to your next task</Text>
-          <FocusOnThisEffect />
-        </Box>
-      </Box>
-      <Box width={"100%"} backgroundColor={"xblue.800"} minH="400px" padding={5}>
-        <Flex backgroundColor={"xblue.700"} flexDirection={["column", null, "row"]} gap={2} minH="90%">
-          <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
-            <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
-              Get Started for Free
+        <Box>
+          <Box as={motion.div}>
+            <Heading as="h1" size="2xl" fontFamily="Satoshi-Regular">
+              Hello Human,
             </Heading>
-
-            <Flex flexDirection="column" gap="3">
-              <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2} borderBottom="1px solid" borderColor="teal.200">
-                {!isUserLoggedIn && <FocusOnThisEffect />}
-
-                <Heading as="h3" size="md" textAlign="center" fontFamily="Satoshi-Regular">
-                  Login via Wallet
+            <Heading as="h1" size="xl" fontFamily="Satoshi-Regular" w="70%" textAlign="center" margin="auto" mt="2">
+              {/* Join the AI Data Workforce, prove your reputation,  creative data with me and get rewarded */}
+              Join the AI Data Workforce, prove your reputation, co-create and accelerate creative data with me and get rewarded
+            </Heading>
+          </Box>
+          <Box display="inline-flex" mt="5">
+            <Text>Pulsating orbs guide you to your next task</Text>
+            <FocusOnThisEffect />
+          </Box>
+          <Box width={"100%"} backgroundColor={"xblue.800"} minH="400px" padding={5}>
+            <Flex backgroundColor={"xblue.700"} flexDirection={["column", null, "row"]} gap={2} minH="90%">
+              <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+                <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
+                  Get Started for Free
                 </Heading>
 
-                <Text textAlign="center">You need this to collect your rewards</Text>
+                <Flex flexDirection="column" gap="3">
+                  <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2} borderBottom="1px solid" borderColor="teal.200">
+                    {!isUserLoggedIn && <FocusOnThisEffect />}
 
-                {!isUserLoggedIn ? (
-                  <Button
-                    m="auto"
-                    colorScheme="teal"
-                    fontSize={{ base: "sm", md: "md" }}
-                    size={{ base: "sm", lg: "lg" }}
-                    onClick={() => {
-                      onShowConnectWalletModal("sol");
-                    }}>
-                    Login via Wallet
-                  </Button>
-                ) : (
-                  <Flex flexDirection="column" alignItems="center">
-                    <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
-                    <Box>
-                      <ShortAddress address={userPublicKey?.toBase58()} fontSize="xl" isCopyAddress={true} />
-                    </Box>
+                    <Heading as="h3" size="md" textAlign="center" fontFamily="Satoshi-Regular">
+                      Login via Wallet
+                    </Heading>
+
+                    <Text textAlign="center">You need this to collect your rewards</Text>
+
+                    {!isUserLoggedIn ? (
+                      <Button
+                        m="auto"
+                        colorScheme="teal"
+                        fontSize={{ base: "sm", md: "md" }}
+                        size={{ base: "sm", lg: "lg" }}
+                        onClick={() => {
+                          onShowConnectWalletModal("sol");
+                        }}>
+                        Login via Wallet
+                      </Button>
+                    ) : (
+                      <Flex flexDirection="column" alignItems="center">
+                        <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
+                        <Box>
+                          <ShortAddress address={userPublicKey?.toBase58()} fontSize="xl" isCopyAddress={true} />
+                        </Box>
+                      </Flex>
+                    )}
                   </Flex>
-                )}
-              </Flex>
 
-              {/* Get the BiTz XP airdrop -- ONLY ENABLE if the user has logged in & does NOT have a BitZ XP already */}
-              <Flex
-                flexDirection="column"
-                backgroundColor={"xgray.500"}
-                gap={2}
-                p={2}
-                borderBottom="1px solid"
-                borderColor="teal.200"
-                opacity={!isUserLoggedIn ? 0.5 : "initial"}
-                pointerEvents={!isUserLoggedIn ? "none" : "initial"}>
-                {isUserLoggedIn && !hasBitzNft && <FocusOnThisEffect />}
+                  {/* Get the BiTz XP airdrop -- ONLY ENABLE if the user has logged in & does NOT have a BitZ XP already */}
+                  <Flex
+                    flexDirection="column"
+                    backgroundColor={"xgray.500"}
+                    gap={2}
+                    p={2}
+                    borderBottom="1px solid"
+                    borderColor="teal.200"
+                    opacity={!isUserLoggedIn ? 0.5 : "initial"}
+                    pointerEvents={!isUserLoggedIn ? "none" : "initial"}>
+                    {isUserLoggedIn && !hasBitzNft && <FocusOnThisEffect />}
 
-                <Heading as="h3" size="md" textAlign="center">
-                  Get a Free BiTz XP Data NFT
+                    <Heading as="h3" size="md" textAlign="center">
+                      Get a Free BiTz XP Data NFT
+                    </Heading>
+
+                    <Text textAlign="center">You can use it to collect XP by staying active</Text>
+
+                    <Button
+                      m="auto"
+                      colorScheme="teal"
+                      variant={freeBitzClaimed ? "solid" : "outline"}
+                      fontSize={{ base: "sm", md: "md" }}
+                      size={{ base: "sm", lg: "lg" }}
+                      isLoading={freeDropCheckLoading}
+                      isDisabled={!isUserLoggedIn || freeBitzClaimed}
+                      onClick={() => {
+                        setFreeMintBitzXpIntroToAction(true);
+                        onProgressModalOpen();
+                      }}>
+                      {freeBitzClaimed ? "Claimed" : "Free Mint Now"}
+                    </Button>
+
+                    {!freeBitzClaimed ? (
+                      <Text fontSize="xs" textAlign="center">
+                        Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which will NOT be used but is to make sure
+                        your wallet exists and can receive the NFT.
+                      </Text>
+                    ) : (
+                      <Box margin="auto">
+                        <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
+                      </Box>
+                    )}
+                  </Flex>
+
+                  {/* Get the NFMe ID airdrop -- ONLY ENABLE if the user has logged in & does NOT have a free NFMe ID already */}
+                  <Flex
+                    flexDirection="column"
+                    backgroundColor={"xgray.500"}
+                    gap={2}
+                    p={2}
+                    borderBottom="1px solid"
+                    borderColor="teal.200"
+                    opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
+                    pointerEvents={!isUserLoggedIn || !hasBitzNft ? "none" : "initial"}>
+                    {isUserLoggedIn && freeBitzClaimed && !freeNfMeIdClaimed && <FocusOnThisEffect />}
+
+                    <Heading as="h3" size="md" textAlign="center">
+                      Get a Free NFMe ID
+                    </Heading>
+
+                    <Text textAlign="center">You can use it as your web3 identity for AI agents to verify</Text>
+
+                    <Button
+                      m="auto"
+                      colorScheme="teal"
+                      variant={freeNfMeIdClaimed ? "solid" : "outline"}
+                      fontSize={{ base: "sm", md: "md" }}
+                      size={{ base: "sm", lg: "lg" }}
+                      isLoading={freeDropCheckLoading}
+                      isDisabled={!isUserLoggedIn || freeNfMeIdClaimed}
+                      onClick={() => {
+                        navigate("/mintdata?launchTemplate=nfMeIdFreeMint");
+                      }}>
+                      {freeNfMeIdClaimed ? "Claimed" : "Free Mint Now"}
+                    </Button>
+
+                    {!freeNfMeIdClaimed ? (
+                      <Text fontSize="xs" textAlign="center">
+                        Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which will NOT be used but is to make sure
+                        your wallet exists and can receive the NFT.
+                      </Text>
+                    ) : (
+                      <Box margin="auto">
+                        <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
+                      </Box>
+                    )}
+                  </Flex>
+                </Flex>
+              </Box>
+
+              <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+                <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
+                  Grow Reputation
                 </Heading>
 
-                <Text textAlign="center">You can use it to collect XP by staying active</Text>
+                <Flex flexDirection="column" gap="3">
+                  {/* Play the BiTz Game -- ONLY ENABLE if the user has a BiTz Data NFT */}
+                  <Flex
+                    flexDirection="column"
+                    backgroundColor={"xgray.500"}
+                    gap={2}
+                    p={2}
+                    borderBottom="1px solid"
+                    borderColor="teal.200"
+                    opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
+                    pointerEvents={!hasBitzNft ? "none" : "initial"}>
+                    {!hasBitzNft && (
+                      <Alert status="warning" rounded="md">
+                        <AlertIcon />
+                        {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
+                      </Alert>
+                    )}
 
-                <Button
-                  m="auto"
-                  colorScheme="teal"
-                  variant={freeBitzClaimed ? "solid" : "outline"}
-                  fontSize={{ base: "sm", md: "md" }}
-                  size={{ base: "sm", lg: "lg" }}
-                  isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn || freeBitzClaimed}
-                  onClick={() => {
-                    setFreeMintBitzXpIntroToAction(true);
-                    onProgressModalOpen();
-                  }}>
-                  {freeBitzClaimed ? "Claimed" : "Free Mint Now"}
-                </Button>
+                    {isUserLoggedIn && cooldown === 0 && <FocusOnThisEffect />}
 
-                {!freeBitzClaimed ? (
-                  <Text fontSize="xs" textAlign="center">
-                    Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which will NOT be used but is to make sure your
-                    wallet exists and can receive the NFT.
-                  </Text>
-                ) : (
-                  <Box margin="auto">
-                    <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
-                  </Box>
-                )}
-              </Flex>
+                    <Heading as="h3" size="md" textAlign="center">
+                      Boost Your Proof-of-Activity
+                    </Heading>
 
-              {/* Get the NFMe ID airdrop -- ONLY ENABLE if the user has logged in & does NOT have a free NFMe ID already */}
-              <Flex
-                flexDirection="column"
-                backgroundColor={"xgray.500"}
-                gap={2}
-                p={2}
-                borderBottom="1px solid"
-                borderColor="teal.200"
-                opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
-                pointerEvents={!isUserLoggedIn || !hasBitzNft ? "none" : "initial"}>
-                {isUserLoggedIn && freeBitzClaimed && !freeNfMeIdClaimed && <FocusOnThisEffect />}
+                    <Text textAlign="center">You need BiTz to vote to curate AI content. Earn BiTz by playing the game every few hours.</Text>
 
-                <Heading as="h3" size="md" textAlign="center">
-                  Get a Free NFMe ID
-                </Heading>
+                    <Button
+                      m="auto"
+                      display={{ base: "none", md: "inline-flex" }}
+                      size={{ md: "md", xl: "md", "2xl": "lg" }}
+                      p="8 !important"
+                      onClick={() => onRemoteTriggerOfBiTzPlayModel(true)}
+                      isDisabled={!isUserLoggedIn}>
+                      <Text fontSize="xl">{bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}</Text>
 
-                <Text textAlign="center">You can use it as your web3 identity for AI agents to verify</Text>
+                      <LuFlaskRound fontSize={"2.2rem"} fill="#03c797" />
 
-                <Button
-                  m="auto"
-                  colorScheme="teal"
-                  variant={freeNfMeIdClaimed ? "solid" : "outline"}
-                  fontSize={{ base: "sm", md: "md" }}
-                  size={{ base: "sm", lg: "lg" }}
-                  isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn || freeNfMeIdClaimed}
-                  onClick={() => {
-                    navigate("/mintdata?launchTemplate=nfMeIdFreeMint");
-                  }}>
-                  {freeNfMeIdClaimed ? "Claimed" : "Free Mint Now"}
-                </Button>
-
-                {!freeNfMeIdClaimed ? (
-                  <Text fontSize="xs" textAlign="center">
-                    Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which will NOT be used but is to make sure your
-                    wallet exists and can receive the NFT.
-                  </Text>
-                ) : (
-                  <Box margin="auto">
-                    <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
-                  </Box>
-                )}
-              </Flex>
-            </Flex>
-          </Box>
-
-          <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
-            <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
-              Grow Reputation
-            </Heading>
-
-            <Flex flexDirection="column" gap="3">
-              {/* Play the BiTz Game -- ONLY ENABLE if the user has a BiTz Data NFT */}
-              <Flex
-                flexDirection="column"
-                backgroundColor={"xgray.500"}
-                gap={2}
-                p={2}
-                borderBottom="1px solid"
-                borderColor="teal.200"
-                opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
-                pointerEvents={!hasBitzNft ? "none" : "initial"}>
-                {!hasBitzNft && (
-                  <Alert status="warning" rounded="md">
-                    <AlertIcon />
-                    {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
-                  </Alert>
-                )}
-
-                {isUserLoggedIn && cooldown === 0 && <FocusOnThisEffect />}
-
-                <Heading as="h3" size="md" textAlign="center">
-                  Boost Your Proof-of-Activity
-                </Heading>
-
-                <Text textAlign="center">You need BiTz to vote to curate AI content. Earn BiTz by playing the game every few hours.</Text>
-
-                <Button
-                  m="auto"
-                  display={{ base: "none", md: "inline-flex" }}
-                  size={{ md: "md", xl: "md", "2xl": "lg" }}
-                  p="8 !important"
-                  onClick={() => onRemoteTriggerOfBiTzPlayModel(true)}
-                  isDisabled={!isUserLoggedIn}>
-                  <Text fontSize="xl">{bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}</Text>
-
-                  <LuFlaskRound fontSize={"2.2rem"} fill="#03c797" />
-
-                  {cooldown <= 0 && cooldown != -2 && (
-                    <>
-                      {" "}
-                      <Box
-                        position={"absolute"}
-                        w={"full"}
-                        h={"full"}
-                        right="-15px"
-                        top="-15px"
-                        as={BsDot}
-                        color="#03c797"
-                        size="15px"
-                        animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"></Box>{" "}
-                      <Box
-                        position={"absolute"}
-                        w={"full"}
-                        h={"full"}
-                        right="-8px"
-                        top="-18px"
-                        as={BsDot}
-                        color="#03c797"
-                        size="15px"
-                        animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
-                        style={{ animationDelay: "0.5s" }}></Box>{" "}
-                      <Box
-                        position={"absolute"}
-                        w={"full"}
-                        h={"full"}
-                        right="-12px"
-                        top="-25px"
-                        as={BsDot}
-                        color="#03c797"
-                        size="55px"
-                        animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
-                        style={{ animationDelay: "1s" }}></Box>{" "}
-                    </>
-                  )}
-                </Button>
-
-                {isUserLoggedIn && (
-                  <Button
-                    m="auto"
-                    onClick={() => onRemoteTriggerOfBiTzPlayModel(true)}
-                    variant="outline"
-                    borderColor="#03c797"
-                    rounded="full"
-                    w="full"
-                    _hover={{ textColor: "white", backgroundImage: "linear-gradient(345deg, #171717, #03c797)" }}>
-                    <span>
-                      {cooldown === -2 ? (
-                        <span>Check XP Balance & Play</span>
-                      ) : cooldown > 0 ? (
-                        <Countdown unixTime={cooldown} />
-                      ) : (
-                        <span> Claim Your BiTz XP</span>
+                      {cooldown <= 0 && cooldown != -2 && (
+                        <>
+                          {" "}
+                          <Box
+                            position={"absolute"}
+                            w={"full"}
+                            h={"full"}
+                            right="-15px"
+                            top="-15px"
+                            as={BsDot}
+                            color="#03c797"
+                            size="15px"
+                            animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"></Box>{" "}
+                          <Box
+                            position={"absolute"}
+                            w={"full"}
+                            h={"full"}
+                            right="-8px"
+                            top="-18px"
+                            as={BsDot}
+                            color="#03c797"
+                            size="15px"
+                            animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
+                            style={{ animationDelay: "0.5s" }}></Box>{" "}
+                          <Box
+                            position={"absolute"}
+                            w={"full"}
+                            h={"full"}
+                            right="-12px"
+                            top="-25px"
+                            as={BsDot}
+                            color="#03c797"
+                            size="55px"
+                            animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
+                            style={{ animationDelay: "1s" }}></Box>{" "}
+                        </>
                       )}
-                    </span>
-                  </Button>
-                )}
+                    </Button>
 
-                <Button
-                  m="auto"
-                  colorScheme="teal"
-                  variant="outline"
-                  fontSize={{ base: "sm", md: "md" }}
-                  size={{ base: "sm", lg: "lg" }}
-                  isDisabled={!isUserLoggedIn}
-                  onClick={() => {
-                    alert("Buy BiTz");
-                  }}>
-                  Buy BiTz
-                </Button>
-              </Flex>
+                    {isUserLoggedIn && (
+                      <Button
+                        m="auto"
+                        onClick={() => onRemoteTriggerOfBiTzPlayModel(true)}
+                        variant="outline"
+                        borderColor="#03c797"
+                        rounded="full"
+                        w="full"
+                        _hover={{ textColor: "white", backgroundImage: "linear-gradient(345deg, #171717, #03c797)" }}>
+                        <span>
+                          {cooldown === -2 ? (
+                            <span>Check XP Balance & Play</span>
+                          ) : cooldown > 0 ? (
+                            <Countdown unixTime={cooldown} />
+                          ) : (
+                            <span> Claim Your BiTz XP</span>
+                          )}
+                        </span>
+                      </Button>
+                    )}
 
-              {/* Bond on your NFMe and Make it a vault -- ONLY ENABLE if the user has no bonded NFMe and a Vault */}
-              <Flex
-                flexDirection="column"
-                backgroundColor={"xgray.500"}
-                gap={2}
-                p={2}
-                opacity={!isUserLoggedIn || !freeNfMeIdClaimed ? 0.5 : "initial"}
-                pointerEvents={!isUserLoggedIn || !freeNfMeIdClaimed ? "none" : "initial"}>
-                {isUserLoggedIn && hasBitzNft && freeNfMeIdClaimed && usersNfMeIdVaultBondId === 0 && <FocusOnThisEffect />}
+                    <Button
+                      m="auto"
+                      colorScheme="teal"
+                      variant="outline"
+                      fontSize={{ base: "sm", md: "md" }}
+                      size={{ base: "sm", lg: "lg" }}
+                      isDisabled={!isUserLoggedIn}
+                      onClick={() => {
+                        alert("Buy BiTz");
+                      }}>
+                      Buy BiTz
+                    </Button>
+                  </Flex>
 
-                <Heading as="h3" size="md" textAlign="center">
-                  Boost Your Proof-of-Reputation
+                  {/* Bond on your NFMe and Make it a vault -- ONLY ENABLE if the user has no bonded NFMe and a Vault */}
+                  <Flex
+                    flexDirection="column"
+                    backgroundColor={"xgray.500"}
+                    gap={2}
+                    p={2}
+                    opacity={!isUserLoggedIn || !freeNfMeIdClaimed ? 0.5 : "initial"}
+                    pointerEvents={!isUserLoggedIn || !freeNfMeIdClaimed ? "none" : "initial"}>
+                    {isUserLoggedIn && hasBitzNft && freeNfMeIdClaimed && usersNfMeIdVaultBondId === 0 && <FocusOnThisEffect />}
+
+                    <Heading as="h3" size="md" textAlign="center">
+                      Boost Your Proof-of-Reputation
+                    </Heading>
+
+                    <Text textAlign="center">Bond $ITHEUM on your NFMe ID vault, and grow your Liveliness to signal that you are {"Committed"}</Text>
+
+                    {/* check if the user has at least 1 bond */}
+                    <Button
+                      m="auto"
+                      colorScheme="teal"
+                      variant={bondedDataNftIds.length > 0 ? "solid" : "outline"}
+                      fontSize={{ base: "sm", md: "md" }}
+                      size={{ base: "sm", lg: "lg" }}
+                      w="280px"
+                      isLoading={freeDropCheckLoading}
+                      isDisabled={!isUserLoggedIn || bondedDataNftIds.length > 0}
+                      onClick={() => {
+                        navigate("/datanfts/unbonded");
+                      }}>
+                      Bond $ITHEUM on your NFMe ID
+                    </Button>
+
+                    {/* check if the user has no vault and then allow them to action that */}
+                    <Button
+                      m="auto"
+                      colorScheme="teal"
+                      variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
+                      fontSize={{ base: "sm", md: "md" }}
+                      size={{ base: "sm", lg: "lg" }}
+                      w="280px"
+                      isLoading={freeDropCheckLoading}
+                      isDisabled={!isUserLoggedIn || bondedDataNftIds.length === 0 || usersNfMeIdVaultBondId > 0}
+                      onClick={() => {
+                        navigate("/liveliness?hl=makevault");
+                      }}>
+                      Upgrade the NFMe ID into a Vault
+                    </Button>
+
+                    {bondedDataNftIds.length > 0 && usersNfMeIdVaultBondId > 0 && (
+                      <Box margin="auto">
+                        <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
+                      </Box>
+                    )}
+                  </Flex>
+                </Flex>
+              </Box>
+
+              <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+                <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
+                  Co-Create with AI
                 </Heading>
 
-                <Text textAlign="center">Bond $ITHEUM on your NFMe ID vault, and grow your Liveliness to signal that you are {"Committed"}</Text>
+                <Flex flexDirection="column" gap="3">
+                  <Flex
+                    flexDirection="column"
+                    backgroundColor={"xgray.500"}
+                    gap={2}
+                    p={2}
+                    borderBottom="1px solid"
+                    borderColor="teal.200"
+                    opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
+                    pointerEvents={!isUserLoggedIn || !hasBitzNft ? "none" : "initial"}>
+                    <Text textAlign="center" fontSize="lg" fontWeight="bold" mb="5">
+                      {`<< `}The Following Jobs Are Live{` >>`}
+                    </Text>
 
-                {/* check if the user has at least 1 bond */}
-                <Button
-                  m="auto"
-                  colorScheme="teal"
-                  variant={bondedDataNftIds.length > 0 ? "solid" : "outline"}
-                  fontSize={{ base: "sm", md: "md" }}
-                  size={{ base: "sm", lg: "lg" }}
-                  w="280px"
-                  isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn || bondedDataNftIds.length > 0}
-                  onClick={() => {
-                    navigate("/datanfts/unbonded");
-                  }}>
-                  Bond $ITHEUM on your NFMe ID
-                </Button>
+                    <Heading as="h3" size="md" textAlign="center">
+                      NF-Tunes AI Music Feedback
+                    </Heading>
+                    <Text textAlign="center">
+                      Help real-world music artists amplify their music with help from the Itheum Sigma AI Agent and your data curation
+                    </Text>
+                  </Flex>
 
-                {/* check if the user has no vault and then allow them to action that */}
-                <Button
-                  m="auto"
-                  colorScheme="teal"
-                  variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
-                  fontSize={{ base: "sm", md: "md" }}
-                  size={{ base: "sm", lg: "lg" }}
-                  w="280px"
-                  isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn || bondedDataNftIds.length === 0 || usersNfMeIdVaultBondId > 0}
-                  onClick={() => {
-                    navigate("/liveliness?hl=makevault");
-                  }}>
-                  Upgrade the NFMe ID into a Vault
-                </Button>
+                  <Flex
+                    flexDirection="column"
+                    backgroundColor={"xgray.500"}
+                    gap={2}
+                    p={2}
+                    borderBottom="1px solid"
+                    borderColor="teal.200"
+                    opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
+                    pointerEvents={!isUserLoggedIn || !hasBitzNft ? "none" : "initial"}>
+                    <Text textAlign="center" fontSize="2xl">
+                      1.
+                    </Text>
 
-                {bondedDataNftIds.length > 0 && usersNfMeIdVaultBondId > 0 && (
-                  <Box margin="auto">
-                    <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
-                  </Box>
-                )}
-              </Flex>
+                    {isUserLoggedIn && hasBitzNft && <FocusOnThisEffect />}
+
+                    <Heading as="h3" size="md" textAlign="center">
+                      Get Free Music Data NFT
+                    </Heading>
+
+                    <Text textAlign="center">Claim it and use it on NF-Tunes</Text>
+
+                    <Button
+                      margin="auto"
+                      colorScheme="teal"
+                      variant={freeMusicGiftClaimed ? "solid" : "outline"}
+                      fontSize={{ base: "sm", md: "md" }}
+                      size={{ base: "sm", lg: "lg" }}
+                      isLoading={freeDropCheckLoading}
+                      isDisabled={!isUserLoggedIn || freeMusicGiftClaimed}
+                      w="280px"
+                      onClick={() => {
+                        setFreeMintMusicGiftIntroToAction(true);
+                        onProgressModalOpen();
+                      }}>
+                      {freeMusicGiftClaimed ? "Claimed" : "Free Mint Now"}
+                    </Button>
+
+                    <Button
+                      margin="auto"
+                      colorScheme="teal"
+                      variant="outline"
+                      fontSize={{ base: "sm", md: "md" }}
+                      size={{ base: "sm", lg: "lg" }}
+                      w="280px"
+                      isLoading={freeDropCheckLoading}
+                      isDisabled={!isUserLoggedIn || !freeMusicGiftClaimed}
+                      onClick={() => {
+                        window.open(`${EXPLORER_APP_FOR_TOKEN[chainId]["nftunes"]}?artist-profile=waveborn-luminex&hl=sample`, "_blank");
+                      }}>
+                      Use Music Data NFT on NF-Tunes
+                    </Button>
+
+                    {freeMusicGiftClaimed && (
+                      <Box margin="auto">
+                        <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
+                      </Box>
+                    )}
+                  </Flex>
+
+                  {/* lets people vote on content with BitZ: ONLY ENABLE if the user has a BiTz Data NFT and have more than 0 BiTz balance */}
+                  <Flex
+                    flexDirection="column"
+                    backgroundColor={"xgray.500"}
+                    gap={2}
+                    p={2}
+                    opacity={!hasBitzNft ? 0.5 : "initial"}
+                    pointerEvents={!hasBitzNft ? "none" : "initial"}>
+                    {!hasBitzNft && (
+                      <Alert status="warning" rounded="md">
+                        <AlertIcon />
+                        {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
+                      </Alert>
+                    )}
+                    <Text textAlign="center" fontSize="2xl">
+                      2.
+                    </Text>
+
+                    {isUserLoggedIn && hasBitzNft && bitzBalance > 0 && <FocusOnThisEffect />}
+
+                    <Heading as="h3" size="md" textAlign="center">
+                      Vote to Power-Up & Like Music Content
+                    </Heading>
+
+                    <Text textAlign="center">Vote for content by gifting BiTz to music content created Itheum AI Music Creators</Text>
+
+                    <Button
+                      margin="auto"
+                      colorScheme="teal"
+                      variant="outline"
+                      fontSize={{ base: "sm", md: "md" }}
+                      size={{ base: "sm", lg: "lg" }}
+                      isLoading={freeDropCheckLoading}
+                      isDisabled={!isUserLoggedIn || bitzBalance === 0}
+                      w="280px"
+                      onClick={() => {
+                        window.open(`${EXPLORER_APP_FOR_TOKEN[chainId]["nftunes"]}?artist-profile=waveborn-luminex&hl=sigma`, "_blank");
+                      }}>
+                      Gift BiTz XP on NF-Tunes
+                    </Button>
+                  </Flex>
+                </Flex>
+              </Box>
+
+              <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+                <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
+                  Share Rewards
+                </Heading>
+
+                {/* lets people top up their vault or withdraw rewards etc:  ONLY ENABLE if the user is Logged IN && has a BiTz Data NFT && has already setup a NFMeId Vault */}
+                <Flex flexDirection="column" gap="3">
+                  <Flex
+                    flexDirection="column"
+                    backgroundColor={"xgray.500"}
+                    gap={2}
+                    p={2}
+                    opacity={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? 0.5 : "initial"}
+                    pointerEvents={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? "none" : "initial"}>
+                    {usersNfMeIdVaultBondId === 0 && (
+                      <Alert status="warning" rounded="md">
+                        <AlertIcon />
+                        {`You need to ${isUserLoggedIn ? "" : "login and "} have a NFMe ID that has been upgraded into a Vault first!!`}
+                      </Alert>
+                    )}
+
+                    {isUserLoggedIn && usersNfMeIdVaultBondId > 0 && <FocusOnThisEffect />}
+
+                    <Heading as="h3" size="md" textAlign="center">
+                      Liveliness Staking Rewards
+                    </Heading>
+
+                    <Text textAlign="center">Get a share of protocol rewards. Currently 40% APR on your NFMe Id Bonds</Text>
+
+                    {/* if the user has a vault allow them to top-up */}
+                    <Button
+                      margin="auto"
+                      colorScheme="teal"
+                      variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
+                      fontSize={{ base: "sm", md: "md" }}
+                      size={{ base: "sm", lg: "lg" }}
+                      isLoading={freeDropCheckLoading}
+                      isDisabled={!isUserLoggedIn || usersNfMeIdVaultBondId === 0}
+                      w="280px"
+                      onClick={() => {
+                        navigate("/liveliness?hl=topup");
+                      }}>
+                      Top-up Vault for Higher Staking Rewards
+                    </Button>
+
+                    {/* if the user has a vault allow them to claim rewards */}
+                    <Button
+                      margin="auto"
+                      colorScheme="teal"
+                      variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
+                      fontSize={{ base: "sm", md: "md" }}
+                      size={{ base: "sm", lg: "lg" }}
+                      w="280px"
+                      isLoading={freeDropCheckLoading}
+                      isDisabled={!isUserLoggedIn || usersNfMeIdVaultBondId === 0}
+                      onClick={() => {
+                        navigate("/liveliness?hl=claim");
+                      }}>
+                      Claim Rewards
+                    </Button>
+                  </Flex>
+                </Flex>
+              </Box>
             </Flex>
           </Box>
-
-          <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
-            <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
-              Co-Create with AI
-            </Heading>
-
-            <Flex flexDirection="column" gap="3">
-              <Flex
-                flexDirection="column"
-                backgroundColor={"xgray.500"}
-                gap={2}
-                p={2}
-                borderBottom="1px solid"
-                borderColor="teal.200"
-                opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
-                pointerEvents={!isUserLoggedIn || !hasBitzNft ? "none" : "initial"}>
-                <Text textAlign="center" fontSize="lg" fontWeight="bold" mb="5">
-                  {`<< `}The Following Jobs Are Live{` >>`}
-                </Text>
-
-                <Heading as="h3" size="md" textAlign="center">
-                  NF-Tunes AI Music Feedback
-                </Heading>
-                <Text textAlign="center">
-                  Help real-world music artists amplify their music with help from the Itheum Sigma AI Agent and your data curation
-                </Text>
-              </Flex>
-
-              <Flex
-                flexDirection="column"
-                backgroundColor={"xgray.500"}
-                gap={2}
-                p={2}
-                borderBottom="1px solid"
-                borderColor="teal.200"
-                opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
-                pointerEvents={!isUserLoggedIn || !hasBitzNft ? "none" : "initial"}>
-                <Text textAlign="center" fontSize="2xl">
-                  1.
-                </Text>
-
-                {isUserLoggedIn && hasBitzNft && <FocusOnThisEffect />}
-
-                <Heading as="h3" size="md" textAlign="center">
-                  Get Free Music Data NFT
-                </Heading>
-
-                <Text textAlign="center">Claim it and use it on NF-Tunes</Text>
-
-                <Button
-                  margin="auto"
-                  colorScheme="teal"
-                  variant={freeMusicGiftClaimed ? "solid" : "outline"}
-                  fontSize={{ base: "sm", md: "md" }}
-                  size={{ base: "sm", lg: "lg" }}
-                  isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn || freeMusicGiftClaimed}
-                  w="280px"
-                  onClick={() => {
-                    setFreeMintMusicGiftIntroToAction(true);
-                    onProgressModalOpen();
-                  }}>
-                  {freeMusicGiftClaimed ? "Claimed" : "Free Mint Now"}
-                </Button>
-
-                <Button
-                  margin="auto"
-                  colorScheme="teal"
-                  variant="outline"
-                  fontSize={{ base: "sm", md: "md" }}
-                  size={{ base: "sm", lg: "lg" }}
-                  w="280px"
-                  isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn || !freeMusicGiftClaimed}
-                  onClick={() => {
-                    window.open(`${EXPLORER_APP_FOR_TOKEN[chainId]["nftunes"]}?artist-profile=waveborn-luminex&hl=sample`, "_blank");
-                  }}>
-                  Use Music Data NFT on NF-Tunes
-                </Button>
-
-                {freeMusicGiftClaimed && (
-                  <Box margin="auto">
-                    <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
-                  </Box>
-                )}
-              </Flex>
-
-              {/* lets people vote on content with BitZ: ONLY ENABLE if the user has a BiTz Data NFT and have more than 0 BiTz balance */}
-              <Flex
-                flexDirection="column"
-                backgroundColor={"xgray.500"}
-                gap={2}
-                p={2}
-                opacity={!hasBitzNft ? 0.5 : "initial"}
-                pointerEvents={!hasBitzNft ? "none" : "initial"}>
-                {!hasBitzNft && (
-                  <Alert status="warning" rounded="md">
-                    <AlertIcon />
-                    {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
-                  </Alert>
-                )}
-                <Text textAlign="center" fontSize="2xl">
-                  2.
-                </Text>
-
-                {isUserLoggedIn && hasBitzNft && bitzBalance > 0 && <FocusOnThisEffect />}
-
-                <Heading as="h3" size="md" textAlign="center">
-                  Vote to Power-Up & Like Music Content
-                </Heading>
-
-                <Text textAlign="center">Vote for content by gifting BiTz to music content created Itheum AI Music Creators</Text>
-
-                <Button
-                  margin="auto"
-                  colorScheme="teal"
-                  variant="outline"
-                  fontSize={{ base: "sm", md: "md" }}
-                  size={{ base: "sm", lg: "lg" }}
-                  isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn || bitzBalance === 0}
-                  w="280px"
-                  onClick={() => {
-                    window.open(`${EXPLORER_APP_FOR_TOKEN[chainId]["nftunes"]}?artist-profile=waveborn-luminex&hl=sigma`, "_blank");
-                  }}>
-                  Gift BiTz XP on NF-Tunes
-                </Button>
-              </Flex>
-            </Flex>
-          </Box>
-
-          <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
-            <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
-              Share Rewards
-            </Heading>
-
-            {/* lets people top up their vault or withdraw rewards etc:  ONLY ENABLE if the user is Logged IN && has a BiTz Data NFT && has already setup a NFMeId Vault */}
-            <Flex flexDirection="column" gap="3">
-              <Flex
-                flexDirection="column"
-                backgroundColor={"xgray.500"}
-                gap={2}
-                p={2}
-                opacity={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? 0.5 : "initial"}
-                pointerEvents={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? "none" : "initial"}>
-                {usersNfMeIdVaultBondId === 0 && (
-                  <Alert status="warning" rounded="md">
-                    <AlertIcon />
-                    {`You need to ${isUserLoggedIn ? "" : "login and "} have a NFMe ID that has been upgraded into a Vault first!!`}
-                  </Alert>
-                )}
-
-                {isUserLoggedIn && usersNfMeIdVaultBondId > 0 && <FocusOnThisEffect />}
-
-                <Heading as="h3" size="md" textAlign="center">
-                  Liveliness Staking Rewards
-                </Heading>
-
-                <Text textAlign="center">Get a share of protocol rewards. Currently 40% APR on your NFMe Id Bonds</Text>
-
-                {/* if the user has a vault allow them to top-up */}
-                <Button
-                  margin="auto"
-                  colorScheme="teal"
-                  variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
-                  fontSize={{ base: "sm", md: "md" }}
-                  size={{ base: "sm", lg: "lg" }}
-                  isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn || usersNfMeIdVaultBondId === 0}
-                  w="280px"
-                  onClick={() => {
-                    navigate("/liveliness?hl=topup");
-                  }}>
-                  Top-up Vault for Higher Staking Rewards
-                </Button>
-
-                {/* if the user has a vault allow them to claim rewards */}
-                <Button
-                  margin="auto"
-                  colorScheme="teal"
-                  variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
-                  fontSize={{ base: "sm", md: "md" }}
-                  size={{ base: "sm", lg: "lg" }}
-                  w="280px"
-                  isLoading={freeDropCheckLoading}
-                  isDisabled={!isUserLoggedIn || usersNfMeIdVaultBondId === 0}
-                  onClick={() => {
-                    navigate("/liveliness?hl=claim");
-                  }}>
-                  Claim Rewards
-                </Button>
-              </Flex>
-            </Flex>
-          </Box>
-        </Flex>
+        </Box>
       </Box>
 
       <Modal

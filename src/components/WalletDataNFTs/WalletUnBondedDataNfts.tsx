@@ -66,10 +66,8 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
   const toast = useToast();
   const updateItheumBalance = useAccountStore((state) => state.updateItheumBalance);
   const itheumBalance = useAccountStore((state) => state.itheumBalance);
-  const lockPeriod = useMintStore((state) => state.lockPeriodForBond);
   const { bondedDataNftIds, updateBondedDataNftIds } = useNftsStore();
-  const { currentMaxApr } = useMintStore();
-  const { usersNfMeIdVaultBondId } = useMintStore();
+  const { currentMaxApr, usersNfMeIdVaultBondId, lockPeriodForBond: lockPeriod, updateUsersNfMeIdVaultBondId } = useMintStore();
   const [nextBondId, setNextBondId] = useState<number | undefined>(undefined); // if the bond tx passes, this will be the bond id of the new bond
   const [dataNftNonce, setDataNftNonce] = useState<number | undefined>(undefined); // is the nonce (leaf_id) of the data nft we just minted
 
@@ -159,8 +157,6 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
         if (result) {
           updateItheumBalance(itheumBalance - BigNumber(lockPeriod[0]?.amount).toNumber());
 
-          setBondingInProgress(false);
-
           if (reEstablishBondConfirmationWorkflow) {
             await sleep(2);
 
@@ -208,6 +204,9 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                     if (!vaultTxSig) {
                       console.error("Error: Vault transaction signature was not returned");
                     }
+
+                    // update the store with the new vault bond id
+                    updateUsersNfMeIdVaultBondId(nextBondId);
                   } else {
                     console.error("Failed to create the vault bond transaction");
                   }
@@ -225,6 +224,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
             onShowBondingSuccessModal(); // ask the parent to show the success model CTA
           }
 
+          setBondingInProgress(false);
           setReEstablishBondConfirmationWorkflow(undefined);
         }
       } catch (err) {
@@ -303,9 +303,11 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
     }
   }
 
-  const amountOfTime = lockPeriod.length > 0 ? timeUntil(lockPeriod[0]?.lockPeriod) : { count: -1, unit: "-1" };
-
   const userHasEnoughItheumTokensForBond = itheumBalance >= BigNumber(lockPeriod[0]?.amount).toNumber();
+
+  // unit of time for bonding
+  const amountOfTime = lockPeriod.length > 0 ? timeUntil(lockPeriod[0]?.lockPeriod) : { count: -1, unit: "-1" };
+  const amountOfTimeUnit = amountOfTime?.unit !== "-1" ? amountOfTime?.unit : "[Failed to fetch - refresh to try again]";
 
   return (
     <>
@@ -493,12 +495,22 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                         {usersNfMeIdVaultBondId}
                       </Text>
                       <Text fontWeight="bold" pb={3} opacity="1">
-                        This Data NFT has no active {`"Bond."`} You can bond {BigNumber(lockPeriod[0]?.amount).toNumber()} $ITHEUM to boost your Web3 Reputation
-                        (Liveliness) and earn staking rewards (up to {currentMaxApr}% APR). Key points:
+                        This Data NFT has no active {`"Bond."`} You can bond{" "}
+                        <Text as="span" color="teal.200">
+                          {BigNumber(lockPeriod[0]?.amount).toNumber()} $ITHEUM
+                        </Text>{" "}
+                        to boost your Web3 Reputation (Liveliness) and earn staking rewards of up to{" "}
+                        <Text as="span" color="teal.200">
+                          {currentMaxApr}% APR
+                        </Text>
+                        .
                       </Text>
+                      <Text fontWeight="bold">Key points:</Text>
 
                       <UnorderedList p="2">
-                        <ListItem>Minimum bonding period: {`${lockPeriod[0]?.lockPeriod} ${amountOfTime?.unit}`}</ListItem>
+                        <ListItem>
+                          Minimum bonding period: <Text as="span" fontWeight="bold" color="teal.200">{`${amountOfTime.count} ${amountOfTimeUnit}`}</Text>
+                        </ListItem>
                         <ListItem>Full amount is withdrawable after the minimum period.</ListItem>
                         <ListItem>Early withdrawals incur a penalty.</ListItem>
                       </UnorderedList>
@@ -523,7 +535,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
           dialogData={
             !bondingInProgress
               ? {
-                  title: "Bond ITHEUM tokens to get more Liveliness?",
+                  title: "Bond $ITHEUM tokens to get more Liveliness?",
                   proceedBtnTxt: solBondingTxHasFailedMsg || !userHasEnoughItheumTokensForBond ? "" : "Proceed with Bond",
                   cancelBtnText: solBondingTxHasFailedMsg ? "Cancel and Try Again" : "Cancel and Close",
                   proceedBtnColorScheme: "teal",

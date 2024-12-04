@@ -33,8 +33,6 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
       path = path.split("-")[0];
       setMenuItem(PATHS[path as keyof typeof PATHS]?.[0] as number);
     }
-
-    // console.log(consoleNotice);
   }, []);
 
   const handleLogout = async () => {

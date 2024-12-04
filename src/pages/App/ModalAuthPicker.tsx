@@ -136,7 +136,7 @@ function ModalAuthPicker({ openConnectModal, onShowConnectWalletModal }: { openC
         } else if (userLoggedInCallData?.existingUserAccountLastLoginUpdated) {
           let userMessage = "";
 
-          userMessage = "Welcome Back Solana Legend!";
+          userMessage = "Welcome Back Itheum Legend!";
 
           toast({
             title: `${celebrateEmojis[Math.floor(Math.random() * celebrateEmojis.length)]} ${userMessage}`,

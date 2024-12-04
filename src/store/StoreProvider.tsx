@@ -1,6 +1,5 @@
 import React, { PropsWithChildren, useEffect } from "react";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
-// import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
@@ -10,7 +9,6 @@ import {
   fetchBondingConfigSol,
   fetchRewardsConfigSol,
   fetchSolNfts,
-  // ITHEUM_SOL_TOKEN_ADDRESS,
   fetchAddressBondsRewards,
   getBondingProgramInterface,
   retrieveBondsAndNftMeIdVault,
@@ -209,18 +207,6 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
     updateCooldown(-2);
     updateBonusBitzSum(-2);
   }
-
-  // const getItheumBalanceOnSolana = async () => {
-  //   try {
-  //     const itheumTokenMint = new PublicKey(ITHEUM_SOL_TOKEN_ADDRESS);
-  //     const addressAta = getAssociatedTokenAddressSync(itheumTokenMint, userPublicKey!, false);
-  //     const balance = await connection.getTokenAccountBalance(addressAta);
-  //     return balance.value.uiAmount;
-  //   } catch (error) {
-  //     console.error("Error fetching Itheum" + ITHEUM_SOL_TOKEN_ADDRESS + "  balance on Solana " + import.meta.env.VITE_ENV_NETWORK + " blockchain:", error);
-  //     throw error;
-  //   }
-  // };
 
   const getItheumPrice = () => {
     (async () => {

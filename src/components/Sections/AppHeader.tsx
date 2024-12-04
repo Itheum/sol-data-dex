@@ -410,7 +410,7 @@ const AppHeader = ({
                 onClick={() => {
                   onShowConnectWalletModal("sol");
                 }}>
-                <FlaskBottleAnimation cooldown={cooldown} />
+                <FlaskBottleAnimation cooldown={cooldown} /> <Text ml="2">BiTz XP</Text>
               </Button>
             )}
 

@@ -228,15 +228,15 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
               {isFreeMint && mintingSuccessful && (
                 <Box textAlign="center" mt="2">
                   <Alert status="success" rounded="md">
-                    <Text fontSize="lg" colorScheme="teal">
-                      Success! Your unique NFMe ID was minted.
+                    <Text fontSize="lg" colorScheme="teal" m="auto">
+                      Success! Your unique NFMe ID was minted
                     </Text>
                   </Alert>
                   <Flex mt="4" flexDir={"column"} alignItems="center">
                     <Button
                       colorScheme="teal"
                       onClick={() => {
-                        navigate("/liveliness");
+                        navigate("/datanfts/wallet");
                       }}>
                       Visit {`"Wallet"`} to see it!
                     </Button>

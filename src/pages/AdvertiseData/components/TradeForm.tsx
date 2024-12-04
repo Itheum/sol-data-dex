@@ -147,7 +147,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   const [bondingTxHasFailed, setBondingTxHasFailed] = useState<boolean>(false);
   const [solNFMeIDMintConfirmationWorkflow, setSolNFMeIDMintConfirmationWorkflow] = useState<boolean>(false);
   const [solBondingConfigObtainedFromChainErr, setSolBondingConfigObtainedFromChainErr] = useState<boolean>(false);
-  const { usersNfMeIdVaultBondId, lockPeriodForBond } = useMintStore();
+  const { usersNfMeIdVaultBondId, lockPeriodForBond, updateUsersNfMeIdVaultBondId } = useMintStore();
   const [bondingProgram, setBondingProgram] = useState<Program<CoreSolBondStakeSc> | undefined>();
   const [isAutoVaultInProgress, setIsAutoVaultInProgress] = useState<boolean>(false);
 
@@ -733,6 +733,9 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
                   setMintingSuccessful(true);
                   setErrDataNFTStreamGeneric(null);
+
+                  // update the store with the new vault bond id
+                  updateUsersNfMeIdVaultBondId(nextBondId);
                 } else {
                   console.error("Failed to create the vault bond transaction");
                 }
@@ -1354,7 +1357,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
                 <PopoverTooltip title="Bond $ITHEUM to Prove Reputation" bodyWidthInPX="380px">
                   <>
                     <Text fontSize="md" fontWeight="500" lineHeight="22.4px" mt="3 !important">
-                      Bonding ITHEUM tokens proves your {"Liveliness"} and gives Data Consumers confidence about your reputation. You will need to lock the{" "}
+                      Bonding $ITHEUM tokens proves your {"Liveliness"} and gives Data Consumers confidence about your reputation. You will need to lock the{" "}
                       <Text fontWeight="bold" as="span">
                         Bonding Amount{" "}
                       </Text>
@@ -1489,7 +1492,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
                 <Box mt="3 !important">
                   <Tag variant="solid" bgColor="#00C7971A" borderRadius="sm">
                     <Text px={2} py={2} color="teal.200" fontWeight="500">
-                      Anti-Spam Fee is currently {antiSpamTax < 0 ? "?" : antiSpamTax} ITHEUM tokens{" "}
+                      Anti-Spam Fee is currently {antiSpamTax < 0 ? "?" : antiSpamTax} $ITHEUM tokens{" "}
                     </Text>
                   </Tag>
                 </Box>

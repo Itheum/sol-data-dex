@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import {
   Box,

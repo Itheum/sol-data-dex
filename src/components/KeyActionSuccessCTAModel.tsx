@@ -29,7 +29,7 @@ export default function KeyActionSuccessCTAModel({ isOpen, onClose, congratsActi
 
               {/* @TODO, make this dynamic as needed for the host component */}
               <Text textAlign="center" my="2">
-                Visit the Liveliness page to view your bond, claim rewards, set up a Vault, top up bonds, and more.
+                Visit the Liveliness page to view your bond, claim rewards, top up bonds, and more.
               </Text>
               <Button
                 colorScheme="teal"

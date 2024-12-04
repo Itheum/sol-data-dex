@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Flex,
@@ -21,7 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { motion, useScroll, useSpring, useTransform, useMotionValueEvent } from "framer-motion";
+import { motion, useScroll, useSpring, useTransform, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { BsDot } from "react-icons/bs";
 import { BsBookmarkCheckFill } from "react-icons/bs";
 import { LuFlaskRound } from "react-icons/lu";
@@ -42,6 +42,20 @@ const parentVariants = {
   visible: { opacity: 1, y: 0 },
   hidden: { opacity: 0, y: "10rem" },
 };
+// const parentVariants = {
+//   visible: { opacity: 1, y: 0, height: "auto" },
+//   hidden: {
+//     opacity: 0,
+//     y: "10rem",
+//     height: 0,
+//     transition: {
+//       // Define sequence of animations
+//       opacity: { duration: 5 },
+//       height: { duration: 5, delay: 2.5 }, // Start height animation after opacity is mostly done
+//       y: { duration: 5 },
+//     },
+//   },
+// };
 
 const Dashboard = ({
   onShowConnectWalletModal,
@@ -85,6 +99,8 @@ const Dashboard = ({
   const updateSolPreaccessTimestamp = useAccountStore((state: any) => state.updateSolPreaccessTimestamp);
   const updateSolSignedPreaccess = useAccountStore((state: any) => state.updateSolSignedPreaccess);
   // E: Cached Signature Store Items
+
+  const helloHeadingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     const checkFreeClaims = async () => {
@@ -182,6 +198,9 @@ const Dashboard = ({
     setFreeMintBitzXpLoading(false);
     onProgressModalClose();
     setFreeMintBitzXpGameComingUp(false);
+    setFreeMintBitzXpIntroToAction(false);
+    setFreeMintMusicGiftIntroToAction(false);
+    setFreeMintMusicGiftLoading(false);
   };
 
   const handleFreeMintBitzXP = async () => {
@@ -309,6 +328,7 @@ const Dashboard = ({
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
   const [prevScroll, setPrevScroll] = useState(0);
+  const [wasEverHidden, setWasEverHidden] = useState(false);
 
   function update(latest: number, prev: number): void {
     if (latest < prev) {
@@ -316,6 +336,7 @@ const Dashboard = ({
       // console.log("visible");
     } else if (latest > 100 && latest > prev) {
       setHidden(true);
+      setWasEverHidden(true); // Mark that image was hidden at least once
       // console.log("hidden");
     }
   }
@@ -327,33 +348,52 @@ const Dashboard = ({
   // E: Animation
 
   return (
-    <Flex mt={{ base: "10", md: "0" }} flexDirection="column" alignItems="center" justifyContent="center" backgroundColor={"xred.800"}>
-      <Box width={"100%"} backgroundColor={"xblue.900"} padding={5} textAlign="center">
-        <motion.nav
-          variants={parentVariants}
-          animate={hidden ? "hidden" : "visible"}
-          transition={{
-            ease: [0.1, 0.25, 0.3, 1],
-            duration: 2,
-            staggerChildren: 0.05,
-          }}>
-          <div className="navLinksWrapper">
-            <motion.img className="rounded-[.1rem] m-auto -z-1 w-[50%] h-[100%]" src={nfMeIDVault} />
-          </div>
-        </motion.nav>
+    <Flex mt={{ base: "10", md: "0" }} flexDirection="column" alignItems="center" justifyContent="center">
+      <Box width={"100%"} padding={5} textAlign="center">
+        <Box as={motion.div}>
+          <Heading ref={helloHeadingRef} as="h1" size="2xl" fontFamily="Satoshi-Regular" my="5">
+            Hello Human,
+          </Heading>
+          <Heading as="h1" size="xl" fontFamily="Satoshi-Regular" w="70%" textAlign="center" margin="auto" my="5">
+            Join the AI Data Workforce, prove your reputation, co-create new data with me and get rewarded
+          </Heading>
+        </Box>
 
-        <Box>
-          <Box as={motion.div}>
-            <Heading as="h1" size="2xl" fontFamily="Satoshi-Regular">
-              Hello Human,
-            </Heading>
-            <Heading as="h1" size="xl" fontFamily="Satoshi-Regular" w="70%" textAlign="center" margin="auto" mt="2">
-              {/* Join the AI Data Workforce, prove your reputation,  creative data with me and get rewarded */}
-              Join the AI Data Workforce, prove your reputation, co-create and accelerate creative data with me and get rewarded
-            </Heading>
-          </Box>
+        {!isUserLoggedIn && (
+          <AnimatePresence>
+            {/* {!hidden && !wasEverHidden && ( */}
+            {/* {!hidden && !wasEverHidden && ( */}
+            <motion.nav
+              variants={parentVariants}
+              initial="visible"
+              // animate="visible"
+              // animate={hidden || wasEverHidden ? "hidden" : "visible"}
+              animate={hidden ? "hidden" : "visible"}
+              exit="hidden"
+              transition={{
+                ease: [0.1, 0.25, 0.3, 1],
+                duration: 3,
+                staggerChildren: 0.05,
+              }}
+              onAnimationComplete={() => {
+                // helloHeadingRef.current?.scrollIntoView({
+                //   behavior: "smooth",
+                //   block: "center", // centers the element in the viewport
+                // });
+              }}>
+              <div className="navLinksWrapper">
+                <motion.img className="rounded-[.1rem] m-auto -z-1 w-[50%] h-[100%]" src={nfMeIDVault} />
+              </div>
+            </motion.nav>
+            {/* )} */}
+          </AnimatePresence>
+        )}
+
+        <Box className="mt-5">
           <Box display="inline-flex" mt="5">
-            <Text>Pulsating orbs guide you to your next task</Text>
+            <Text fontSize="2xl" fontWeight="bold" fontFamily="Satoshi-Regular">
+              Pulsating orbs guide you to your next task
+            </Text>
             <FocusOnThisEffect />
           </Box>
           <Box width={"100%"} backgroundColor={"xblue.800"} minH="400px" padding={5}>
@@ -427,7 +467,7 @@ const Dashboard = ({
                       {freeBitzClaimed ? "Claimed" : "Free Mint Now"}
                     </Button>
 
-                    {!freeBitzClaimed ? (
+                    {isUserLoggedIn && !freeBitzClaimed ? (
                       <Text fontSize="xs" textAlign="center">
                         Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which will NOT be used but is to make sure
                         your wallet exists and can receive the NFT.
@@ -471,7 +511,7 @@ const Dashboard = ({
                       {freeNfMeIdClaimed ? "Claimed" : "Free Mint Now"}
                     </Button>
 
-                    {!freeNfMeIdClaimed ? (
+                    {isUserLoggedIn && freeBitzClaimed && !freeNfMeIdClaimed ? (
                       <Text fontSize="xs" textAlign="center">
                         Requirements: Only 1 per address, completely free to you, but you need SOL in your wallet, which will NOT be used but is to make sure
                         your wallet exists and can receive the NFT.
@@ -501,7 +541,7 @@ const Dashboard = ({
                     borderColor="teal.200"
                     opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
                     pointerEvents={!hasBitzNft ? "none" : "initial"}>
-                    {!hasBitzNft && (
+                    {isUserLoggedIn && !hasBitzNft && (
                       <Alert status="warning" rounded="md">
                         <AlertIcon />
                         {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
@@ -568,13 +608,13 @@ const Dashboard = ({
 
                     {isUserLoggedIn && (
                       <Button
-                        m="auto"
                         onClick={() => onRemoteTriggerOfBiTzPlayModel(true)}
+                        m="auto"
+                        colorScheme="teal"
                         variant="outline"
-                        borderColor="#03c797"
-                        rounded="full"
-                        w="full"
-                        _hover={{ textColor: "white", backgroundImage: "linear-gradient(345deg, #171717, #03c797)" }}>
+                        fontSize={{ base: "sm", md: "md" }}
+                        size={{ base: "sm", lg: "lg" }}
+                        w="280px">
                         <span>
                           {cooldown === -2 ? (
                             <span>Check XP Balance & Play</span>
@@ -594,8 +634,9 @@ const Dashboard = ({
                       fontSize={{ base: "sm", md: "md" }}
                       size={{ base: "sm", lg: "lg" }}
                       isDisabled={!isUserLoggedIn}
+                      w="280px"
                       onClick={() => {
-                        alert("Buy BiTz");
+                        alert("Buy BiTz Coming Soon...");
                       }}>
                       Buy BiTz
                     </Button>
@@ -752,7 +793,7 @@ const Dashboard = ({
                     p={2}
                     opacity={!hasBitzNft ? 0.5 : "initial"}
                     pointerEvents={!hasBitzNft ? "none" : "initial"}>
-                    {!hasBitzNft && (
+                    {isUserLoggedIn && !hasBitzNft && (
                       <Alert status="warning" rounded="md">
                         <AlertIcon />
                         {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
@@ -802,7 +843,7 @@ const Dashboard = ({
                     p={2}
                     opacity={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? 0.5 : "initial"}
                     pointerEvents={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? "none" : "initial"}>
-                    {usersNfMeIdVaultBondId === 0 && (
+                    {isUserLoggedIn && usersNfMeIdVaultBondId === 0 && (
                       <Alert status="warning" rounded="md">
                         <AlertIcon />
                         {`You need to ${isUserLoggedIn ? "" : "login and "} have a NFMe ID that has been upgraded into a Vault first!!`}
@@ -903,7 +944,7 @@ const Dashboard = ({
                       <Alert status={"success"} mt={5} rounded="md" mb={8}>
                         <AlertIcon />
                         <Box>
-                          <Text> Success! {`Let's`} get you for first BiTz XP, game coming up in 3,2,1...</Text>
+                          <Text> Success! {`Let's`} get you your first event BiTz XP, game coming up in 3,2,1...</Text>
                         </Box>
                       </Alert>
                     )}
@@ -1008,7 +1049,7 @@ const Dashboard = ({
 function FocusOnThisEffect() {
   return (
     <Box className="absolute flex h-8 w-8">
-      <Box className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></Box>
+      <Box className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#03c797] opacity-75"></Box>
     </Box>
   );
 }

@@ -1,15 +1,15 @@
 import React from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { Box, Text, Flex, HStack, Link, Heading, useColorMode } from "@chakra-ui/react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { getSentryProfile } from "libs/utils";
-import { useAccountStore } from "store";
 
 const dataDexVersion = import.meta.env.VITE_APP_VERSION ?? "version number unknown";
 const nonProdEnv = `env:${getSentryProfile()}`;
 
 export default function () {
   const { colorMode } = useColorMode();
-  const { solPreaccessNonce, solPreaccessSignature, solPreaccessTimestamp } = useAccountStore();
+  const { connected: isSolLoggedIn } = useWallet();
 
   return (
     <Flex
@@ -21,18 +21,13 @@ export default function () {
       pt={10}
       flexDirection={{ base: "column", md: "row" }}>
       <Flex flex="1" flexDir="column" alignItems="center" justifyContent="center" height="100%" mt={5} pr={5}>
-        <Box backgroundColor={"#5d3d0d"}>
-          <Text textAlign={"center"} fontSize={"small"}>{`preaccessNonce = ${solPreaccessNonce.substring(0, 8)},
-       preaccessSig = ${solPreaccessSignature.substring(0, 8)},
-      preaccessTS = ${solPreaccessTimestamp > -2 ? new Date(solPreaccessTimestamp).toUTCString() : solPreaccessTimestamp}`}</Text>
-        </Box>
         <Box>
           <Heading size={"lg"} fontFamily="Clash-Medium" color={"teal.200"}>
             Solana Data DEX
           </Heading>
           <Text fontSize="md" mt={3}>
             {" "}
-            Mint free NFMe IDs and bond ITHEUM tokens to prove your web3 Liveliness, receive staking rewards on your Liveliness bonds, claim free Music Data
+            Mint free NFMe IDs and bond $ITHEUM tokens to prove your web3 Liveliness, receive staking rewards on your Liveliness bonds, claim free Music Data
             NFTs and earn BiTz XP for your activity!
           </Text>
         </Box>
@@ -154,13 +149,13 @@ export default function () {
               </li>
               <li>
                 {"> "}
-                <a href="/liveliness" className="hover:underline" rel="noreferrer">
+                <a href={`${isSolLoggedIn ? "/liveliness" : "/NFMeID#liveliness"}`} className="hover:underline" rel="noreferrer">
                   Liveliness Staking
                 </a>
               </li>
               <li>
                 {"> "}
-                <a href="https://portal.itheum.com/nftunes" target="_blank" className="hover:underline" rel="noreferrer">
+                <a href="https://explorer.itheum.com/nftunes" target="_blank" className="hover:underline" rel="noreferrer">
                   NF-Tunes : Stream Web3 Music
                 </a>
               </li>

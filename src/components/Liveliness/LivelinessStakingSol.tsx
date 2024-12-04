@@ -845,7 +845,6 @@ export const LivelinessStakingSol: React.FC = () => {
                           <Tooltip
                             hasArrow
                             shouldWrapChildren
-                            // isDisabled={!(!userPublicKey || nftMeId === undefined || claimableAmount < 1 || vaultLiveliness === 0)}
                             isDisabled={!(!userPublicKey || vaultBondId === 0 || claimableAmount < 1 || vaultLiveliness === 0)}
                             label={
                               "Rewards reinvesting is disabled if you have no NFT as a NFMe ID Vault set, liveliness is 0, rewards amount is lower than 1 or there are transactions pending"
@@ -855,15 +854,7 @@ export const LivelinessStakingSol: React.FC = () => {
                               colorScheme="teal"
                               px={6}
                               width="180px"
-                              isDisabled={
-                                !userPublicKey ||
-                                // nftMeId === undefined ||
-                                // vaultBondId === undefined ||
-                                claimableAmount < 1 ||
-                                vaultLiveliness === 0 ||
-                                hasPendingTransaction ||
-                                vaultBondId === 0
-                              }
+                              isDisabled={!userPublicKey || claimableAmount < 1 || vaultLiveliness === 0 || hasPendingTransaction || vaultBondId === 0}
                               onClick={() => {
                                 setReinvestRewardsConfirmationWorkflow(true);
                               }}>
@@ -882,7 +873,6 @@ export const LivelinessStakingSol: React.FC = () => {
                       </Text>{" "}
                       <Text fontSize="lg">: {formatNumberToShort(estCombinedAnnualRewards / 10 ** 9)} $ITHEUM</Text>
                     </Flex>
-                    <Text>vaultBondId = {vaultBondId}</Text>
                     {vaultBondId === 0 && (
                       <Alert status="info" mt={2} rounded="md">
                         <AlertIcon />
@@ -914,9 +904,7 @@ export const LivelinessStakingSol: React.FC = () => {
                       <AlertIcon />
                       {freeNfMeIdClaimed ? (
                         <Box>
-                          <Text fontWeight="bold">
-                            You have not Bonded $ITHEUM of your NFMe ID yet? numberOfBonds = {numberOfBonds} freeNfMeIdClaimed ={freeNfMeIdClaimed.toString()}
-                          </Text>
+                          <Text fontWeight="bold">You have not Bonded $ITHEUM of your NFMe ID yet?</Text>
                           <Text mt="1">Bond now to:</Text>
                           <Text mt={2}>
                             <ul>

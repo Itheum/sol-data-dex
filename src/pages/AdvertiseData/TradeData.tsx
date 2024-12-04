@@ -34,10 +34,19 @@ export const TradeData: React.FC = () => {
       const launchTemplate = queryParams?.launchTemplate;
 
       if (launchTemplate) {
-        if (launchTemplate === "nfmeidvault") {
+        if (launchTemplate === "nfMeIdWithBond") {
           await sleep(0.5);
           setIsDrawerOpen(true);
           setPrefilledData(nfMeIDVaultConfig);
+        } else if (launchTemplate === "nfMeIdFreeMint") {
+          await sleep(0.5);
+          setIsDrawerOpen(true);
+
+          const _nfMeIDVaultConfig = { ...nfMeIDVaultConfig };
+          _nfMeIDVaultConfig.shouldAutoVaultIfPossible = false;
+          _nfMeIDVaultConfig.isFreeMint = true;
+
+          setPrefilledData(_nfMeIDVaultConfig);
         }
       }
     }

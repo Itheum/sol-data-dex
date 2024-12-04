@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { Box, Flex, Progress, Text, Link } from "@chakra-ui/react";
 import moment from "moment/moment";
-import { sleep, settingLivelinessScore } from "libs/utils";
+import { settingLivelinessScore } from "libs/utils";
 
 type LivelinessScoreProp = {
   unbondTimestamp?: number;

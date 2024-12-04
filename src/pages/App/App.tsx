@@ -5,14 +5,13 @@ import { Outlet, Route, Routes, useLocation } from "react-router-dom";
 import AppFooter from "components/Sections/AppFooter";
 import AppHeader from "components/Sections/AppHeader";
 import AppSettings from "components/UtilComps/AppSettings";
-import { consoleNotice, MENU, PATHS } from "libs/config";
+import { MENU, PATHS } from "libs/config";
 import { clearAppSessionsLaunchMode, gtagGo } from "libs/utils";
 import MyDataNFTs from "pages/DataNFT/MyDataNFTs";
 import { GetNFMeID } from "pages/GetNFMeID";
 import MyHome from "pages/Home/MyHome";
 import LandingPage from "pages/LandingPage";
 import MyLiveliness from "pages/Liveliness/MyLiveliness";
-import { useAccountStore } from "store";
 import { TradeData } from "../AdvertiseData/TradeData";
 
 function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
@@ -27,28 +26,17 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
   const { pathname } = useLocation();
   let path = pathname?.split("/")[pathname?.split("/")?.length - 1]; // handling Route Path
   const { connected: isSolLoggedIn, disconnect: disconnectSolWallet } = useWallet();
-  const updateBitzBalance = useAccountStore((state: any) => state.updateBitzBalance);
-  const updateItheumBalance = useAccountStore((state: any) => state.updateItheumBalance);
-  const updateCooldown = useAccountStore((state: any) => state.updateCooldown);
+  const [triggerBiTzPlayModelAndIsOpen, setTriggerBiTzPlayModelAndIsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (path) {
       path = path.split("-")[0];
       setMenuItem(PATHS[path as keyof typeof PATHS]?.[0] as number);
     }
-
-    console.log(consoleNotice);
   }, []);
-
-  const resetCommonStoreValuesBitzContext = () => {
-    updateBitzBalance(-2);
-    updateItheumBalance(-1);
-    updateCooldown(-2);
-  };
 
   const handleLogout = async () => {
     clearAppSessionsLaunchMode();
-    resetCommonStoreValuesBitzContext();
     gtagGo("auth", "logout", "el");
 
     // if we are connected to solana
@@ -61,18 +49,37 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
     }
   };
 
+  const handleRemoteTriggerOfBiTzPlayModel = (openItIfNotOpen: boolean) => {
+    if (openItIfNotOpen && !triggerBiTzPlayModelAndIsOpen) {
+      setTriggerBiTzPlayModelAndIsOpen(true);
+    } else {
+      setTriggerBiTzPlayModelAndIsOpen(false);
+    }
+  };
+
   function commonRoutes() {
     return (
       <>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LandingPage onShowConnectWalletModal={onShowConnectWalletModal} handleLogout={handleLogout} />} />
         <Route path="NFMeID" element={<Outlet />}>
           <Route path="" element={<GetNFMeID onShowConnectWalletModal={onShowConnectWalletModal} />} />
         </Route>
-        <Route path="dashboard" element={<MyHome key={rfKeys.tools} setMenuItem={setMenuItem} />} />
+        <Route
+          path="dashboard"
+          element={
+            <MyHome
+              key={rfKeys.tools}
+              setMenuItem={setMenuItem}
+              onShowConnectWalletModal={onShowConnectWalletModal}
+              handleLogout={handleLogout}
+              onRemoteTriggerOfBiTzPlayModel={handleRemoteTriggerOfBiTzPlayModel}
+            />
+          }
+        />
         <Route path="mintdata" element={<TradeData />} />
         <Route path="datanfts" element={<Outlet />}>
           <Route path="wallet" element={<MyDataNFTs tabState={1} />} />
-          <Route path="claim" element={<MyDataNFTs tabState={2} />} />
+          <Route path="unbonded" element={<MyDataNFTs tabState={2} />} />
         </Route>
 
         <Route path="liveliness" element={<MyLiveliness />} />
@@ -85,15 +92,21 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
   return (
     <>
       {/* App Header */}
-      <AppHeader onShowConnectWalletModal={onShowConnectWalletModal} setMenuItem={setMenuItem} handleLogout={handleLogout} />
+      <AppHeader
+        onShowConnectWalletModal={onShowConnectWalletModal}
+        setMenuItem={setMenuItem}
+        handleLogout={handleLogout}
+        onRemoteTriggerOfBiTzPlayModel={handleRemoteTriggerOfBiTzPlayModel}
+        triggerBiTzPlayModel={triggerBiTzPlayModelAndIsOpen}
+      />
 
       {/* App Body */}
       {isSolLoggedIn ? (
-        <Box flexGrow={1} minH={{ base: "auto", lg: "1000px" }}>
+        <Box flexGrow={1} minH={{ base: "auto", lg: "100vh" }}>
           <Routes>{commonRoutes()}</Routes>
         </Box>
       ) : (
-        <Box flexGrow={1} minH={{ base: "auto", lg: "1000px" }}>
+        <Box flexGrow={1} minH={{ base: "auto", lg: "100vh" }}>
           <Routes>{commonRoutes()}</Routes>
         </Box>
       )}

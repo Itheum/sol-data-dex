@@ -19,7 +19,7 @@ const ExplainerArticles = ({ reduceGap }: { reduceGap?: boolean }) => {
 
       <ArticleCard
         imgTitle="How can I mint a Data NFT"
-        title="Guide on how to bond ITHEUM tokens and mint a Data NFT"
+        title="Guide on how to bond $ITHEUM tokens and mint a Data NFT"
         link="https://docs.itheum.io/product-docs/product/data-dex/minting-a-data-nft"
       />
 

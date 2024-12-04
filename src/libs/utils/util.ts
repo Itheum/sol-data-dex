@@ -1,6 +1,3 @@
-import { BondContract } from "@itheum/sdk-mx-data-nft/out";
-import { IS_DEVNET } from "libs/config";
-
 export const qsParams = () => {
   const urlSearchParams = new URLSearchParams(window.location.search);
   const params = Object.fromEntries(urlSearchParams.entries());
@@ -68,7 +65,6 @@ export const clearAppSessionsLaunchMode = () => {
   localStorage?.removeItem("itm-wallet-used");
   localStorage?.removeItem("itm-launch-mode");
   localStorage?.removeItem("itm-launch-env");
-  localStorage?.removeItem("itm-datacat-linked");
   sessionStorage.removeItem("persist:sdk-dapp-signedMessageInfo"); // clear signedSessions
   localStorage?.removeItem("network"); // clear solana network
 };
@@ -99,13 +95,12 @@ export const getApiDataDex = () => {
 };
 
 export const getApiDataMarshal = () => {
-  const envKey = import.meta.env.VITE_ENV_NETWORK === "mainnet" ? "VITE_ENV_DATAMARSHAL_MAINNET_API" : "VITE_ENV_DATAMARSHAL_DEVNET_API";
   const defaultUrl =
     import.meta.env.VITE_ENV_NETWORK === "mainnet"
       ? "https://api.itheumcloud.com/datamarshalapi/router/v1"
       : "https://api.itheumcloud-stg.com/datamarshalapi/router/v1";
 
-  return import.meta.env[envKey] || defaultUrl;
+  return import.meta.env.VITE_ENV_DATAMARSHAL_API || defaultUrl;
 };
 
 export const getLivelinessScore = (seconds: number, lockPeriod: number) => {

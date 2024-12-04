@@ -96,7 +96,8 @@ export const CHAIN_TOKEN_SYMBOL = (chainID: string) => {
 export const nfMeIDVaultConfig = {
   "program": "nfme-id-vault",
   "isNFMeID": true,
-  "shouldAutoVault": true,
+  "shouldAutoVaultIfPossible": true,
+  "isFreeMint": false,
   additionalInformation: {
     "tokenName": "NFMeIDG1",
     "programName": "NFMe ID Avatar",
@@ -127,3 +128,5 @@ export enum SOL_ENV_ENUM {
   devnet = "SD",
   mainnet = "S1",
 }
+
+export const NFME_ID_COLLECTION_ID = import.meta.env.VITE_ENV_NFME_ID_COLLECTION_ID || "";

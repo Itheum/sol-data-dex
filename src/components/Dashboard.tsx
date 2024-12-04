@@ -450,7 +450,7 @@ const Dashboard = ({
                       Get a Free BiTz XP Data NFT
                     </Heading>
 
-                    <Text textAlign="center">You can use it to collect XP by staying active</Text>
+                    <Text textAlign="center">Use it to collect and own your Itheum XP by staying active in the ecosystem</Text>
 
                     <Button
                       m="auto"
@@ -495,7 +495,7 @@ const Dashboard = ({
                       Get a Free NFMe ID
                     </Heading>
 
-                    <Text textAlign="center">You can use it as your web3 identity for AI agents to verify</Text>
+                    <Text textAlign="center">Use it as your web3 identity for AI agents to verify you</Text>
 
                     <Button
                       m="auto"
@@ -554,7 +554,7 @@ const Dashboard = ({
                       Boost Your Proof-of-Activity
                     </Heading>
 
-                    <Text textAlign="center">You need BiTz to vote to curate AI content. Earn BiTz by playing the game every few hours.</Text>
+                    <Text textAlign="center">You need BiTz to vote to curate AI content. Earn BiTz every few hours.</Text>
 
                     <Button
                       m="auto"
@@ -656,7 +656,9 @@ const Dashboard = ({
                       Boost Your Proof-of-Reputation
                     </Heading>
 
-                    <Text textAlign="center">Bond $ITHEUM on your NFMe ID vault, and grow your Liveliness to signal that you are {"Committed"}</Text>
+                    <Text textAlign="center">
+                      Bond $ITHEUM on your NFMe ID, this grows your {`"Liveliness"`} to signal the AI Agents that you are committed
+                    </Text>
 
                     {/* check if the user has at least 1 bond */}
                     <Button
@@ -891,6 +893,8 @@ const Dashboard = ({
                     </Button>
                   </Flex>
                 </Flex>
+
+                {/* Claim Badges - only available if the user has a NFMe ID Vault */}
               </Box>
             </Flex>
           </Box>

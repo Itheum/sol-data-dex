@@ -38,7 +38,6 @@ type MintingModalProps = {
   dataNFTImg: string;
   dataNFTTraits: any;
   mintingSuccessful: boolean;
-  // makePrimaryNFMeIdSuccessful: boolean;
   isNFMeIDMint: boolean;
   isAutoVaultInProgress: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
@@ -56,7 +55,6 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
     dataNFTImg,
     dataNFTTraits,
     mintingSuccessful,
-    // makePrimaryNFMeIdSuccessful,
     isNFMeIDMint,
     isAutoVaultInProgress,
     setIsOpen,
@@ -106,7 +104,9 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
 
                 <HStack>
                   <Box w={6}>{(!saveProgress.s3 && <Spinner size="md" />) || <CheckCircleIcon w={6} h={6} />}</Box>
-                  <Text fontSize="lg">Loading metadata to durable decentralized storage {isFreeMint ? " and minting your NFMe ID" : ""}</Text>
+                  <Text fontSize="lg">
+                    Loading metadata to durable decentralized storage {isFreeMint ? " and minting your NFMe ID. " : " "} (⏳ This can take a few minutes.)
+                  </Text>
                 </HStack>
 
                 {!isFreeMint && (
@@ -114,7 +114,7 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
                     <Box w={6}>{(!saveProgress.s4 && <Spinner size="md" />) || <CheckCircleIcon w={6} h={6} />}</Box>
                     <Text fontSize="lg">
                       Minting your {isNFMeIDMint ? "NFMe ID" : "Data NFT"}, bonding $ITHEUM to generate your liveliness staking rewards{" "}
-                      {isAutoVaultInProgress ? "and setting it as your vault" : ""}
+                      {isAutoVaultInProgress ? "and setting it as your vault. " : " "}. (⏳ This can take a few minutes.)
                     </Text>
                   </HStack>
                 )}
@@ -165,7 +165,7 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
 
                 {dataNFTImg && (
                   <Text fontSize="xs" align="center" mt={{ md: "-5" }}>
-                    Image and traits were created using the unique data signature (it&apos;s one of a kind!)
+                    Image and traits were created using a unique data signature (it&apos;s one of a kind!)
                   </Text>
                 )}
               </>
@@ -229,125 +229,26 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
                 <Box textAlign="center" mt="2">
                   <Alert status="success" rounded="md">
                     <Text fontSize="lg" colorScheme="teal" m="auto">
-                      Success! Your unique NFMe ID was minted
+                      Success! Your unique NFMe ID was minted.
                     </Text>
                   </Alert>
                   <Flex mt="4" flexDir={"column"} alignItems="center">
-                    <Button
-                      colorScheme="teal"
-                      onClick={() => {
-                        navigate("/datanfts/wallet");
-                      }}>
-                      Visit {`"Wallet"`} to see it!
-                    </Button>
                     <Text textAlign="center" my="2">
-                      Or, head back to your dashboard for next steps to join the AI Data Workforce.
+                      Head back to your dashboard for next steps to join the AI Data Workforce!
                     </Text>
                     <Button
                       colorScheme="teal"
+                      mt="2"
+                      size="lg"
                       onClick={() => {
                         navigate("/dashboard");
                       }}>
-                      Go to Dashboard
-                    </Button>
-                    <Text my="1">OR</Text>
-                    <Button
-                      colorScheme="teal"
-                      variant="outline"
-                      onClick={() => {
-                        closeProgressModal();
-                        onClose();
-                      }}>
-                      Close & Return
+                      Back to Dashboard
                     </Button>
                   </Flex>
                 </Box>
               )}
             </>
-
-            {/* {isAutoVault ? ( */}
-            {/* <> */}
-            {/* {mintingSuccessful && makePrimaryNFMeIdSuccessful ? ( */}
-            {/* {mintingSuccessful ? (
-                  <Box textAlign="center" mt="2">
-                    <Alert status="success" rounded="md">
-                      <Text fontSize="lg" colorScheme="teal">
-                        Success! {isNFMeIDMint ? "NFMe ID" : "Data NFT"} Minted and {isSolWalletConnected ? "bonded" : "set as your NFMe ID"}.
-                      </Text>
-                    </Alert>
-                    <HStack mt="4">
-                      <Button
-                        colorScheme="teal"
-                        ml="auto"
-                        onClick={() => {
-                          navigate("/liveliness");
-                        }}>
-                        Visit {`"Liveliness"`} to see it!
-                      </Button>
-                      <Button
-                        colorScheme="teal"
-                        variant="outline"
-                        mr="auto"
-                        onClick={() => {
-                          closeProgressModal();
-                          onClose();
-                        }}>
-                        Close & Return
-                      </Button>
-                    </HStack>
-                  </Box>
-                ) : (
-                  mintingSuccessful &&
-                  bondingTxHasFailed && (
-                    <Box textAlign="center" mt={4}>
-                      <Text fontSize="lg" colorScheme="teal" color="teal.200" mb={2}>
-                        Note: You can only complete the bonding step here.
-                      </Text>
-                      <Button
-                        colorScheme="teal"
-                        variant="solid"
-                        onClick={() => {
-                          sendSolanaBondingTx ? sendSolanaBondingTx() : console.error("Retry is not possible.");
-                        }}>
-                        Retry Bonding
-                      </Button>
-                    </Box>
-                  )
-                )} */}
-            {/* </> */}
-            {/* ) : ( */}
-            {/* <>
-                {mintingSuccessful && (
-                  <Box textAlign="center" mt="2">
-                    <Alert status="success" rounded="md">
-                      <Text fontSize="lg" colorScheme="teal">
-                        Success! Your {isNFMeIDMint ? "NFMe ID" : "Data NFT"} has been minted.
-                      </Text>
-                    </Alert>
-                    <HStack mt="4">
-                      <Button
-                        colorScheme="teal"
-                        ml="auto"
-                        onClick={() => {
-                          navigate("/datanfts/wallet");
-                        }}>
-                        Visit your {"Wallet"} to see it!
-                      </Button>
-                      <Button
-                        colorScheme="teal"
-                        variant="outline"
-                        mr="auto"
-                        onClick={() => {
-                          closeProgressModal();
-                          onClose();
-                        }}>
-                        Close & Return
-                      </Button>
-                    </HStack>
-                  </Box>
-                )}
-              </> */}
-            {/* )} */}
 
             {errDataNFTStreamGeneric && (
               <Alert status="error" rounded="md">

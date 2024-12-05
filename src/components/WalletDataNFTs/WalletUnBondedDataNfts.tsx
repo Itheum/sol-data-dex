@@ -160,11 +160,6 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
           if (reEstablishBondConfirmationWorkflow) {
             await sleep(2);
 
-            // we can assume the bonding passed here, so to keep it simple (or else we need to sync a lot of state to store), we re just remove the dataNftId from global store BondedDataNftIds
-            const _bondedDataNftIds: string[] = [...bondedDataNftIds];
-            _bondedDataNftIds.push(reEstablishBondConfirmationWorkflow.dataNftId);
-            updateBondedDataNftIds(_bondedDataNftIds);
-
             // if the user already does NOT have a vault, we also auto-vault now
 
             // S: AUTO-VAULT STEP
@@ -220,6 +215,11 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
             // E: AUTO-VAULT STEP
 
             await sleep(2);
+
+            // we can assume the bonding passed here, so to keep it simple (or else we need to sync a lot of state to store), we re just remove the dataNftId from global store BondedDataNftIds
+            const _bondedDataNftIds: string[] = [...bondedDataNftIds];
+            _bondedDataNftIds.push(reEstablishBondConfirmationWorkflow.dataNftId);
+            updateBondedDataNftIds(_bondedDataNftIds);
 
             onShowBondingSuccessModal(); // ask the parent to show the success model CTA
           }
@@ -351,7 +351,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                 Bond To Get Liveliness <br />+ Staking Rewards
               </Button>
               <br />
-              <Text fontSize="sm">
+              {/* <Text fontSize="sm">
                 ID: {solDataNft.id}
                 <br />
                 Leaf {solDataNft.compression.leaf_id}
@@ -359,7 +359,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                 Length {solDataNft.grouping.length}
                 <br />
                 Collection {solDataNft.grouping[0].group_value}
-              </Text>
+              </Text> */}
             </Box>
             <Link
               onClick={() => window.open(`${SOLANA_EXPLORER_URL}address/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}
@@ -431,8 +431,14 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
           bodyContent={
             <>
               {bondingInProgress ? (
-                <Flex w="100%" h="5rem" justifyContent="center" alignItems="center">
-                  <Spinner size="xl" color="teal.200" />
+                <Flex w="100%" h="5rem" justifyContent="center" alignItems="center" flexDirection="column">
+                  <Box>
+                    <Spinner size="xl" color="teal.200" />
+                  </Box>
+
+                  <Text fontSize="sm" textAlign="center" mt="2">
+                    Please note that you will be asked to sign up to 3 transactions for the process to complete.
+                  </Text>
                 </Flex>
               ) : (
                 <>

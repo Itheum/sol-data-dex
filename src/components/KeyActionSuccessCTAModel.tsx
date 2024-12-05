@@ -53,10 +53,6 @@ export default function KeyActionSuccessCTAModel({ isOpen, onClose, congratsActi
                 }}>
                 Go to Dashboard
               </Button>
-
-              <Button colorScheme="teal" size={{ base: "sm", md: "md", xl: "lg" }} variant="outline" onClick={onClose} m={2}>
-                Close This
-              </Button>
             </Flex>
           </ModalBody>
         </ModalContent>

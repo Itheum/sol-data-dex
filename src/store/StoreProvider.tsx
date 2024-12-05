@@ -13,6 +13,7 @@ import {
   getBondingProgramInterface,
   retrieveBondsAndNftMeIdVault,
   getItheumBalanceOnSolana,
+  fetchUserBadges,
 } from "libs/Solana/utils";
 import { computeRemainingCooldown } from "libs/utils";
 import { sleep } from "libs/utils/util";
@@ -26,6 +27,8 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
 
   // STOREs
   const {
+    solPreaccessNonce,
+    solPreaccessSignature,
     updateItheumPrice,
     updateItheumBalance,
     updateIsKeyChainDataForAppLoading,
@@ -33,10 +36,10 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
     updateGivenBitzSum,
     updateBonusBitzSum,
     updateCooldown,
+    updateUserBadges,
   } = useAccountStore();
   const { updateAllDataNfts, updateBondedDataNftIds, updateBitzDataNfts, bitzDataNfts, allDataNfts } = useNftsStore();
   const { updateLockPeriodForBond, updateUserBonds, updateUsersNfMeIdVaultBondId, updateCurrentMaxApr } = useMintStore();
-  const { solPreaccessNonce, solPreaccessSignature } = useAccountStore();
 
   useEffect(() => {
     getItheumPrice();
@@ -114,6 +117,10 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
         });
       }
       // E: get users bonds
+
+      // get users badges
+      const _userBadges: any[] = await fetchUserBadges(userPublicKey?.toBase58());
+      updateUserBadges(_userBadges);
 
       await sleep(3);
 

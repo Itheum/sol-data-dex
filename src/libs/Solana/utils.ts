@@ -605,3 +605,47 @@ export const swapForItheumTokensOnJupiter = (wallet: any, onSuccessCallback: any
     },
   });
 };
+
+export async function fetchUserBadges(solAddress: string | undefined) {
+  if (!solAddress) {
+    return [];
+  } else {
+    const resp = await fetch(`${getApiDataDex()}/userAccounts/getBadges?addr=${solAddress}`);
+    const data = await resp.json();
+
+    return data;
+  }
+}
+
+export async function fetchBadgesLookup() {
+  const resp = await fetch(`${getApiDataDex()}/userAccounts/getBadgeLookup`);
+  const data = await resp.json();
+
+  return data;
+}
+
+export async function claimBadge(addr: string | undefined, claimThisBadgeId: string) {
+  if (!addr || !claimThisBadgeId) {
+    return { error: true };
+  } else {
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    const requestBody = { addr, claimThisBadgeId };
+
+    const res = await fetch(`${getApiDataDex()}/userAccounts/claimBadge`, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      return data;
+    } else {
+      return { success: true };
+    }
+  }
+}

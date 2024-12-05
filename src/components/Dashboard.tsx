@@ -37,6 +37,9 @@ import { sleep } from "libs/utils/util";
 import { useAccountStore } from "store/account";
 import { useMintStore } from "store/mint";
 import { useNftsStore } from "store/nfts";
+import BadgesPreview from "./Dashboard/BadgesPreview";
+
+const isDebugSoAvoidAPIs = false;
 
 const parentVariants = {
   visible: { opacity: 1, y: 0 },
@@ -90,6 +93,7 @@ const Dashboard = ({
 
   // conditional displays
   const [hasBitzNft, setHasBitzNft] = useState(false);
+  const [hasUnclaimedBadges, setHasUnclaimedBadges] = useState(false);
 
   // S: Cached Signature Store Items
   const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
@@ -104,6 +108,10 @@ const Dashboard = ({
 
   useEffect(() => {
     const checkFreeClaims = async () => {
+      if (isDebugSoAvoidAPIs) {
+        return;
+      }
+
       if (userPublicKey) {
         setFreeDropCheckLoading(true);
         const freeNfMeIdMinted = await checkIfFreeDataNftGiftMinted("nfmeid", userPublicKey.toBase58());
@@ -411,7 +419,9 @@ const Dashboard = ({
                       Login via Wallet
                     </Heading>
 
-                    <Text textAlign="center">You need this to collect your rewards</Text>
+                    <Text textAlign="center" fontSize="md">
+                      You need this to collect your rewards
+                    </Text>
 
                     {!isUserLoggedIn ? (
                       <Button
@@ -450,7 +460,13 @@ const Dashboard = ({
                       Get a Free BiTz XP Data NFT
                     </Heading>
 
-                    <Text textAlign="center">Use it to collect and own your Itheum XP by staying active in the ecosystem</Text>
+                    <Text textAlign="center" fontSize="md">
+                      Use it to collect and own your{" "}
+                      <Text as="span" fontWeight="bold" color="teal.200">
+                        Itheum XP
+                      </Text>{" "}
+                      by staying active in the ecosystem
+                    </Text>
 
                     <Button
                       m="auto"
@@ -489,13 +505,26 @@ const Dashboard = ({
                     borderColor="teal.200"
                     opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
                     pointerEvents={!isUserLoggedIn || !hasBitzNft ? "none" : "initial"}>
+                    {isUserLoggedIn && !hasBitzNft && (
+                      <Alert status="warning" rounded="md" fontSize="md">
+                        <AlertIcon />
+                        {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
+                      </Alert>
+                    )}
+
                     {isUserLoggedIn && freeBitzClaimed && !freeNfMeIdClaimed && <FocusOnThisEffect />}
 
                     <Heading as="h3" size="md" textAlign="center">
                       Get a Free NFMe ID
                     </Heading>
 
-                    <Text textAlign="center">Use it as your web3 identity for AI agents to verify you</Text>
+                    <Text textAlign="center" fontSize="md">
+                      Use it as your{" "}
+                      <Text as="span" fontWeight="bold" color="teal.200">
+                        Web3 Identity
+                      </Text>{" "}
+                      for AI agents to verify you
+                    </Text>
 
                     <Button
                       m="auto"
@@ -542,7 +571,7 @@ const Dashboard = ({
                     opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
                     pointerEvents={!hasBitzNft ? "none" : "initial"}>
                     {isUserLoggedIn && !hasBitzNft && (
-                      <Alert status="warning" rounded="md">
+                      <Alert status="warning" rounded="md" fontSize="md">
                         <AlertIcon />
                         {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
                       </Alert>
@@ -554,7 +583,9 @@ const Dashboard = ({
                       Boost Your Proof-of-Activity
                     </Heading>
 
-                    <Text textAlign="center">You need BiTz to vote to curate AI content. Earn BiTz every few hours.</Text>
+                    <Text textAlign="center" fontSize="md">
+                      You need BiTz to vote to curate AI content. Earn BiTz every few hours.
+                    </Text>
 
                     <Button
                       m="auto"
@@ -614,7 +645,7 @@ const Dashboard = ({
                         variant="outline"
                         fontSize={{ base: "sm", md: "md" }}
                         size={{ base: "sm", lg: "lg" }}
-                        w="280px">
+                        w={{ base: "100%", md: "280px" }}>
                         <span>
                           {cooldown === -2 ? (
                             <span>Check XP Balance & Play</span>
@@ -634,7 +665,7 @@ const Dashboard = ({
                       fontSize={{ base: "sm", md: "md" }}
                       size={{ base: "sm", lg: "lg" }}
                       isDisabled={!isUserLoggedIn}
-                      w="280px"
+                      w={{ base: "100%", md: "280px" }}
                       onClick={() => {
                         alert("Buy BiTz Coming Soon...");
                       }}>
@@ -650,14 +681,25 @@ const Dashboard = ({
                     p={2}
                     opacity={!isUserLoggedIn || !freeNfMeIdClaimed ? 0.5 : "initial"}
                     pointerEvents={!isUserLoggedIn || !freeNfMeIdClaimed ? "none" : "initial"}>
+                    {isUserLoggedIn && !freeNfMeIdClaimed && (
+                      <Alert status="warning" rounded="md" fontSize="md">
+                        <AlertIcon />
+                        {`You need to ${isUserLoggedIn ? "" : "login and "} get your free NFMe ID  first!`}
+                      </Alert>
+                    )}
+
                     {isUserLoggedIn && hasBitzNft && freeNfMeIdClaimed && usersNfMeIdVaultBondId === 0 && <FocusOnThisEffect />}
 
                     <Heading as="h3" size="md" textAlign="center">
                       Boost Your Proof-of-Reputation
                     </Heading>
 
-                    <Text textAlign="center">
-                      Bond $ITHEUM on your NFMe ID, this grows your {`"Liveliness"`} to signal the AI Agents that you are committed
+                    <Text textAlign="center" fontSize="md">
+                      Bond $ITHEUM on your NFMe ID, this grows your{" "}
+                      <Text as="span" fontWeight="bold" color="teal.200">
+                        Liveliness
+                      </Text>{" "}
+                      to signal the AI Agents that you are committed to completing your tasks.
                     </Text>
 
                     {/* check if the user has at least 1 bond */}
@@ -667,7 +709,7 @@ const Dashboard = ({
                       variant={bondedDataNftIds.length > 0 ? "solid" : "outline"}
                       fontSize={{ base: "sm", md: "md" }}
                       size={{ base: "sm", lg: "lg" }}
-                      w="280px"
+                      w={{ base: "100%", md: "280px" }}
                       isLoading={freeDropCheckLoading}
                       isDisabled={!isUserLoggedIn || bondedDataNftIds.length > 0}
                       onClick={() => {
@@ -683,7 +725,7 @@ const Dashboard = ({
                       variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
                       fontSize={{ base: "sm", md: "md" }}
                       size={{ base: "sm", lg: "lg" }}
-                      w="280px"
+                      w={{ base: "100%", md: "280px" }}
                       isLoading={freeDropCheckLoading}
                       isDisabled={!isUserLoggedIn || bondedDataNftIds.length === 0 || usersNfMeIdVaultBondId > 0}
                       onClick={() => {
@@ -723,8 +765,8 @@ const Dashboard = ({
                     <Heading as="h3" size="md" textAlign="center">
                       NF-Tunes AI Music Feedback
                     </Heading>
-                    <Text textAlign="center">
-                      Help real-world music artists amplify their music with help from the Itheum Sigma AI Agent and your data curation
+                    <Text textAlign="center" fontSize="md">
+                      Help music artists improve their songs by providing feedback that trains AI Agents
                     </Text>
                   </Flex>
 
@@ -740,6 +782,13 @@ const Dashboard = ({
                     <Text textAlign="center" fontSize="2xl">
                       1.
                     </Text>
+
+                    {isUserLoggedIn && !hasBitzNft && (
+                      <Alert status="warning" rounded="md" fontSize="md">
+                        <AlertIcon />
+                        {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
+                      </Alert>
+                    )}
 
                     {isUserLoggedIn && hasBitzNft && <FocusOnThisEffect />}
 
@@ -757,7 +806,7 @@ const Dashboard = ({
                       size={{ base: "sm", lg: "lg" }}
                       isLoading={freeDropCheckLoading}
                       isDisabled={!isUserLoggedIn || freeMusicGiftClaimed}
-                      w="280px"
+                      w={{ base: "100%", md: "280px" }}
                       onClick={() => {
                         setFreeMintMusicGiftIntroToAction(true);
                         onProgressModalOpen();
@@ -771,7 +820,7 @@ const Dashboard = ({
                       variant="outline"
                       fontSize={{ base: "sm", md: "md" }}
                       size={{ base: "sm", lg: "lg" }}
-                      w="280px"
+                      w={{ base: "100%", md: "280px" }}
                       isLoading={freeDropCheckLoading}
                       isDisabled={!isUserLoggedIn || !freeMusicGiftClaimed}
                       onClick={() => {
@@ -796,7 +845,7 @@ const Dashboard = ({
                     opacity={!hasBitzNft ? 0.5 : "initial"}
                     pointerEvents={!hasBitzNft ? "none" : "initial"}>
                     {isUserLoggedIn && !hasBitzNft && (
-                      <Alert status="warning" rounded="md">
+                      <Alert status="warning" rounded="md" fontSize="md">
                         <AlertIcon />
                         {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
                       </Alert>
@@ -811,7 +860,9 @@ const Dashboard = ({
                       Vote to Power-Up & Like Music Content
                     </Heading>
 
-                    <Text textAlign="center">Vote for content by gifting BiTz to music content created Itheum AI Music Creators</Text>
+                    <Text textAlign="center" fontSize="md">
+                      Vote for content by gifting BiTz to music content created by Music Creators. Feedback is used to train AI Agents
+                    </Text>
 
                     <Button
                       margin="auto"
@@ -821,7 +872,7 @@ const Dashboard = ({
                       size={{ base: "sm", lg: "lg" }}
                       isLoading={freeDropCheckLoading}
                       isDisabled={!isUserLoggedIn || bitzBalance === 0}
-                      w="280px"
+                      w={{ base: "100%", md: "280px" }}
                       onClick={() => {
                         window.open(`${EXPLORER_APP_FOR_TOKEN[chainId]["nftunes"]}?artist-profile=waveborn-luminex&hl=sigma`, "_blank");
                       }}>
@@ -843,12 +894,14 @@ const Dashboard = ({
                     backgroundColor={"xgray.500"}
                     gap={2}
                     p={2}
+                    borderBottom="1px solid"
+                    borderColor="teal.200"
                     opacity={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? 0.5 : "initial"}
                     pointerEvents={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? "none" : "initial"}>
                     {isUserLoggedIn && usersNfMeIdVaultBondId === 0 && (
-                      <Alert status="warning" rounded="md">
+                      <Alert status="warning" rounded="md" fontSize="md">
                         <AlertIcon />
-                        {`You need to ${isUserLoggedIn ? "" : "login and "} have a NFMe ID that has been upgraded into a Vault first!!`}
+                        {`You need to ${isUserLoggedIn ? "" : "login and "} have a NFMe ID that has been upgraded into a Vault first!`}
                       </Alert>
                     )}
 
@@ -858,7 +911,17 @@ const Dashboard = ({
                       Liveliness Staking Rewards
                     </Heading>
 
-                    <Text textAlign="center">Get a share of protocol rewards. Currently 40% APR on your NFMe Id Bonds</Text>
+                    <Text textAlign="center" fontSize="md">
+                      Get a share of protocol rewards for your{" "}
+                      <Text as="span" fontWeight="bold" color="teal.200">
+                        Liveliness
+                      </Text>
+                      . Currently{" "}
+                      <Text as="span" fontWeight="bold" color="teal.200">
+                        40% APR
+                      </Text>{" "}
+                      on your NFMe Id Bonds
+                    </Text>
 
                     {/* if the user has a vault allow them to top-up */}
                     <Button
@@ -869,7 +932,7 @@ const Dashboard = ({
                       size={{ base: "sm", lg: "lg" }}
                       isLoading={freeDropCheckLoading}
                       isDisabled={!isUserLoggedIn || usersNfMeIdVaultBondId === 0}
-                      w="280px"
+                      w={{ base: "100%", md: "280px" }}
                       onClick={() => {
                         navigate("/liveliness?hl=topup");
                       }}>
@@ -883,7 +946,7 @@ const Dashboard = ({
                       variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
                       fontSize={{ base: "sm", md: "md" }}
                       size={{ base: "sm", lg: "lg" }}
-                      w="280px"
+                      w={{ base: "100%", md: "280px" }}
                       isLoading={freeDropCheckLoading}
                       isDisabled={!isUserLoggedIn || usersNfMeIdVaultBondId === 0}
                       onClick={() => {
@@ -894,7 +957,29 @@ const Dashboard = ({
                   </Flex>
                 </Flex>
 
-                {/* Claim Badges - only available if the user has a NFMe ID Vault */}
+                {/* Claim Badges - only available if the user has a BiTz Data NFT */}
+                <Flex
+                  flexDirection="column"
+                  gap="3"
+                  mt="5"
+                  opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
+                  pointerEvents={!isUserLoggedIn || !hasBitzNft ? "none" : "initial"}>
+                  {hasUnclaimedBadges && <FocusOnThisEffect />}
+                  {isUserLoggedIn && !hasBitzNft && (
+                    <Alert status="warning" rounded="md" fontSize="md">
+                      <AlertIcon />
+                      {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
+                    </Alert>
+                  )}
+                  <BadgesPreview
+                    isUserLoggedIn={isUserLoggedIn}
+                    onHasUnclaimedBadges={(status: boolean) => {
+                      setHasUnclaimedBadges(status);
+                    }}
+                  />
+                </Flex>
+
+                {/* Claim Credentials - only available if the user has a NFMe ID Vault @TODO */}
               </Box>
             </Flex>
           </Box>
@@ -922,28 +1007,40 @@ const Dashboard = ({
                   With Itheum, your XP Data is yours to own! 🚀
                 </Text>
                 <Text mt="5" textAlign="center">
-                  {`BiTz`} are Itheum XP stored in a Data NFT in your wallet. Collect them to curate, power-up, and like data—and earn rewards! Your BiTz NFT is
-                  your gateway to the Itheum Protocol and the Web3 AI Data Era {`we're`} enabling.
+                  {`BiTz`} are{" "}
+                  <Text as="span" fontWeight="bold" color="teal.200">
+                    Itheum XP
+                  </Text>{" "}
+                  stored in a Data NFT in your wallet. Collect them to curate, power-up, and like data—and earn rewards! Your BiTz NFT is your gateway to the
+                  Itheum Protocol and the Web3 AI Data Era {`we're`} enabling.
                 </Text>
 
                 {!errFreeMintGeneric && !freeNfMeIdClaimed && (
                   <>
                     {!freeMintBitzXpGameComingUp ? (
-                      <Button
-                        m="auto"
-                        mt="5"
-                        colorScheme="teal"
-                        variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
-                        fontSize={{ base: "sm", md: "md" }}
-                        size={{ base: "sm", lg: "lg" }}
-                        w="280px"
-                        disabled={freeMintBitzXpLoading}
-                        isLoading={freeMintBitzXpLoading}
-                        onClick={() => {
-                          handleFreeMintBitzXP();
-                        }}>
-                        LFG! Give Me My Airdrop!
-                      </Button>
+                      <>
+                        <Button
+                          m="auto"
+                          mt="5"
+                          colorScheme="teal"
+                          variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
+                          fontSize={{ base: "sm", md: "md" }}
+                          size={{ base: "sm", lg: "lg" }}
+                          w={{ base: "100%", md: "280px" }}
+                          disabled={freeMintBitzXpLoading}
+                          isLoading={freeMintBitzXpLoading}
+                          onClick={() => {
+                            handleFreeMintBitzXP();
+                          }}>
+                          LFG! Give Me My Airdrop!
+                        </Button>
+
+                        {freeMintBitzXpLoading && (
+                          <Text fontSize="md" textAlign="center" mt="2" color="teal.200">
+                            ⏳ Please wait... this can take a few minutes as {`it's`} airdropping to your wallet.
+                          </Text>
+                        )}
+                      </>
                     ) : (
                       <Alert status={"success"} mt={5} rounded="md" mb={8}>
                         <AlertIcon />
@@ -987,21 +1084,29 @@ const Dashboard = ({
                 {!errFreeMintGeneric && (
                   <>
                     {!freeMusicGiftClaimed ? (
-                      <Button
-                        m="auto"
-                        mt="5"
-                        colorScheme="teal"
-                        variant={"outline"}
-                        fontSize={{ base: "sm", md: "md" }}
-                        size={{ base: "sm", lg: "lg" }}
-                        w="280px"
-                        disabled={freeMintMusicGiftLoading}
-                        isLoading={freeMintMusicGiftLoading}
-                        onClick={() => {
-                          handleFreeMintMusicGift();
-                        }}>
-                        LFG! Give Me My Airdrop!
-                      </Button>
+                      <>
+                        <Button
+                          m="auto"
+                          mt="5"
+                          colorScheme="teal"
+                          variant={"outline"}
+                          fontSize={{ base: "sm", md: "md" }}
+                          size={{ base: "sm", lg: "lg" }}
+                          w={{ base: "100%", md: "280px" }}
+                          disabled={freeMintMusicGiftLoading}
+                          isLoading={freeMintMusicGiftLoading}
+                          onClick={() => {
+                            handleFreeMintMusicGift();
+                          }}>
+                          LFG! Give Me My Airdrop!
+                        </Button>
+
+                        {freeMintMusicGiftLoading && (
+                          <Text fontSize="md" textAlign="center" mt="2" color="teal.200">
+                            ⏳ Please wait... this can take a few minutes as {`it's`} airdropping to your wallet.
+                          </Text>
+                        )}
+                      </>
                     ) : (
                       <Alert status={"success"} mt={5} rounded="md" mb={8}>
                         <AlertIcon />
@@ -1013,7 +1118,7 @@ const Dashboard = ({
                             variant="outline"
                             fontSize={{ base: "sm", md: "md" }}
                             size={{ base: "sm", lg: "lg" }}
-                            w="280px"
+                            w={{ base: "100%", md: "280px" }}
                             mt={3}
                             onClick={() => {
                               window.open(`${EXPLORER_APP_FOR_TOKEN[chainId]["nftunes"]}?artist-profile=waveborn-luminex&hl=sample`, "_blank");

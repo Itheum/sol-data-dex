@@ -19,6 +19,7 @@ type State = {
   solPreaccessSignature: string;
   solPreaccessTimestamp: number;
   keyChainDataForAppLoading: boolean;
+  userBadges: any[];
 };
 
 type Action = {
@@ -37,6 +38,7 @@ type Action = {
   updateSolPreaccessTimestamp: (solPreaccessTimestamp: State["solPreaccessTimestamp"]) => void;
   // we should set this below value to true and false anywhere in the app, were we get on-chain data
   updateIsKeyChainDataForAppLoading: (isLoading: boolean) => void;
+  updateUserBadges: (userBadges: State["userBadges"]) => void;
 };
 
 export const useAccountStore = create<State & Action>((set) => ({
@@ -54,6 +56,7 @@ export const useAccountStore = create<State & Action>((set) => ({
   solPreaccessSignature: "",
   solPreaccessTimestamp: -2,
   keyChainDataForAppLoading: false,
+  userBadges: [],
   updateItheumPrice: (value: number) => set((state) => ({ ...state, itheumPrice: value })),
   updateItheumBalance: (value: number) => set(() => ({ itheumBalance: value })),
   updateAccessToken: (value: string) => set(() => ({ accessToken: value })),
@@ -68,4 +71,5 @@ export const useAccountStore = create<State & Action>((set) => ({
   updateSolSignedPreaccess: (value: string) => set(() => ({ solPreaccessSignature: value })),
   updateSolPreaccessTimestamp: (value: number) => set(() => ({ solPreaccessTimestamp: value })),
   updateIsKeyChainDataForAppLoading: (value: boolean) => set(() => ({ keyChainDataForAppLoading: value })),
+  updateUserBadges: (value: any[]) => set(() => ({ userBadges: value })),
 }));

@@ -1091,7 +1091,7 @@ export const LivelinessStakingSol: React.FC = () => {
                     </Box>
                     <Flex p={0} ml={{ md: "3" }} flexDirection="column" alignItems="start" w="full">
                       <Flex flexDirection="column" w="100%">
-                        <Text fontSize="sm" mb="5">
+                        {/* <Text fontSize="sm" mb="5">
                           ID: {dataNft.id}
                           <br />
                           Leaf {dataNft.compression.leaf_id}
@@ -1099,7 +1099,7 @@ export const LivelinessStakingSol: React.FC = () => {
                           Length {dataNft.grouping.length}
                           <br />
                           Collection {dataNft.grouping[0].group_value}
-                        </Text>
+                        </Text> */}
                         <Text fontFamily="Clash-Medium">{metadata.name}</Text>
                         <Link isExternal href={`${SOLANA_EXPLORER_URL}address/${dataNft.id}?cluster=${networkConfiguration}`}>
                           <Text fontSize="sm" pb={3}>

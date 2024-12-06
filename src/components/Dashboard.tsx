@@ -363,7 +363,7 @@ const Dashboard = ({
             Hello Human,
           </Heading>
           <Heading as="h1" size="xl" fontFamily="Satoshi-Regular" w="70%" textAlign="center" margin="auto" my="5">
-            Join the AI Data Workforce, prove your reputation, co-create new data with me and get rewarded
+            Join the AI Workforce, prove your reputation, co-create new data with me and get rewarded
           </Heading>
         </Box>
 

@@ -1,6 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
-import { Flex, Text, Heading, Box, Button, Collapse, AlertIcon, Alert, SkeletonCircle } from "@chakra-ui/react";
+import {
+  Flex,
+  Text,
+  Heading,
+  Box,
+  Button,
+  Collapse,
+  AlertIcon,
+  Alert,
+  SkeletonCircle,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  useBreakpointValue,
+  useColorMode,
+} from "@chakra-ui/react";
 import { fetchBadgesLookup } from "libs/Solana/utils";
 import { useAccountStore } from "store/account";
 import { BadgeCard } from "./BadgeCard";
@@ -38,6 +56,9 @@ const BadgesPreview: React.FC<BadgesPreviewProps> = ({ isUserLoggedIn, onHasUncl
   const [hasUnclaimedBadges, setHasUnclaimedBadges] = useState(false);
   const [badgeCategoryMap, setBadgeCategoryMap] = useState<object | undefined>();
   const [badgeCategoryMapWithCatNameAsKey, setBadgeCategoryMapWithCatNameAsKey] = useState<BadgeMetadataType>({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const { colorMode } = useColorMode();
 
   useEffect(() => {
     (async () => {
@@ -92,13 +113,7 @@ const BadgesPreview: React.FC<BadgesPreviewProps> = ({ isUserLoggedIn, onHasUncl
   }, [hasUnclaimedBadges]);
 
   return (
-    <Flex
-      flexDirection="column"
-      backgroundColor={"xgray.500"}
-      gap={2}
-      p={2}
-      opacity={!isUserLoggedIn ? 0.5 : "initial"}
-      pointerEvents={!isUserLoggedIn ? "none" : "initial"}>
+    <Flex flexDirection="column" gap={2} p={2} opacity={!isUserLoggedIn ? 0.5 : "initial"} pointerEvents={!isUserLoggedIn ? "none" : "initial"}>
       <Heading as="h3" size="md" textAlign="center">
         Badges
       </Heading>
@@ -133,26 +148,50 @@ const BadgesPreview: React.FC<BadgesPreviewProps> = ({ isUserLoggedIn, onHasUncl
 
           <Button
             variant="ghost"
-            onClick={() => setIsExpanded(!isExpanded)}
-            rightIcon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-            _hover={{ bg: "xgray.400" }}>
-            {isExpanded ? "Show Less" : "See All Badges"}
+            onClick={() => (isMobile ? setIsExpanded(!isExpanded) : setIsModalOpen(true))}
+            rightIcon={isMobile && isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            _hover={{ bg: colorMode === "dark" ? "#181818" : "bgWhite" }}>
+            {isMobile && isExpanded ? "Show Less" : "See All Badges"}
           </Button>
 
-          <Collapse in={isExpanded} animateOpacity>
-            <Box>
-              {Object.entries(groupedBadges).length > 0 ? (
-                Object.entries(groupedBadges).map(([category, badges]) => (
-                  <BadgeCard key={category} badgeCategoryMapWithCatNameAsKey={badgeCategoryMapWithCatNameAsKey} category={category} badges={badges} />
-                ))
-              ) : (
-                <Alert status="info" borderRadius="md" mb={4}>
-                  <AlertIcon />
-                  <Text fontSize="md">No badges earned yet. Complete activities to earn badges!</Text>
-                </Alert>
-              )}
-            </Box>
-          </Collapse>
+          {/* Collapse panel for mobile */}
+          {isMobile && (
+            <Collapse in={isExpanded} animateOpacity>
+              <Box>
+                {Object.entries(groupedBadges).length > 0 ? (
+                  Object.entries(groupedBadges).map(([category, badges]) => (
+                    <BadgeCard key={category} badgeCategoryMapWithCatNameAsKey={badgeCategoryMapWithCatNameAsKey} category={category} badges={badges} />
+                  ))
+                ) : (
+                  <Alert status="info" borderRadius="md" mb={4}>
+                    <AlertIcon />
+                    <Text fontSize="md">No badges earned yet. Complete activities to earn badges!</Text>
+                  </Alert>
+                )}
+              </Box>
+            </Collapse>
+          )}
+
+          {/* Modal for desktop */}
+          <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} closeOnEsc={false} closeOnOverlayClick={false} blockScrollOnMount={false}>
+            <ModalOverlay backdropFilter="blur(10px)" />
+            <ModalContent bgColor={colorMode === "dark" ? "#181818" : "bgWhite"}>
+              <ModalHeader>All Badges</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody pb={6}>
+                {Object.entries(groupedBadges).length > 0 ? (
+                  Object.entries(groupedBadges).map(([category, badges]) => (
+                    <BadgeCard key={category} badgeCategoryMapWithCatNameAsKey={badgeCategoryMapWithCatNameAsKey} category={category} badges={badges} />
+                  ))
+                ) : (
+                  <Alert status="info" borderRadius="md" mb={4}>
+                    <AlertIcon />
+                    <Text fontSize="md">No badges earned yet. Complete activities to earn badges!</Text>
+                  </Alert>
+                )}
+              </ModalBody>
+            </ModalContent>
+          </Modal>
         </>
       )}
     </Flex>

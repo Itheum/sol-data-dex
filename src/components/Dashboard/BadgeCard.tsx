@@ -75,7 +75,7 @@ export const BadgeCard: React.FC<BadgeGroupProps> = ({ badgeCategoryMapWithCatNa
   return (
     <>
       <Popover trigger="hover" placement="top">
-        <PopoverContent bg={colorMode === "dark" ? "black" : "white"} borderColor="xgray.600" maxW="250px">
+        <PopoverContent bg={colorMode === "dark" ? "black" : "white"} maxW="250px">
           <PopoverArrow bg={colorMode === "dark" ? "white" : "black"} />
           <PopoverBody>{badgeCategoryMapWithCatNameAsKey[category]?.description}</PopoverBody>
         </PopoverContent>

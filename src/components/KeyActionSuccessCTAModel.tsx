@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Button, Stack, Flex, Modal, ModalBody, ModalContent, ModalOverlay, Text, useColorMode } from "@chakra-ui/react";
+import { Button, Flex, Modal, ModalBody, ModalContent, ModalOverlay, Text, useColorMode } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 
 export interface ProcureDataNFTSuccessCTAModelProps {

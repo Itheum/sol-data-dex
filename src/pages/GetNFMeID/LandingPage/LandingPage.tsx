@@ -99,30 +99,76 @@ const ClaimCTAs = ({ onShowConnectWalletModal }: { onShowConnectWalletModal?: an
 
   return (
     <Flex flexDirection={{ base: "column", md: "row" }} justifyContent="space-around" alignItems="center">
-      <Flex flexDirection="column" justifyContent="space-between" h="210px" w="390px" my={{ base: "5", md: "0" }}>
+      <Flex
+        flexDirection="column"
+        justifyContent="space-between"
+        h={`${connectedSolWallet ? "310px" : "210px"}`}
+        w={`${connectedSolWallet ? "420px" : "390px"}`}
+        my={{ base: "5", md: "0" }}>
         <Box h="100px">
-          <Image m="auto" mt="10px" boxSize="73px" height="auto" src={solIcon} alt="Solana " borderRadius="lg" />
+          <Image m="auto" mt="10px" boxSize="73px" height="auto" src={solIcon} alt="Solana" borderRadius="lg" />
         </Box>
         <Spacer />
-        <Button
-          m="auto"
-          variant="solid"
-          colorScheme="teal"
-          px={7}
-          py={6}
-          rounded="lg"
-          size="xl"
-          onClick={() => {
-            gtagGo("nfm", "mint", "sol");
+        <Flex flexDirection="column" gap={4} mt={4}>
+          <Button
+            m="auto"
+            variant="solid"
+            colorScheme="teal"
+            px={7}
+            py={6}
+            rounded="lg"
+            size={connectedSolWallet ? "xl" : "xl"}
+            w="100%"
+            onClick={() => {
+              gtagGo("nfm", "mint", "sol");
 
-            if (connectedSolWallet) {
-              navigate("/mintdata?launchTemplate=nfmeidvault");
-            } else {
-              onShowConnectWalletModal();
-            }
-          }}>
-          {connectedSolWallet ? "Mint NFMe ID" : "Connect Wallet to Start"}
-        </Button>
+              if (connectedSolWallet) {
+                navigate("/mintdata?launchTemplate=nfMeIdWithBond");
+              } else {
+                onShowConnectWalletModal();
+              }
+            }}>
+            {connectedSolWallet ? "Mint NFMe ID (with $ITHEUM Bond and Staking APR)" : "Login via Wallet to Start"}
+          </Button>
+          {connectedSolWallet && (
+            <Button
+              m="auto"
+              variant="solid"
+              colorScheme="teal"
+              px={7}
+              py={6}
+              rounded="md"
+              size="xl"
+              w="100%"
+              onClick={() => {
+                gtagGo("nfm", "mint", "sol");
+
+                if (connectedSolWallet) {
+                  navigate("/mintdata?launchTemplate=nfMeIdFreeMint");
+                } else {
+                  onShowConnectWalletModal();
+                }
+              }}>
+              Free Mint NFMe ID (Bond $ITHEUM Bond Later)
+            </Button>
+          )}
+          {connectedSolWallet && (
+            <Button
+              m="auto"
+              variant="solid"
+              colorScheme="teal"
+              px={7}
+              py={6}
+              rounded="md"
+              size="xl"
+              w="100%"
+              onClick={() => {
+                navigate("/dashboard");
+              }}>
+              Go To Dashboard for More Guidance
+            </Button>
+          )}
+        </Flex>
       </Flex>
     </Flex>
   );

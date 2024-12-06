@@ -1,6 +1,5 @@
 import React from "react";
 import { Box, Button, Flex, Image, Text, Heading, Link, useColorMode } from "@chakra-ui/react";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { useNavigate } from "react-router-dom";
 import darkLivelinessRewards from "assets/img/landing/nfme/dark-liveliness-rewards.png";
 import darkMintWithBond from "assets/img/landing/nfme/dark-mint-nfmeid-with-bond.png";
@@ -12,7 +11,6 @@ import { gtagGo } from "libs/utils";
 
 export const LivelinessStaking = ({ onShowConnectWalletModal }: { onShowConnectWalletModal?: any }) => {
   const { colorMode } = useColorMode();
-  const { connected: connectedSolWallet } = useWallet();
   const navigate = useNavigate();
 
   return (

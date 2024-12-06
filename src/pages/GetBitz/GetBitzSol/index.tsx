@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import bs58 from "bs58";
+import { PublicKey } from "@solana/web3.js";
+import { confetti } from "@tsparticles/confetti";
+import { Container } from "@tsparticles/engine";
+import { fireworks } from "@tsparticles/fireworks";
 import { motion } from "framer-motion";
 import Countdown from "react-countdown";
+import "../common/GetBitz.css";
 
 // Image Layers
 import { LuMousePointerClick } from "react-icons/lu";
@@ -45,12 +48,11 @@ import Meme8 from "assets/img/getbitz/memes/8.jpg";
 import Meme9 from "assets/img/getbitz/memes/9.jpg";
 
 import resultLoading from "assets/img/getbitz/pixel-loading.gif";
-import { IS_DEVNET } from "libs/config";
-import { itheumSolPreaccess, itheumSolViewData } from "libs/Solana/SolViewData";
+import { itheumSolViewData } from "libs/Solana/SolViewData";
+import { getOrCacheAccessNonceAndSignature } from "libs/Solana/utils";
 import { BlobDataType } from "libs/types";
 import { cn, computeRemainingCooldown, sleep } from "libs/utils";
 import { useAccountStore } from "store";
-
 import { useNftsStore } from "store/nfts";
 import { BurningImage } from "../common/BurningImage";
 
@@ -84,12 +86,11 @@ const MEME_IMGS = [
 ];
 
 const GetBitzSol = (props: any) => {
-  const { modalMode } = props;
-  const { publicKey: solPubKey, signMessage } = useWallet();
-  const address = solPubKey?.toBase58();
+  const { modalMode, onIsDataMarshalFetching } = props;
+  const { publicKey: userPublicKey, signMessage } = useWallet();
+  const address = userPublicKey?.toBase58();
   const [checkingIfHasGameDataNFT, setCheckingIfHasGameDataNFT] = useState<boolean>(true);
   const [hasGameDataNFT, setHasGameDataNFT] = useState<boolean>(false);
-  const [showMessage, setShowMessage] = useState<boolean>(true);
   const { setVisible } = useWalletModal();
 
   // store based state
@@ -117,57 +118,144 @@ const GetBitzSol = (props: any) => {
   const [burnFireGlow, setBurnFireGlow] = useState<number>(0);
   const [burnProgress, setBurnProgress] = useState(0);
   const [randomMeme, setRandomMeme] = useState<any>(Meme1);
-  const tweetText = `url=https://explorer.itheum.io/getbitz?v=3&text=${viewDataRes?.data.gamePlayResult.bitsWon > 0 ? "I just played the Get <BiTz> XP Game on %23itheum and won " + viewDataRes?.data.gamePlayResult.bitsWon + " <BiTz> points 🙌!%0A%0APlay now and get your own <BiTz>! %23GetBiTz %23DRiP %23Solana" : "Oh no, I got rugged getting <BiTz> points this time. Maybe you will have better luck?%0A%0ATry here to %23GetBiTz %23itheum %0A"}`;
+  const tweetText = `url=https://explorer.itheum.io/getbitz?v=3&text=${viewDataRes?.data.gamePlayResult.bitsWon > 0 ? "I just played the Get BiTz XP Game on %23itheum and won " + viewDataRes?.data.gamePlayResult.bitsWon + " BiTz points 🙌!%0A%0APlay now and get your own BiTz! %23GetBiTz %23DRiP %23Solana" : "Oh no, I got rugged getting BiTz points this time. Maybe you will have better luck?%0A%0ATry here to %23GetBiTz %23itheum %0A"}`;
 
   // Game canvas related
   const [loadBlankGameCanvas, setLoadBlankGameCanvas] = useState<boolean>(false);
-
-  const { solNfts } = useNftsStore();
-  const [solNftsBitz, setSolNftsBitz] = useState<DasApiAsset[]>([]);
+  const { bitzDataNfts } = useNftsStore();
   const [populatedBitzStore, setPopulatedBitzStore] = useState<boolean>(false);
-  useEffect(() => {
-    if (solPubKey && solNfts) {
-      setSolNftsBitz(
-        IS_DEVNET ? solNfts.filter((nft) => nft.content.metadata.name.includes("XP")) : solNfts.filter((nft) => nft.content.metadata.name.includes("IXPG2"))
-      );
-    }
-  }, [solPubKey, solNfts]);
 
   useEffect(() => {
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
-    const timeout = setTimeout(() => {
-      setShowMessage(false);
-    }, 3000);
-    return () => clearTimeout(timeout);
   }, []);
+
+  useEffect(() => {
+    if (bitzDataNfts === undefined) return;
+
+    if (!populatedBitzStore) {
+      if (userPublicKey && bitzDataNfts.length > 0) {
+        updateBitzBalance(-2);
+        updateCooldown(-2);
+        updateGivenBitzSum(-2);
+        setPopulatedBitzStore(true);
+
+        (async () => {
+          // setIsFetchingDataMarshal(true);
+
+          const { usedPreAccessNonce, usedPreAccessSignature } = await getOrCacheAccessNonceAndSignature({
+            solPreaccessNonce,
+            solPreaccessSignature,
+            solPreaccessTimestamp,
+            signMessage,
+            publicKey: userPublicKey,
+            updateSolPreaccessNonce,
+            updateSolSignedPreaccess,
+            updateSolPreaccessTimestamp,
+          });
+
+          const viewDataArgs = {
+            headers: {
+              "dmf-custom-only-state": "1",
+              "dmf-custom-sol-collection-id": bitzDataNfts[0].grouping[0].group_value,
+            },
+            fwdHeaderKeys: ["dmf-custom-only-state", "dmf-custom-sol-collection-id"],
+          };
+
+          const getBitzGameResult = await viewDataToOnlyGetReadOnlyBitz(
+            bitzDataNfts[0],
+            usedPreAccessNonce,
+            usedPreAccessSignature,
+            userPublicKey,
+            viewDataArgs
+          );
+
+          setIsFetchingDataMarshal(false);
+
+          if (getBitzGameResult) {
+            let bitzBeforePlay = getBitzGameResult.data.gamePlayResult.bitsScoreBeforePlay || 0; // first play: 0
+            let sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0; // first play: -1
+            let sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0; // first play: 0
+
+            // some values can be -1 during first play or other situations, so we make it 0 or else we get weird numbers like 1 for the some coming up
+            if (bitzBeforePlay < 0) {
+              bitzBeforePlay = 0;
+            }
+
+            if (sumGivenBits < 0) {
+              sumGivenBits = 0;
+            }
+
+            if (sumBonusBitz < 0) {
+              sumBonusBitz = 0;
+            }
+
+            updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
+            updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
+            updateBonusBitzSum(sumBonusBitz);
+
+            updateCooldown(
+              computeRemainingCooldown(
+                getBitzGameResult.data.gamePlayResult.lastPlayedBeforeThisPlay,
+                getBitzGameResult.data.gamePlayResult.configCanPlayEveryMSecs
+              )
+            );
+          }
+        })();
+      } else {
+        updateBitzBalance(-1);
+        updateGivenBitzSum(-1);
+        updateCooldown(-1);
+        updateCollectedBitzSum(-1);
+      }
+    } else {
+      if (!userPublicKey) {
+        setPopulatedBitzStore(false);
+      }
+    }
+  }, [bitzDataNfts, userPublicKey]);
+
+  useEffect(() => {
+    checkIfHasGameDataNft();
+  }, [bitzDataNfts]);
+
+  useEffect(() => {
+    onIsDataMarshalFetching(isFetchingDataMarshal);
+  }, [isFetchingDataMarshal]);
+
+  useEffect(() => {
+    setBurnFireScale(`scale(${burnProgress}) translate(-13px, -15px)`);
+    setBurnFireGlow(burnProgress * 0.1);
+
+    // we can slow the burn by updating the value here...
+    if (burnProgress === 25) {
+      setIsMemeBurnHappening(false);
+      playGame();
+    }
+  }, [burnProgress]);
 
   async function viewData(viewDataArgs: any, requiredDataNFT: any) {
     try {
-      let usedPreAccessNonce = solPreaccessNonce;
-      let usedPreAccessSignature = solPreaccessSignature;
+      const { usedPreAccessNonce, usedPreAccessSignature } = await getOrCacheAccessNonceAndSignature({
+        solPreaccessNonce,
+        solPreaccessSignature,
+        solPreaccessTimestamp,
+        signMessage,
+        publicKey: userPublicKey,
+        updateSolPreaccessNonce,
+        updateSolSignedPreaccess,
+        updateSolPreaccessTimestamp,
+      });
 
-      if (solPreaccessSignature === "" || solPreaccessTimestamp === -2 || solPreaccessTimestamp + 60 * 80 * 1000 < Date.now()) {
-        const preAccessNonce = await itheumSolPreaccess();
-        const message = new TextEncoder().encode(preAccessNonce);
-        if (signMessage === undefined) throw new Error("signMessage is undefiend");
-        const signature = await signMessage(message);
-        if (!preAccessNonce || !signature || !solPubKey) throw new Error("Missing data for viewData");
-        const encodedSignature = bs58.encode(signature);
-        updateSolPreaccessNonce(preAccessNonce);
-        updateSolSignedPreaccess(encodedSignature);
-        updateSolPreaccessTimestamp(Date.now());
-        usedPreAccessNonce = preAccessNonce;
-        usedPreAccessSignature = encodedSignature;
-      }
-      if (!solPubKey) throw new Error("Missing data for viewData");
+      if (!userPublicKey) throw new Error("Missing data for viewData");
+
       const res = await itheumSolViewData(
         requiredDataNFT.id,
         usedPreAccessNonce,
         usedPreAccessSignature,
-        solPubKey,
+        userPublicKey,
         viewDataArgs.fwdHeaderKeys,
         viewDataArgs.headers
       );
@@ -186,76 +274,13 @@ const GetBitzSol = (props: any) => {
         return undefined;
       }
     } catch (err) {
-      setIsFetchingDataMarshal(false);
       return undefined;
     }
   }
 
-  useEffect(() => {
-    if (solNftsBitz === undefined) return;
-    if (!populatedBitzStore) {
-      if (solPubKey && solNftsBitz.length > 0) {
-        updateBitzBalance(-2);
-        updateCooldown(-2);
-        updateGivenBitzSum(-2);
-        setPopulatedBitzStore(true);
-
-        const viewDataArgs = {
-          headers: {
-            "dmf-custom-only-state": "1",
-          },
-          fwdHeaderKeys: ["dmf-custom-only-state"],
-        };
-
-        (async () => {
-          const getBitzGameResult = await viewData(viewDataArgs, solNftsBitz[0]);
-          if (getBitzGameResult) {
-            const bitzBeforePlay = getBitzGameResult.data.gamePlayResult.bitsScoreBeforePlay || 0;
-            const sumGivenBits = getBitzGameResult.data?.bitsMain?.bitsGivenSum || 0;
-            const sumBonusBitz = getBitzGameResult.data?.bitsMain?.bitsBonusSum || 0;
-            if (sumGivenBits > 0) {
-              updateBitzBalance(bitzBeforePlay + sumBonusBitz - sumGivenBits); // collected bits - given bits
-              updateGivenBitzSum(sumGivenBits); // given bits -- for power-ups
-              updateBonusBitzSum(sumBonusBitz);
-            }
-
-            updateCooldown(
-              computeRemainingCooldown(
-                getBitzGameResult.data.gamePlayResult.lastPlayedBeforeThisPlay,
-                getBitzGameResult.data.gamePlayResult.configCanPlayEveryMSecs
-              )
-            );
-          }
-        })();
-      } else {
-        updateBitzBalance(-1);
-        updateGivenBitzSum(-1);
-        updateCooldown(-1);
-        updateCollectedBitzSum(-1);
-      }
-    } else {
-      if (!solPubKey) {
-        setPopulatedBitzStore(false);
-      }
-    }
-  }, [solNftsBitz, solPubKey]);
-
-  useEffect(() => {
-    checkIfHasGameDataNft();
-  }, [address, solNftsBitz]);
-
-  useEffect(() => {
-    setBurnFireScale(`scale(${burnProgress}) translate(-13px, -15px)`);
-    setBurnFireGlow(burnProgress * 0.1);
-    if (burnProgress === 10) {
-      setIsMemeBurnHappening(false);
-      playGame();
-    }
-  }, [burnProgress]);
-
   // secondly, we get the user's Data NFTs and flag if the user has the required Data NFT for the game in their wallet
   async function checkIfHasGameDataNft() {
-    const hasRequiredDataNFT = solNftsBitz && solNftsBitz.length > 0;
+    const hasRequiredDataNFT = bitzDataNfts && bitzDataNfts.length > 0;
     setHasGameDataNFT(hasRequiredDataNFT ? true : false);
     setCheckingIfHasGameDataNFT(false);
     setRandomMeme(MEME_IMGS[Math.floor(Math.random() * MEME_IMGS.length)]); // set a random meme as well
@@ -276,25 +301,72 @@ const GetBitzSol = (props: any) => {
   async function playGame() {
     setIsFetchingDataMarshal(true);
     await sleep(5);
+
     const viewDataArgs: Record<string, any> = {
-      headers: {},
-      fwdHeaderKeys: [],
+      headers: {
+        "dmf-custom-sol-collection-id": bitzDataNfts[0].grouping[0].group_value,
+      },
+      fwdHeaderKeys: ["dmf-custom-sol-collection-id"],
     };
 
-    const viewDataPayload = await viewData(viewDataArgs, solNftsBitz[0]);
+    const viewDataPayload = await viewData(viewDataArgs, bitzDataNfts[0]);
+
     if (viewDataPayload) {
+      let animation;
+
+      if (viewDataPayload.data.gamePlayResult.bitsWon > 0) {
+        if (viewDataPayload.data.gamePlayResult.userWonMaxBits === 1) {
+          animation = await fireworks({
+            background: "transparent",
+            sounds: true,
+          });
+        } else {
+          animation = await confetti({
+            spread: 360,
+            ticks: 100,
+            gravity: 0,
+            decay: 0.94,
+            startVelocity: 30,
+            particleCount: 200,
+            scalar: 2,
+            shapes: ["emoji"],
+            shapeOptions: {
+              emoji: {
+                value: ["🤲🏼", "💎", "🤲🏼", "💎", "🎊", "🐸", "🐸", "🐸", "🐸", "🐹", "🐹"],
+              },
+            },
+          });
+        }
+      }
+
       setGameDataFetched(true);
       setIsFetchingDataMarshal(false);
       setViewDataRes(viewDataPayload);
+
       updateCooldown(
         computeRemainingCooldown(
           Math.max(viewDataPayload.data.gamePlayResult.lastPlayedAndCommitted, viewDataPayload.data.gamePlayResult.lastPlayedBeforeThisPlay),
           viewDataPayload.data.gamePlayResult.configCanPlayEveryMSecs
         )
       );
-      const sumBitzBalance = viewDataPayload.data.gamePlayResult.bitsScoreAfterPlay || 0;
-      const sumBonusBitz = viewDataPayload.data?.bitsMain?.bitsBonusSum || 0;
-      const sumGivenBits = viewDataPayload.data?.bitsMain?.bitsGivenSum || 0;
+
+      let sumBitzBalance = viewDataPayload.data.gamePlayResult.bitsScoreAfterPlay || 0;
+      let sumBonusBitz = viewDataPayload.data?.bitsMain?.bitsBonusSum || 0;
+      let sumGivenBits = viewDataPayload.data?.bitsMain?.bitsGivenSum || 0;
+
+      // some values can be -1 during first play or other situations, so we make it 0 or else we get weird numbers like 1 for the some coming up
+      if (sumBitzBalance < 0) {
+        sumBitzBalance = 0;
+      }
+
+      if (sumGivenBits < 0) {
+        sumGivenBits = 0;
+      }
+
+      if (sumBonusBitz < 0) {
+        sumBonusBitz = 0;
+      }
+
       if (viewDataPayload.data.gamePlayResult.bitsScoreAfterPlay > -1) {
         updateBitzBalance(sumBitzBalance + sumBonusBitz - sumGivenBits); // won some bis, minus given bits and show
         updateCollectedBitzSum(viewDataPayload.data.gamePlayResult.bitsScoreAfterPlay);
@@ -302,20 +374,32 @@ const GetBitzSol = (props: any) => {
         updateBitzBalance(viewDataPayload.data.gamePlayResult.bitsScoreBeforePlay + sumBonusBitz - sumGivenBits); // did not win bits, minus given bits from current and show
         updateCollectedBitzSum(viewDataPayload.data.gamePlayResult.bitsScoreBeforePlay);
       }
+
       // how many bonus tries does the user have
       if (viewDataPayload.data.gamePlayResult.bonusTriesAfterThisPlay > -1) {
         updateBonusTries(viewDataPayload.data.gamePlayResult.bonusTriesAfterThisPlay);
       } else {
         updateBonusTries(viewDataPayload.data.gamePlayResult.bonusTriesBeforeThisPlay || 0);
       }
+
+      if (animation) {
+        await sleep(10);
+        animation.stop();
+        // if its confetti, then we have to destroy it
+        if ((animation as unknown as Container).destroy) {
+          (animation as unknown as Container).destroy();
+        }
+      }
     }
   }
+
   function gamePlayImageSprites() {
     const _viewDataRes = viewDataRes;
     const _loadBlankGameCanvas = loadBlankGameCanvas;
     const _gameDataFetched = gameDataFetched;
     const _isFetchingDataMarshal = isFetchingDataMarshal;
     const _isMemeBurnHappening = isMemeBurnHappening;
+
     if (!address) {
       return (
         <img
@@ -328,17 +412,19 @@ const GetBitzSol = (props: any) => {
         />
       );
     }
+
     if ((address && checkingIfHasGameDataNFT && !hasGameDataNFT) || cooldown === -2) {
       return (
         <div className="relative">
           <img
             className={cn("-z-1 rounded-[3rem] w-full cursor-pointer", modalMode ? "rounded" : "")}
             src={ImgLoadingGame}
-            alt={"Checking if you have <BiTz> Data NFT"}
+            alt={"Checking if you have BiTz Data NFT"}
           />
         </div>
       );
     }
+
     // user is logged in does not have the data nft, so take them to the marketplace
     if (address && !checkingIfHasGameDataNFT && !hasGameDataNFT) {
       return (
@@ -356,11 +442,12 @@ const GetBitzSol = (props: any) => {
           <img
             className={cn("z-5 rounded-[3rem] w-full cursor-pointer", modalMode ? "rounded" : "")}
             src={ImgGetDataNFT}
-            alt={"Get <BiTz> Data NFT from Data NFT Marketplace"}
+            alt={"Get BiTz Data NFT from Data NFT Marketplace"}
           />
         </div>
       );
     }
+
     const CountDownComplete = () => (
       <div
         className="cursor-pointer relative inline-flex h-12 overflow-hidden rounded-full p-[1px] "
@@ -373,6 +460,7 @@ const GetBitzSol = (props: any) => {
         </span>
       </div>
     );
+
     // Renderer callback with condition
     const countdownRenderer = (props: { hours: number; minutes: number; seconds: number; completed: boolean }) => {
       if (props.completed) {
@@ -388,6 +476,7 @@ const GetBitzSol = (props: any) => {
         );
       }
     };
+
     // user has data nft, so load the "start game" view
     if (!_loadBlankGameCanvas && !_isFetchingDataMarshal) {
       return (
@@ -428,6 +517,7 @@ const GetBitzSol = (props: any) => {
         </div>
       );
     }
+
     // user clicked on the start game view, so load the empty blank game canvas
     if (_loadBlankGameCanvas && !_gameDataFetched) {
       return (
@@ -452,9 +542,9 @@ const GetBitzSol = (props: any) => {
                   }}>
                   <p className="lg:text-md">Welcome Back Itheum OG!</p>
                   <p className="lg:text-md mt-2 lg:mt-5">
-                    Ready to grab yourself some of them <span className=" lg:text-3xl">🤤</span> {`<BiTz>`} points?
+                    Ready to grab yourself some of them <span className=" lg:text-3xl">🤤</span> {`BiTz`} points?
                   </p>
-                  <p className="font-bold lg:text-2xl mt-5">But the {`<BiTz>`} Generator God will need a Meme 🔥 Sacrifice from you to proceed!</p>
+                  <p className="font-bold lg:text-2xl mt-5">But the {`BiTz`} Generator God will need a Meme 🔥 Sacrifice from you to proceed!</p>
                   <p className="font-bold mt-2 lg:mt-5">Click here when you are ready...</p>
                   <img className="w-[40px] m-auto" src={FingerPoint} alt={"Click to Start"} />
                 </div>
@@ -477,7 +567,7 @@ const GetBitzSol = (props: any) => {
             {_isFetchingDataMarshal && (
               <div>
                 <p className="text-center text-md text-gray-950 text-foreground lg:text-xl mb-[1rem]">
-                  Did the {`<BiTz>`} Generator God like that Meme Sacrifice? Only time will tell...
+                  Did the {`BiTz`} Generator God like that Meme Sacrifice? Only time will tell...
                 </p>
                 <p className="text-gray-950 text-sm text-center mb-[1rem]">Hang tight, result incoming</p>
                 <img className="w-[160px] lg:w-[230px] m-auto" src={resultLoading} alt={"Result loading"} />
@@ -487,11 +577,12 @@ const GetBitzSol = (props: any) => {
         </div>
       );
     }
+
     // we got the response from the game play
     if (_loadBlankGameCanvas && !_isFetchingDataMarshal && _gameDataFetched) {
       return (
         <div className="relative overflow-hidden">
-          <img className={cn("rounded-[3rem] w-full cursor-pointer", modalMode ? "rounded" : "")} src={ImgGameCanvas} alt={"Get <BiTz> Points"} />
+          <img className={cn("rounded-[3rem] w-full cursor-pointer", modalMode ? "rounded" : "")} src={ImgGameCanvas} alt={"Get BiTz Points"} />
           <div
             className={cn(
               "flex justify-center items-center mt-[2rem] w-[100%] h-[350px] rounded-[3rem] bg-slate-50 text-gray-950 p-[1rem] border border-primary/50 static lg:absolute lg:p-[2rem] lg:pb-[.5rem] lg:w-[500px] lg:h-[400px] lg:mt-0 lg:top-[40%] lg:left-[50%] lg:-translate-x-1/2 lg:-translate-y-1/2",
@@ -547,7 +638,7 @@ const GetBitzSol = (props: any) => {
                       <>
                         <p className="text-2xl text-gray-950">w👀t! w👀t! You have won:</p>
                         <p className="text-4xl mt-[2rem] text-gray-950">
-                          {_viewDataRes.data.gamePlayResult.bitsWon} {` <BiTz>`}
+                          {_viewDataRes.data.gamePlayResult.bitsWon} {` BiTz`}
                         </p>
                         <div className="bg-black rounded-full p-[10px]">
                           <a
@@ -613,7 +704,7 @@ const GetBitzSol = (props: any) => {
           <img
             className={cn("-z-1 rounded-[3rem] w-full cursor-pointer", modalMode ? "rounded" : "")}
             src={ImgLoadingGame}
-            alt={"Checking if you have <BiTz> Data NFT"}
+            alt={"Checking if you have BiTz Data NFT"}
           />
         </div>
         {gamePlayImageSprites()}
@@ -621,5 +712,42 @@ const GetBitzSol = (props: any) => {
     </div>
   );
 };
+
+export async function viewDataToOnlyGetReadOnlyBitz(
+  requiredDataNFT: any,
+  usedPreAccessNonce: string,
+  usedPreAccessSignature: string,
+  userPublicKey: PublicKey,
+  viewDataArgs: any
+) {
+  try {
+    if (!userPublicKey) throw new Error("Missing data for viewData");
+
+    const res = await itheumSolViewData(
+      requiredDataNFT.id,
+      usedPreAccessNonce,
+      usedPreAccessSignature,
+      userPublicKey,
+      viewDataArgs.fwdHeaderKeys,
+      viewDataArgs.headers
+    );
+    const rest = await res.json();
+    const blobDataType = BlobDataType.TEXT;
+    let data;
+    if (res.ok) {
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = rest;
+      }
+      return { data, blobDataType, contentType };
+    } else {
+      console.error("viewData threw catch error" + res.statusText);
+
+      return undefined;
+    }
+  } catch (err) {
+    return undefined;
+  }
+}
 
 export default GetBitzSol;

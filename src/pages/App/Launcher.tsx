@@ -47,7 +47,7 @@ function Launcher() {
               minH="100svh"
               boxShadow={containerShadow}
               zIndex={2}>
-              <ModalAuthPicker openConnectModal={openConnectModal} />
+              <ModalAuthPicker openConnectModal={openConnectModal} onShowConnectWalletModal={handleLaunchMode} />
               <App onShowConnectWalletModal={handleLaunchMode} />
             </Flex>
           </Container>

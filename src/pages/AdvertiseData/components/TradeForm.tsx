@@ -39,12 +39,15 @@ import {
 import { Program } from "@coral-xyz/anchor";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CNftSolMinter } from "@itheum/sdk-mx-data-nft/out";
+import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { Commitment, PublicKey, Transaction, TransactionConfirmationStrategy } from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { Controller, useForm } from "react-hook-form";
 import * as Yup from "yup";
 import extraAssetDemo from "assets/img/extra-asset-demo.gif";
+import darkFreeMintNFMeIDHero from "assets/img/landing/nfme/dark-hero-nfme-landing-page.jpg";
+import liteFreeMintNFMeIDHero from "assets/img/landing/nfme/lite-hero-nfme-landing-page.jpg";
 import darkNFMeIDHero from "assets/img/nfme/dark-nfmeid-vault-mint-page-hero.jpg";
 import liteNFMeIDHero from "assets/img/nfme/lite-nfmeid-vault-mint-page-hero.jpg";
 import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
@@ -53,10 +56,20 @@ import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationPro
 import { UserDataType } from "libs/Bespoke/types";
 import { IS_DEVNET, PRINT_UI_DEBUG_PANELS } from "libs/config";
 import { labels } from "libs/language";
-import { BONDING_PROGRAM_ID, SOLANA_EXPLORER_URL } from "libs/Solana/config";
+import { BONDING_PROGRAM_ID, SOLANA_EXPLORER_URL, BOND_CONFIG_INDEX } from "libs/Solana/config";
 import { CoreSolBondStakeSc, IDL } from "libs/Solana/CoreSolBondStakeSc";
-import { itheumSolPreaccess } from "libs/Solana/SolViewData";
-import { createBondTransaction, fetchRewardsConfigSol, fetchSolNfts } from "libs/Solana/utils";
+import {
+  createBondTransaction,
+  fetchRewardsConfigSol,
+  fetchSolNfts,
+  getOrCacheAccessNonceAndSignature,
+  sendAndConfirmTransaction,
+  getInitAddressBondsRewardsPdaTransaction,
+  createAddBondAsVaultTransaction,
+  getBondingProgramInterface,
+  swapForItheumTokensOnJupiter,
+  getItheumBalanceOnSolana,
+} from "libs/Solana/utils";
 import { getApiDataMarshal, isValidNumericCharacter, sleep, timeUntil } from "libs/utils";
 import { useAccountStore, useMintStore } from "store";
 import { useNftsStore } from "store/nfts";
@@ -90,16 +103,19 @@ type TradeFormProps = {
 export const TradeForm: React.FC<TradeFormProps> = (props) => {
   const { checkUrlReturns200, maxSupply, minRoyalties, maxRoyalties, antiSpamTax, dataNFTMarshalServiceStatus, userData, dataToPrefill, closeTradeFormModal } =
     props;
+  const { isFreeMint } = dataToPrefill;
   const showInlineErrorsBeforeAction = false;
   const enableBondingInputForm = false;
-  const { publicKey: solPubKey, sendTransaction, signMessage } = useWallet();
+  const { publicKey: userPublicKey, sendTransaction, signMessage, wallet } = useWallet();
   const { connection } = useConnection();
   const { networkConfiguration } = useNetworkConfiguration();
-  const [solanaBondTransaction, setSolanaBondTransaction] = useState<Transaction | undefined>(undefined);
+  const [bondTransaction, setBondTransaction] = useState<Transaction | undefined>(undefined);
+  const [nextBondId, setNextBondId] = useState<number | undefined>(undefined); // if the bond tx passes, this will be the bond id of the new bond
+  const [dataNftNonce, setDataNftNonce] = useState<number | undefined>(undefined); // is the nonce (leaf_id) of the data nft we just minted
   const itheumBalance = useAccountStore((state) => state.itheumBalance);
   const { colorMode } = useColorMode();
   const toast = useToast();
-  const lockPeriod = useMintStore((state) => state.lockPeriodForBond);
+  // const lockPeriod = useMintStore((state) => state.lockPeriodForBond);
   const dataNFTMarshalService: string = getApiDataMarshal();
   const [isNFMeIDMint, setIsNFMeIDMint] = useState<boolean>(false);
   const [currDataCATSellObj] = useState<any>(dataToPrefill ?? null);
@@ -109,7 +125,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   const [isMintingModalOpen, setIsMintingModalOpen] = useState<boolean>(false);
   const [errDataNFTStreamGeneric, setErrDataNFTStreamGeneric] = useState<any>(null);
   const [mintingSuccessful, setMintingSuccessful] = useState<boolean>(false);
-  const [makePrimaryNFMeIdSuccessful, setMakePrimaryNFMeIdSuccessful] = useState<boolean>(false);
+  // const [makePrimaryNFMeIdSuccessful, setMakePrimaryNFMeIdSuccessful] = useState<boolean>(false);
   const [dataNFTImg, setDataNFTImg] = useState<string>("");
   const [dataNFTTraits, setDataNFTTraits] = useState<any>(undefined);
   const [saveProgress, setSaveProgress] = useState({ s1: 0, s2: 0, s3: 0, s4: 0 });
@@ -127,10 +143,22 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   const [maxApy, setMaxApy] = useState<number>(80);
   const [needsMoreITHEUMToProceed, setNeedsMoreITHEUMToProceed] = useState<boolean>(false);
   const updateItheumBalance = useAccountStore((state) => state.updateItheumBalance);
-  const updateSolNfts = useNftsStore((state) => state.updateSolNfts);
-  const [solBondingTxHasFailed, setSolBondingTxHasFailed] = useState<boolean>(false);
+  const updateAllDataNfts = useNftsStore((state) => state.updateAllDataNfts);
+  const [bondingTxHasFailed, setBondingTxHasFailed] = useState<boolean>(false);
   const [solNFMeIDMintConfirmationWorkflow, setSolNFMeIDMintConfirmationWorkflow] = useState<boolean>(false);
   const [solBondingConfigObtainedFromChainErr, setSolBondingConfigObtainedFromChainErr] = useState<boolean>(false);
+  const { usersNfMeIdVaultBondId, lockPeriodForBond, updateUsersNfMeIdVaultBondId } = useMintStore();
+  const [bondingProgram, setBondingProgram] = useState<Program<CoreSolBondStakeSc> | undefined>();
+  const [isAutoVaultInProgress, setIsAutoVaultInProgress] = useState<boolean>(false);
+
+  // S: Cached Signature Store Items
+  const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
+  const solPreaccessSignature = useAccountStore((state: any) => state.solPreaccessSignature);
+  const solPreaccessTimestamp = useAccountStore((state: any) => state.solPreaccessTimestamp);
+  const updateSolPreaccessNonce = useAccountStore((state: any) => state.updateSolPreaccessNonce);
+  const updateSolPreaccessTimestamp = useAccountStore((state: any) => state.updateSolPreaccessTimestamp);
+  const updateSolSignedPreaccess = useAccountStore((state: any) => state.updateSolSignedPreaccess);
+  // E: Cached Signature Store Items
 
   // S: React hook form + yup integration ---->
   // Declaring a validation schema for the form with the validation needed
@@ -236,7 +264,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   preSchema = { ...preSchema, ...bondingPreSchema };
 
   const validationSchema = Yup.object().shape(preSchema);
-  const amountOfTime = lockPeriod.length > 0 ? timeUntil(lockPeriod[0]?.lockPeriod) : { count: -1, unit: "-1" };
+  const amountOfTime = lockPeriodForBond.length > 0 ? timeUntil(lockPeriodForBond[0]?.lockPeriod) : { count: -1, unit: "-1" };
   // Destructure the methods needed from React Hook Form useForm component
   const {
     control,
@@ -255,14 +283,14 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       numberOfCopiesForm: 1,
       royaltiesForm: 0,
       bondingAmount:
-        lockPeriod.length > 0
-          ? solPubKey
-            ? BigNumber(lockPeriod[0]?.amount).toNumber()
-            : BigNumber(lockPeriod[0]?.amount)
+        lockPeriodForBond.length > 0
+          ? userPublicKey
+            ? BigNumber(lockPeriodForBond[0]?.amount).toNumber()
+            : BigNumber(lockPeriodForBond[0]?.amount)
                 .dividedBy(10 ** 18)
                 .toNumber()
           : -1,
-      bondingPeriod: lockPeriod.length > 0 && amountOfTime?.count !== -1 ? amountOfTime?.count : -1,
+      bondingPeriod: lockPeriodForBond.length > 0 && amountOfTime?.count !== -1 ? amountOfTime?.count : -1,
     }, // declaring default values for inputs not necessary to declare
     mode: "onChange", // mode stay for when the validation should be applied
     resolver: yupResolver(validationSchema), // telling to React Hook Form that we want to use yupResolver as the validation schema
@@ -281,7 +309,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
   function generatePrefilledNFMeIDDataStreamURL() {
     // append the imgswapsalt to make the image unique to the user
-    const userAddress = solPubKey?.toBase58();
+    const userAddress = userPublicKey?.toBase58();
 
     if (!userAddress) {
       return;
@@ -297,7 +325,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     // if it's solana then append chain=sol
     let chainMeta = "";
 
-    if (solPubKey) {
+    if (userPublicKey) {
       chainMeta = "&chain=sol";
     }
 
@@ -318,25 +346,29 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   }, [currDataCATSellObj]);
 
   useEffect(() => {
-    // check if we got the data for lockPeriod from Solana Program (lockPeriod also is for MVX, but not checking that here)
-    if (solPubKey) {
-      if (lockPeriod?.length === 0) {
+    // check if we got the data for lockPeriodForBond from Solana Program (lockPeriodForBond also is for MVX, but not checking that here)
+    if (userPublicKey) {
+      if (lockPeriodForBond?.length === 0) {
         setSolBondingConfigObtainedFromChainErr(true);
       } else {
         setSolBondingConfigObtainedFromChainErr(false);
       }
     }
-  }, [lockPeriod]);
+  }, [lockPeriodForBond]);
 
   useEffect(() => {
     async function fetchBondingRelatedDataFromSolana() {
-      if (solPubKey) {
-        const programId = new PublicKey(BONDING_PROGRAM_ID);
-        const program = new Program<CoreSolBondStakeSc>(IDL, programId, {
-          connection,
-        });
+      if (userPublicKey) {
+        // const programId = new PublicKey(BONDING_PROGRAM_ID);
+        // const program = new Program<CoreSolBondStakeSc>(IDL, programId, {
+        //   connection,
+        // });
 
-        fetchRewardsConfigSol(program).then((rewardsT: any) => {
+        const programObj = getBondingProgramInterface(connection);
+
+        setBondingProgram(programObj.programInterface);
+
+        fetchRewardsConfigSol(programObj.programInterface).then((rewardsT: any) => {
           if (rewardsT?.error) {
             setSolBondingConfigObtainedFromChainErr(true);
             setMaxApy(-1);
@@ -348,7 +380,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       }
     }
     fetchBondingRelatedDataFromSolana();
-  }, [solPubKey]);
+  }, [userPublicKey]);
 
   useEffect(() => {
     if (itheumBalance && antiSpamTax && bondingAmount) {
@@ -363,11 +395,17 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   }, [itheumBalance, antiSpamTax, bondingAmount]);
 
   useEffect(() => {
-    if (solanaBondTransaction) sendSolanaBondingTx();
-  }, [solanaBondTransaction]);
+    if (bondTransaction) {
+      sendSolanaBondingTx();
+    }
+  }, [bondTransaction]);
 
   function shouldMintYourDataNftBeDisabled(): boolean | undefined {
-    return !isValid || !readTermsChecked || !readLivelinessBonding || solBondingConfigObtainedFromChainErr || itheumBalance < bondingAmount;
+    if (!isFreeMint) {
+      return !isValid || !readTermsChecked || !readLivelinessBonding || solBondingConfigObtainedFromChainErr || itheumBalance < bondingAmount;
+    } else {
+      return !isValid || !readTermsChecked || solBondingConfigObtainedFromChainErr;
+    }
   }
 
   const closeProgressModal = () => {
@@ -383,12 +421,17 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     setIsMintingModalOpen(false);
     setSaveProgress({ s1: 0, s2: 0, s3: 0, s4: 0 });
     setMintingSuccessful(false);
-    setMakePrimaryNFMeIdSuccessful(false);
+    // setMakePrimaryNFMeIdSuccessful(false);
     setDataNFTImg("");
     closeTradeFormModal();
+    setBondTransaction(undefined);
+    setNextBondId(undefined);
+    setDataNftNonce(undefined);
+    setIsAutoVaultInProgress(false);
   };
 
   function validateBaseInput() {
+    // validate that all URLs are of a supported network protocol
     const isValidProtocol = (url: string) => {
       return url.startsWith("https://") || url.startsWith("ipfs://") || url.startsWith("ipns://");
     };
@@ -431,10 +474,8 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     }
   }
 
-  // Step 1 of minting (user clicked on mint button on main form)
   const dataNFTSellSubmit = async () => {
-    // if (!mxAddress && !solPubKey) {
-    if (!solPubKey) {
+    if (!userPublicKey) {
       toast({
         title: labels.ERR_MINT_FORM_NO_WALLET_CONN,
         status: "error",
@@ -449,55 +490,288 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     if (isValidInput) {
       setErrDataNFTStreamGeneric(null);
       setMintingSuccessful(false);
-      setMakePrimaryNFMeIdSuccessful(false);
+      // setMakePrimaryNFMeIdSuccessful(false);
       setIsMintingModalOpen(true);
 
       // we simulate the "encrypting" step for UX, as this was prev done manually and now its all part of the .mint() SDK
-      await sleep(1);
+      await sleep(2);
+
       setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s1: 1 }));
 
-      prepareMint();
+      await sleep(2);
+
+      mintDataNftSol();
     }
   };
 
-  // Step 2 of minting (call the SDK mint - encrypt stream, get the gen image and save new image and traits to IPFS)
-  const prepareMint = async () => {
-    await sleep(1);
+  // const prepareMint = async () => {
+  //   await sleep(1);
+  //   setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s2: 1 }));
+
+  //   await mintDataNftSol();
+  // };
+
+  const mintDataNftSol = async () => {
     setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s2: 1 }));
 
-    if (solPubKey) {
-      await mintDataNftSol();
+    await sleep(2);
+
+    try {
+      const cNftSolMinter = new CNftSolMinter(IS_DEVNET ? "devnet" : "mainnet");
+      const optionalSDKMintCallFields: Record<string, any> = {
+        nftStorageToken: import.meta.env.VITE_ENV_NFT_STORAGE_KEY,
+        extraAssets: [],
+      };
+
+      if (extraAssets && extraAssets.trim() !== "" && extraAssets.trim().toUpperCase() !== "NA") {
+        optionalSDKMintCallFields["extraAssets"] = [extraAssets.trim()];
+      }
+
+      // if it's nfme id vault, get the custom image layers
+      if (isNFMeIDMint) {
+        optionalSDKMintCallFields["imgGenBg"] = "bg5_series_nfmeid_gen1";
+        optionalSDKMintCallFields["imgGenSet"] = "set9_series_nfmeid_gen1";
+      }
+
+      if (!userPublicKey) {
+        return;
+      }
+
+      const { usedPreAccessNonce, usedPreAccessSignature } = await getOrCacheAccessNonceAndSignature({
+        solPreaccessNonce,
+        solPreaccessSignature,
+        solPreaccessTimestamp,
+        signMessage,
+        publicKey: userPublicKey,
+        updateSolPreaccessNonce,
+        updateSolSignedPreaccess,
+        updateSolPreaccessTimestamp,
+      });
+
+      if (usedPreAccessNonce && usedPreAccessSignature) {
+        optionalSDKMintCallFields["signatureNonce"] = usedPreAccessNonce;
+        optionalSDKMintCallFields["solSignature"] = usedPreAccessSignature;
+      }
+
+      const {
+        imageUrl: _imageUrl,
+        metadataUrl: _metadataUrl,
+        mintMeta: mintMeta,
+      } = await cNftSolMinter.mint(
+        userPublicKey?.toBase58(),
+        dataNFTTokenName,
+        dataNFTMarshalService,
+        dataNFTStreamUrl,
+        dataNFTPreviewUrl,
+        datasetTitle,
+        datasetDescription,
+        optionalSDKMintCallFields
+      );
+
+      // check if any errors (they come as a string - e.g. {\"error\":\"you are not whitelisted to mint\"})
+      let errorMsg = null;
+      let tryParseForPossibleErrs = null;
+
+      try {
+        // note that this parse will fail if it was a success
+        tryParseForPossibleErrs = JSON.parse(mintMeta.toString());
+      } catch (e) {
+        console.log(e);
+      }
+
+      if (tryParseForPossibleErrs && tryParseForPossibleErrs?.error) {
+        errorMsg = "There was a minting error.";
+
+        if (tryParseForPossibleErrs?.errMsg) {
+          errorMsg += ` Technical details: ${tryParseForPossibleErrs?.errMsg}`;
+        } else {
+          errorMsg += ` Technical details: ${tryParseForPossibleErrs?.error}`;
+        }
+
+        setErrDataNFTStreamGeneric(new Error(errorMsg));
+      } else {
+        if (!_imageUrl || _imageUrl.trim() === "" || !_metadataUrl || _metadataUrl.trim() === "") {
+          setErrDataNFTStreamGeneric(new Error(labels.ERR_IPFS_ASSET_SAVE_FAILED));
+        } else if (!mintMeta || mintMeta?.error || Object.keys(mintMeta).length === 0) {
+          setErrDataNFTStreamGeneric(new Error(labels.ERR_MINT_TX_GEN_COMMAND_FAILED));
+        } else {
+          // let's attempt to checks 3 times if the IPFS data is loaded and available on the gateway
+          await checkIfNftImgAndMetadataIsAvailableOnIPFS(_imageUrl, _metadataUrl);
+
+          // let's wait 15 seconds, and then we fetch the user NFTs again as the new NFT should appear
+          await sleep(15);
+
+          const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
+          updateAllDataNfts(_allDataNfts);
+
+          // fetchSolNfts(userPublicKey?.toBase58()).then((nfts) => {
+          //   updateAllDataNfts(nfts);
+          // });
+
+          if (isFreeMint) {
+            // in a free mint, we are now done...
+            setMintingSuccessful(true);
+            setErrDataNFTStreamGeneric(null);
+          } else {
+            // S: BONDING STEP ------------------->
+            // flag that we will also auto vault soon, we do this here so the state changes reflect in UI together
+            if (usersNfMeIdVaultBondId === 0) {
+              setIsAutoVaultInProgress(true);
+            }
+
+            setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s4: 1 }));
+
+            // for the first time user interacts, we need to initialize their rewards PDA
+            const initializeAddressTransaction = await getInitAddressBondsRewardsPdaTransaction(connection, userPublicKey);
+
+            if (initializeAddressTransaction) {
+              await executeTransaction({ transaction: initializeAddressTransaction, customErrorMessage: "Bonding Program address initialization failed" });
+            }
+
+            // const programId = new PublicKey(BONDING_PROGRAM_ID);
+            // const addressBondsRewardsPda = PublicKey.findProgramAddressSync([Buffer.from("address_bonds_rewards"), userPublicKey?.toBuffer()], programId)[0];
+            // const accountInfo = await connection.getAccountInfo(addressBondsRewardsPda);
+            // const isExist = accountInfo !== null;
+
+            // // if no addressBondsRewardsPda was found, this means the user has never minted and bonded on Solana NFMe contract before -- so we first need to "initializeAddress"
+            // // ... in this workflow, the user has to sign and submit 2 transactions (initializeAddress and then createBondTransaction)
+            // if (!isExist) {
+            //   const program = new Program<CoreSolBondStakeSc>(IDL, programId, {
+            //     connection,
+            //   });
+
+            //   const rewardsConfigPda = PublicKey.findProgramAddressSync([Buffer.from("rewards_config")], programId)[0];
+            //   const transactionInitializeAddress = await program.methods
+            //     .initializeAddress()
+            //     .accounts({
+            //       addressBondsRewards: addressBondsRewardsPda,
+            //       rewardsConfig: rewardsConfigPda,
+            //       authority: userPublicKey,
+            //     })
+            //     .transaction();
+
+            //   await executeTransaction({ transaction: transactionInitializeAddress, customErrorMessage: "Bonding Program address initialization failed" });
+            // }
+
+            // const bondTransaction = await createBondTransaction(mintMeta, userPublicKey, connection);
+
+            const createTxResponse = await createBondTransaction(mintMeta, userPublicKey, connection);
+
+            let nextBondTransaction;
+
+            if (createTxResponse) {
+              nextBondTransaction = createTxResponse.transaction;
+              setDataNftNonce(createTxResponse.nonce);
+              setNextBondId(createTxResponse.bondId);
+              setBondTransaction(nextBondTransaction);
+            } else {
+              setErrDataNFTStreamGeneric(new Error("Could not generate the Data NFT bond transaction."));
+            }
+
+            // E: BONDING STEP ------------------->
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      setErrDataNFTStreamGeneric(new Error(labels.ERR_MINT_TX_GEN_COMMAND_FAILED));
     }
   };
 
-  async function sendAndConfirmTransaction({
-    transaction,
-    customErrorMessage = "Transaction failed",
-  }: {
-    transaction: Transaction;
-    customErrorMessage?: string;
-  }) {
+  const sendSolanaBondingTx = async () => {
+    if (bondTransaction) {
+      try {
+        setBondingTxHasFailed(false);
+
+        const bondExeSig = await executeTransaction({ transaction: bondTransaction, customErrorMessage: "Failed to send the bonding transaction" });
+
+        if (bondExeSig) {
+          updateItheumBalance(itheumBalance - bondingAmount);
+
+          // User is minting new NFMe IDs, AFTER then have already setup a Vault. So we can end the flow here...
+          if (usersNfMeIdVaultBondId > 0) {
+            // setMakePrimaryNFMeIdSuccessful(true);
+            setErrDataNFTStreamGeneric(null);
+
+            // in solana, the mint was a success already above in the API, but we only consider it a success here if all the steps complete (i.e. mint + bond)
+            setMintingSuccessful(true);
+          }
+
+          // S: AUTO-VAULT STEP
+          // as the bonding is a success, if the usersNfMeIdVaultBondId is 0 and we have nextBondId (which we should always have if the bonding tx was done) -- we can auto vault the bond
+          if (usersNfMeIdVaultBondId === 0 && nextBondId) {
+            if (userPublicKey && bondingProgram && dataNftNonce) {
+              try {
+                const bondingProgramIdPubKey = new PublicKey(BONDING_PROGRAM_ID);
+                const addressBondsRewardsPda = PublicKey.findProgramAddressSync(
+                  [Buffer.from("address_bonds_rewards"), userPublicKey?.toBuffer()],
+                  bondingProgramIdPubKey
+                )[0];
+                const bondConfigPda = PublicKey.findProgramAddressSync(
+                  [Buffer.from("bond_config"), Buffer.from([BOND_CONFIG_INDEX])],
+                  bondingProgramIdPubKey
+                )[0];
+
+                const createTxResponse = await createAddBondAsVaultTransaction(
+                  userPublicKey,
+                  bondingProgram,
+                  addressBondsRewardsPda,
+                  bondConfigPda,
+                  nextBondId,
+                  dataNftNonce
+                );
+
+                if (createTxResponse) {
+                  const vaultTxSig = await executeTransaction({
+                    transaction: createTxResponse.transaction,
+                    customErrorMessage: "Failed to make the bond a Vault",
+                  });
+
+                  if (!vaultTxSig) {
+                    console.error("Error: Vault transaction signature was not returned");
+                  }
+
+                  setMintingSuccessful(true);
+                  setErrDataNFTStreamGeneric(null);
+
+                  // update the store with the new vault bond id
+                  updateUsersNfMeIdVaultBondId(nextBondId);
+                } else {
+                  console.error("Failed to create the vault bond transaction");
+                }
+              } catch (err) {
+                setErrDataNFTStreamGeneric("Error: Adding the bond as a vault failed");
+                console.error(err);
+              }
+            } else {
+              setErrDataNFTStreamGeneric(
+                new Error("We should auto vault the last minted data nft, but we could not as we did not have the required parameters")
+              );
+            }
+          }
+          // E: AUTO-VAULT STEP
+        } else {
+          setBondingTxHasFailed(true);
+          setErrDataNFTStreamGeneric("Error: Bonding transaction signature was not returned");
+        }
+      } catch (err) {
+        setBondingTxHasFailed(true);
+        setErrDataNFTStreamGeneric(new Error(labels.ERR_SUCCESS_MINT_BUT_BONDING_TRANSACTION_FAILED));
+        console.error("createBondTransaction failed to sign and send bond transaction", err);
+      }
+    } else {
+      setErrDataNFTStreamGeneric(new Error(labels.ERR_SUCCESS_MINT_BUT_BOND_NOT_CREATED));
+      console.error("createBondTransaction failed to create bond transaction");
+    }
+  };
+
+  async function executeTransaction({ transaction, customErrorMessage = "Transaction failed" }: { transaction: Transaction; customErrorMessage?: string }) {
     try {
-      if (solPubKey === null) {
+      if (!userPublicKey) {
         throw new Error("Wallet not connected");
       }
 
-      const latestBlockhash = await connection.getLatestBlockhash();
-      transaction.recentBlockhash = latestBlockhash.blockhash;
-      transaction.feePayer = solPubKey;
-
-      const txSignature = await sendTransaction(transaction, connection, {
-        skipPreflight: true,
-        preflightCommitment: "finalized",
-      });
-
-      const strategy: TransactionConfirmationStrategy = {
-        signature: txSignature,
-        blockhash: latestBlockhash.blockhash,
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-      };
-
-      const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
+      const { confirmationPromise, txSignature } = await sendAndConfirmTransaction({ userPublicKey, connection, transaction, sendTransaction });
 
       toast.promise(
         confirmationPromise.then((response) => {
@@ -538,10 +812,13 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           loading: { title: "Processing Transaction", description: "Please wait...", colorScheme: "blue" },
         }
       );
+
       const result = await confirmationPromise;
+
       if (result.value.err) {
         return false;
       }
+
       return txSignature;
     } catch (error) {
       toast({
@@ -555,165 +832,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       throw error;
     }
   }
-
-  const mintDataNftSol = async () => {
-    try {
-      const cNftSolMinter = new CNftSolMinter(IS_DEVNET ? "devnet" : "mainnet");
-      const optionalSDKMintCallFields: Record<string, any> = {
-        nftStorageToken: import.meta.env.VITE_ENV_NFT_STORAGE_KEY,
-        extraAssets: [],
-      };
-
-      if (extraAssets && extraAssets.trim() !== "" && extraAssets.trim().toUpperCase() !== "NA") {
-        optionalSDKMintCallFields["extraAssets"] = [extraAssets.trim()];
-      }
-
-      // if it's nfme id vault, get the custom image layers
-      if (isNFMeIDMint) {
-        optionalSDKMintCallFields["imgGenBg"] = "bg5_series_nfmeid_gen1";
-        optionalSDKMintCallFields["imgGenSet"] = "set9_series_nfmeid_gen1";
-      }
-
-      if (!solPubKey) {
-        return;
-      }
-
-      const { signatureNonce, solSignature } = await getAccessNonceAndSign();
-
-      if (signatureNonce && solSignature) {
-        optionalSDKMintCallFields["signatureNonce"] = signatureNonce;
-        optionalSDKMintCallFields["solSignature"] = solSignature;
-      }
-
-      const {
-        imageUrl: _imageUrl,
-        metadataUrl: _metadataUrl,
-        mintMeta: mintMeta,
-      } = await cNftSolMinter.mint(
-        solPubKey?.toBase58(), // Solana User Wallet Address
-        dataNFTTokenName,
-        dataNFTMarshalService,
-        dataNFTStreamUrl,
-        dataNFTPreviewUrl,
-        datasetTitle,
-        datasetDescription,
-        optionalSDKMintCallFields
-      );
-
-      // check if any errors (they come as a string - e.g. {\"error\":\"you are not whitelisted to mint\"})
-      let errorMsg = null;
-      let tryParseForPossibleErrs = null;
-
-      try {
-        // note that this parse will fail if it was a success
-        tryParseForPossibleErrs = JSON.parse(mintMeta.toString());
-      } catch (e) {
-        console.log(e);
-      }
-
-      if (tryParseForPossibleErrs && tryParseForPossibleErrs?.error) {
-        errorMsg = "There was a minting error.";
-
-        if (tryParseForPossibleErrs?.errMsg) {
-          errorMsg += ` Technical details: ${tryParseForPossibleErrs?.errMsg}`;
-        } else {
-          errorMsg += ` Technical details: ${tryParseForPossibleErrs?.error}`;
-        }
-
-        setErrDataNFTStreamGeneric(new Error(errorMsg));
-      } else {
-        if (!_imageUrl || _imageUrl.trim() === "" || !_metadataUrl || _metadataUrl.trim() === "") {
-          setErrDataNFTStreamGeneric(new Error(labels.ERR_IPFS_ASSET_SAVE_FAILED));
-        } else if (!mintMeta || mintMeta?.error || Object.keys(mintMeta).length === 0) {
-          setErrDataNFTStreamGeneric(new Error(labels.ERR_MINT_TX_GEN_COMMAND_FAILED));
-        } else {
-          // let's attempt to checks 3 times if the IPFS data is loaded and available on the gateway
-          await checkIfNftImgAndMetadataIsAvailableOnIPFS(_imageUrl, _metadataUrl);
-
-          fetchSolNfts(solPubKey?.toBase58()).then((nfts) => {
-            updateSolNfts(nfts);
-          });
-
-          setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s4: 1 }));
-
-          const programId = new PublicKey(BONDING_PROGRAM_ID);
-          const addressBondsRewardsPda = PublicKey.findProgramAddressSync([Buffer.from("address_bonds_rewards"), solPubKey?.toBuffer()], programId)[0];
-          const accountInfo = await connection.getAccountInfo(addressBondsRewardsPda);
-          const isExist = accountInfo !== null;
-
-          // if no addressBondsRewardsPda was found, this means the user has never minted and bonded on Solana NFMe contract before -- so we first need to "initializeAddress"
-          // ... in this workflow, the user has to sign and submit 2 transactions (initializeAddress and then createBondTransaction)
-          if (!isExist) {
-            const program = new Program<CoreSolBondStakeSc>(IDL, programId, {
-              connection,
-            });
-
-            const rewardsConfigPda = PublicKey.findProgramAddressSync([Buffer.from("rewards_config")], programId)[0];
-            const transactionInitializeAddress = await program.methods
-              .initializeAddress()
-              .accounts({
-                addressBondsRewards: addressBondsRewardsPda,
-                rewardsConfig: rewardsConfigPda,
-                authority: solPubKey,
-              })
-              .transaction();
-
-            await sendAndConfirmTransaction({ transaction: transactionInitializeAddress, customErrorMessage: "Bonding Program address initialization failed" });
-          }
-
-          const bondTransaction = await createBondTransaction(mintMeta, solPubKey, connection);
-          setSolanaBondTransaction(bondTransaction);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-      setErrDataNFTStreamGeneric(new Error(labels.ERR_MINT_TX_GEN_COMMAND_FAILED));
-    }
-  };
-
-  const sendSolanaBondingTx = async () => {
-    if (solanaBondTransaction) {
-      try {
-        setSolBondingTxHasFailed(false);
-
-        const result = await sendAndConfirmTransaction({ transaction: solanaBondTransaction, customErrorMessage: "Failed to send the bonding transaction" });
-
-        if (result) {
-          updateItheumBalance(itheumBalance - bondingAmount);
-          setMakePrimaryNFMeIdSuccessful(true);
-          setErrDataNFTStreamGeneric(null);
-
-          // in solana, the mint was a success already above in the API, but we only consider it a success here if all the steps complete (i.e. mint + bond)
-          setMintingSuccessful(true);
-        }
-      } catch (err) {
-        setSolBondingTxHasFailed(true);
-        setErrDataNFTStreamGeneric(new Error(labels.ERR_SUCCESS_MINT_BUT_BONDING_TRANSACTION_FAILED));
-        console.error("createBondTransaction failed to sign and send bond transaction", err);
-      }
-    } else {
-      setErrDataNFTStreamGeneric(new Error(labels.ERR_SUCCESS_MINT_BUT_BOND_NOT_CREATED));
-      console.error("createBondTransaction failed to create bond transaction");
-    }
-  };
-
-  const getAccessNonceAndSign = async () => {
-    const preAccessNonce = await itheumSolPreaccess();
-    const message = new TextEncoder().encode(preAccessNonce);
-
-    if (signMessage === undefined) {
-      throw new Error("signMessage is undefined");
-    }
-
-    const signature = await signMessage(message);
-    const encodedSignature = Buffer.from(signature).toString("hex");
-
-    if (!preAccessNonce || !signature || !solPubKey) {
-      throw new Error("Missing data for viewData");
-    }
-
-    return { signatureNonce: preAccessNonce, solSignature: encodedSignature };
-  };
 
   const checkIfNftImgAndMetadataIsAvailableOnIPFS = async (_imageUrl: string, _metadataUrl: string) => {
     let assetsLoadedOnIPFSwasSuccess = false;
@@ -785,7 +903,11 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           <Box>
             <Flex>
               <Box>
-                <Image src={colorMode === "light" ? liteNFMeIDHero : darkNFMeIDHero} alt="What is NFMe ID?" rounded="lg" />
+                <Image
+                  src={colorMode === "light" ? (isFreeMint ? liteFreeMintNFMeIDHero : liteNFMeIDHero) : isFreeMint ? darkFreeMintNFMeIDHero : darkNFMeIDHero}
+                  alt="What is NFMe ID?"
+                  rounded="lg"
+                />
               </Box>
             </Flex>
           </Box>
@@ -793,10 +915,11 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
         {PRINT_UI_DEBUG_PANELS && (
           <Box>
-            <Alert status="warning" mt={3} p={2} fontSize=".8rem" rounded="lg" as="div" style={{ "display": "block" }}>
+            <Alert status="warning" mt={3} p={2} fontSize=".8rem" rounded="md" as="div" style={{ "display": "block" }}>
               <Box>--- Debugging Panel ---</Box>
               <Box>^^ Needs more Itheum to Proceed: {needsMoreITHEUMToProceed.toString()}</Box>
               <Box>^^ Is NFMe ID Mint: {isNFMeIDMint.toString()}</Box>
+              <Box>^^ we auto-vault if 0 val on usersNfMeIdVaultBondId : {usersNfMeIdVaultBondId}</Box>
               <Box>Data Stream URL: {dataNFTStreamUrl}</Box>
               <Box>Data Preview URL: {dataNFTPreviewUrl}</Box>
               <Box>Data Marshal URL: {dataNFTMarshalService}</Box>
@@ -1109,174 +1232,201 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
         {activeStep === 2 && (
           <>
-            <Text fontWeight="500" color="teal.200" lineHeight="38.4px" fontSize="24px" mt="8 !important">
-              Liveliness Bonding
-            </Text>
+            {/* Liveliness Bonding Section */}
+            {!isFreeMint && (
+              <>
+                <Text fontWeight="500" color="teal.200" lineHeight="38.4px" fontSize="24px" mt="8 !important">
+                  Liveliness Bonding
+                </Text>
 
-            <Flex flexDirection="row">
-              <Heading size="lg" fontSize="22px" mt={3} mb={5} lineHeight="tall">
-                <Highlight
-                  query={[`${bondingAmount.toLocaleString()} $ITHEUM`, `${bondingPeriod.toString()} ${amountOfTimeUnit}`, `${maxApy}% Max APR`]}
-                  styles={{ px: "2", py: "0", rounded: "full", bg: "teal.200" }}>
-                  {`To mint your ${isNFMeIDMint ? "NFMe ID" : "Data NFT"} , you need to bond ${bondingAmount.toLocaleString()} $ITHEUM for ${bondingPeriod.toString()} ${amountOfTimeUnit}. Bonds earn an estimated ${maxApy}% Max APR as staking rewards.`}
-                </Highlight>
-              </Heading>
+                <Flex flexDirection="row">
+                  <Heading size="lg" fontSize="22px" mt={3} mb={5} lineHeight="tall">
+                    <Highlight
+                      query={[`${bondingAmount.toLocaleString()} $ITHEUM`, `${bondingPeriod.toString()} ${amountOfTimeUnit}`, `${maxApy}% Max APR`]}
+                      styles={{ px: "2", py: "0", rounded: "full", bg: "teal.200" }}>
+                      {`To mint your ${isNFMeIDMint ? "NFMe ID" : "Data NFT"} , you need to bond ${bondingAmount.toLocaleString()} $ITHEUM for ${bondingPeriod.toString()} ${amountOfTimeUnit}. Bonds earn an estimated ${maxApy}% Max APR as staking rewards.`}
+                    </Highlight>
+                  </Heading>
 
-              {enableBondingInputForm && (
-                <>
-                  <FormControl isInvalid={!!errors.bondingAmount}>
-                    <Text fontWeight="bold" fontSize="md" mt={{ base: "1", md: "4" }}>
-                      Bonding Amount (in ITHEUM)
-                    </Text>
+                  {enableBondingInputForm && (
+                    <>
+                      <FormControl isInvalid={!!errors.bondingAmount}>
+                        <Text fontWeight="bold" fontSize="md" mt={{ base: "1", md: "4" }}>
+                          Bonding Amount (in ITHEUM)
+                        </Text>
 
-                    <Controller
-                      control={control}
-                      render={({ field: { onChange } }) => (
-                        <NumberInput
-                          mt="3 !important"
-                          size="md"
-                          id="bondingAmount"
-                          maxW={24}
-                          step={1}
-                          defaultValue={bondingAmount}
-                          isDisabled
-                          min={10}
-                          max={maxRoyalties > 0 ? maxRoyalties : 0}
-                          isValidCharacter={isValidNumericCharacter}
-                          onChange={(event) => onChange(event)}>
-                          <NumberInputField />
-                          <NumberInputStepper>
-                            <NumberIncrementStepper />
-                            <NumberDecrementStepper />
-                          </NumberInputStepper>
-                        </NumberInput>
-                      )}
-                      name="bondingAmount"
-                    />
-                    <FormErrorMessage>{errors?.bondingAmount?.message}</FormErrorMessage>
-                  </FormControl>
+                        <Controller
+                          control={control}
+                          render={({ field: { onChange } }) => (
+                            <NumberInput
+                              mt="3 !important"
+                              size="md"
+                              id="bondingAmount"
+                              maxW={24}
+                              step={1}
+                              defaultValue={bondingAmount}
+                              isDisabled
+                              min={10}
+                              max={maxRoyalties > 0 ? maxRoyalties : 0}
+                              isValidCharacter={isValidNumericCharacter}
+                              onChange={(event) => onChange(event)}>
+                              <NumberInputField />
+                              <NumberInputStepper>
+                                <NumberIncrementStepper />
+                                <NumberDecrementStepper />
+                              </NumberInputStepper>
+                            </NumberInput>
+                          )}
+                          name="bondingAmount"
+                        />
+                        <FormErrorMessage>{errors?.bondingAmount?.message}</FormErrorMessage>
+                      </FormControl>
 
-                  <FormControl isInvalid={!!errors.bondingPeriod}>
-                    <Text fontWeight="bold" fontSize="md" mt={{ base: "1", md: "4" }}>
-                      Bonding Period ({amountOfTime?.unit !== "-1" ? amountOfTime?.unit : "[Failed to fetch - refresh to try again]"})
-                    </Text>
-                    <Controller
-                      control={control}
-                      render={({ field: { onChange } }) => (
-                        <NumberInput
-                          mt="3 !important"
-                          size="md"
-                          id="bondingPeriod"
-                          maxW={24}
-                          step={1}
-                          defaultValue={bondingPeriod}
-                          isDisabled
-                          min={3}
-                          isValidCharacter={isValidNumericCharacter}
-                          onChange={(event) => onChange(event)}>
-                          <NumberInputField />
-                        </NumberInput>
-                      )}
-                      name="bondingPeriod"
-                    />
-                    <FormErrorMessage>{errors?.bondingPeriod?.message}</FormErrorMessage>
-                  </FormControl>
-                </>
-              )}
-            </Flex>
+                      <FormControl isInvalid={!!errors.bondingPeriod}>
+                        <Text fontWeight="bold" fontSize="md" mt={{ base: "1", md: "4" }}>
+                          Bonding Period ({amountOfTime?.unit !== "-1" ? amountOfTime?.unit : "[Failed to fetch - refresh to try again]"})
+                        </Text>
+                        <Controller
+                          control={control}
+                          render={({ field: { onChange } }) => (
+                            <NumberInput
+                              mt="3 !important"
+                              size="md"
+                              id="bondingPeriod"
+                              maxW={24}
+                              step={1}
+                              defaultValue={bondingPeriod}
+                              isDisabled
+                              min={3}
+                              isValidCharacter={isValidNumericCharacter}
+                              onChange={(event) => onChange(event)}>
+                              <NumberInputField />
+                            </NumberInput>
+                          )}
+                          name="bondingPeriod"
+                        />
+                        <FormErrorMessage>{errors?.bondingPeriod?.message}</FormErrorMessage>
+                      </FormControl>
+                    </>
+                  )}
+                </Flex>
 
-            <Box>
-              {itheumBalance < bondingAmount && (
-                <Alert status="error" mt={5} rounded="md" mb={8}>
-                  <AlertIcon />
-                  <Box>
-                    <Text>{labels.ERR_MINT_FORM_NOT_ENOUGH_BOND} </Text>
-                    <Text mt="2" fontWeight="bold">
-                      You can get some ITHEUM tokens on
+                <Box>
+                  {itheumBalance < bondingAmount && (
+                    <Alert status="error" rounded="md" mb={4}>
+                      <AlertIcon />
+                      <Box>
+                        <Text>{labels.ERR_MINT_FORM_NOT_ENOUGH_BOND} </Text>
+                        <Text mt="2" fontWeight="bold">
+                          <Button
+                            w={"300px"}
+                            size={"md"}
+                            p={5}
+                            colorScheme="teal"
+                            onClick={() => {
+                              closeTradeFormModal();
+
+                              swapForItheumTokensOnJupiter(wallet, async () => {
+                                toast({
+                                  title: "Swap Successful",
+                                  description: "$ITHEUM token swap was successful",
+                                  status: "info",
+                                  duration: 15000,
+                                  isClosable: true,
+                                });
+
+                                // update token balance
+                                await sleep(2);
+
+                                const itheumTokens = await getItheumBalanceOnSolana(connection, userPublicKey!);
+                                if (itheumTokens != undefined) {
+                                  updateItheumBalance(itheumTokens);
+                                } else {
+                                  updateItheumBalance(-1);
+                                }
+                              });
+                            }}>
+                            Swap For Some $ITHEUM Tokens Now
+                          </Button>
+                        </Text>
+                      </Box>
+                    </Alert>
+                  )}
+                </Box>
+
+                <PopoverTooltip title="Bond $ITHEUM to Prove Reputation" bodyWidthInPX="380px">
+                  <>
+                    <Text fontSize="md" fontWeight="500" lineHeight="22.4px" mt="3 !important">
+                      Bonding $ITHEUM tokens proves your {"Liveliness"} and gives Data Consumers confidence about your reputation. You will need to lock the{" "}
+                      <Text fontWeight="bold" as="span">
+                        Bonding Amount{" "}
+                      </Text>
+                      for the required{" "}
+                      <Text fontWeight="bold" as="span">
+                        Bonding Period.{" "}
+                      </Text>
+                      <br />
+                      <br />
+                      Your Liveliness Bond is bound by some{" "}
+                      <Text fontWeight="bold" as="span">
+                        Penalties and Slashing Terms
+                      </Text>{" "}
+                      as detailed below. At the end of the{" "}
+                      <Text fontWeight="bold" as="span">
+                        Bonding Period
+                      </Text>
+                      , you can withdraw your full&nbsp;
+                      <Text fontWeight="bold" as="span">
+                        Bonding Amount
+                      </Text>{" "}
+                      OR if you want to continue to signal to Data Consumers that you have good on-chain reputation, you can {`"renew"`} the Liveliness Bond.{" "}
+                      <br />
+                      <br />
+                      But wait, on top of the benefit of having liveliness to prove your reputation, there is more good news, your bonded $ITHEUM also earns
+                      Staking APR as it powers your Liveliness reputation!{" "}
                       <Link
-                        href="https://raydium.io/swap/?inputMint=sol&outputMint=iTHSaXjdqFtcnLK4EFEs7mqYQbJb6B7GostqWbBQwaV"
+                        href="https://docs.itheum.io/product-docs/product/liveliness-on-chain-reputation/liveliness-staking-guide"
                         isExternal
-                        textDecoration="underline"
-                        _hover={{ textDecoration: "none" }}
-                        ml={1}>
-                        Raydium here
+                        rel="noreferrer"
+                        color="teal.200">
+                        Learn more
                       </Link>
                     </Text>
-                  </Box>
-                </Alert>
-              )}
-            </Box>
+                  </>
+                </PopoverTooltip>
 
-            <PopoverTooltip title="Bond $ITHEUM to Prove Reputation" bodyWidthInPX="380px">
-              <>
-                <Text fontSize="md" fontWeight="500" lineHeight="22.4px" mt="3 !important">
-                  Bonding ITHEUM tokens proves your {"Liveliness"} and gives Data Consumers confidence about your reputation. You will need to lock the{" "}
-                  <Text fontWeight="bold" as="span">
-                    Bonding Amount{" "}
-                  </Text>
-                  for the required{" "}
-                  <Text fontWeight="bold" as="span">
-                    Bonding Period.{" "}
-                  </Text>
-                  <br />
-                  <br />
-                  Your Liveliness Bond is bound by some{" "}
-                  <Text fontWeight="bold" as="span">
-                    Penalties and Slashing Terms
-                  </Text>{" "}
-                  as detailed below. At the end of the{" "}
-                  <Text fontWeight="bold" as="span">
-                    Bonding Period
-                  </Text>
-                  , you can withdraw your full&nbsp;
-                  <Text fontWeight="bold" as="span">
-                    Bonding Amount
-                  </Text>{" "}
-                  OR if you want to continue to signal to Data Consumers that you have good on-chain reputation, you can {`"renew"`} the Liveliness Bond. <br />
-                  <br />
-                  But wait, on top of the benefit of having liveliness to prove your reputation, there is more good news, your bonded $ITHEUM also earns Staking
-                  APR as it powers your Liveliness reputation!{" "}
-                  <Link
-                    href="https://docs.itheum.io/product-docs/product/liveliness-on-chain-reputation/liveliness-staking-guide"
-                    isExternal
-                    rel="noreferrer"
-                    color="teal.200">
-                    Learn more
-                  </Link>
+                <Box minH={{ base: "5rem", md: "3.5rem" }}>
+                  <Flex mt="3 !important">
+                    <Button
+                      colorScheme="teal"
+                      borderRadius="12px"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        window.open("https://docs.itheum.io/product-docs/legal/ecosystem-tools-terms/liveliness-bonding-penalties-and-slashing-terms")
+                      }>
+                      <Text color={colorMode === "dark" ? "bgWhite" : "black"} px={2}>
+                        Read Liveliness Bonding: Penalties and Slashing Terms
+                      </Text>
+                    </Button>
+                  </Flex>
+
+                  <Checkbox size="md" mt="3 !important" isChecked={readLivelinessBonding} onChange={(e) => setReadLivelinessBonding(e.target.checked)}>
+                    I have read and I agree to Liveliness Bonding: Penalties and Slashing Terms
+                  </Checkbox>
+
+                  {!readLivelinessBonding && showInlineErrorsBeforeAction && (
+                    <Text color="red.400" fontSize="sm" mt="1 !important">
+                      You need to agree to Liveliness Bonding: Penalties and Slashing Terms to proceed with your mint.
+                    </Text>
+                  )}
+                </Box>
+
+                <Text fontWeight="500" color="teal.200" lineHeight="38.4px" fontSize="24px" mt="48px !important">
+                  Minting Terms of Use
                 </Text>
               </>
-            </PopoverTooltip>
-
-            <Box minH={{ base: "5rem", md: "3.5rem" }}>
-              <Flex mt="3 !important">
-                <Button
-                  colorScheme="teal"
-                  borderRadius="12px"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    window.open("https://docs.itheum.io/product-docs/legal/ecosystem-tools-terms/liveliness-bonding-penalties-and-slashing-terms")
-                  }>
-                  <Text color={colorMode === "dark" ? "bgWhite" : "black"} px={2}>
-                    Read Liveliness Bonding: Penalties and Slashing Terms
-                  </Text>
-                </Button>
-              </Flex>
-
-              <Checkbox size="md" mt="3 !important" isChecked={readLivelinessBonding} onChange={(e) => setReadLivelinessBonding(e.target.checked)}>
-                I have read and I agree to Liveliness Bonding: Penalties and Slashing Terms
-              </Checkbox>
-
-              {!readLivelinessBonding && showInlineErrorsBeforeAction && (
-                <Text color="red.400" fontSize="sm" mt="1 !important">
-                  You need to agree to Liveliness Bonding: Penalties and Slashing Terms to proceed with your mint.
-                </Text>
-              )}
-            </Box>
-
-            <Text fontWeight="500" color="teal.200" lineHeight="38.4px" fontSize="24px" mt="48px !important">
-              Minting Terms of Use
-            </Text>
+            )}
 
             {!isNFMeIDMint && (
               <PopoverTooltip title="Terms of use for Minting a Data NFT">
@@ -1319,8 +1469,8 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
               )}
             </Box>
 
-            {solPubKey ? (
-              <Alert status="warning" rounded="lg">
+            {userPublicKey ? (
+              <Alert status="warning" rounded="md">
                 <AlertIcon />
                 All Data NFTs, including NFMeIDs minted, will include a fixed 5% royalty. <br /> These royalties are split equally 50% / 50% with you and the
                 Itheum Protocol.
@@ -1342,7 +1492,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
                 <Box mt="3 !important">
                   <Tag variant="solid" bgColor="#00C7971A" borderRadius="sm">
                     <Text px={2} py={2} color="teal.200" fontWeight="500">
-                      Anti-Spam Fee is currently {antiSpamTax < 0 ? "?" : antiSpamTax} ITHEUM tokens{" "}
+                      Anti-Spam Fee is currently {antiSpamTax < 0 ? "?" : antiSpamTax} $ITHEUM tokens{" "}
                     </Text>
                   </Tag>
                 </Box>
@@ -1365,8 +1515,8 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
               </>
             )}
 
-            {solPubKey && solBondingConfigObtainedFromChainErr && (
-              <Alert status="error" rounded="lg" mt="2">
+            {userPublicKey && solBondingConfigObtainedFromChainErr && (
+              <Alert status="error" rounded="md" mt="2">
                 <AlertIcon />
                 {labels.ERR_SOL_CANT_GET_ONCHAIN_CONFIG}
               </Alert>
@@ -1378,8 +1528,12 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
                 colorScheme="teal"
                 isLoading={isMintingModalOpen}
                 onClick={() => {
-                  // For solana, as there are a few steps involved, lets inform the user what to expect next
-                  setSolNFMeIDMintConfirmationWorkflow(true);
+                  if (isNFMeIDMint) {
+                    dataNFTSellSubmit();
+                  } else {
+                    // For solana, as there are a few steps involved when minting and bonding, lets inform the user what to expect next
+                    setSolNFMeIDMintConfirmationWorkflow(true);
+                  }
                 }}
                 isDisabled={shouldMintYourDataNftBeDisabled()}>
                 {isNFMeIDMint ? "Mint Your NFMe ID" : "Mint Your Data NFT Collection"}
@@ -1395,11 +1549,12 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
               dataNFTTraits={dataNFTTraits}
               closeProgressModal={closeProgressModal}
               mintingSuccessful={mintingSuccessful}
-              makePrimaryNFMeIdSuccessful={makePrimaryNFMeIdSuccessful}
+              // makePrimaryNFMeIdSuccessful={makePrimaryNFMeIdSuccessful}
               isNFMeIDMint={isNFMeIDMint}
-              isAutoVault={true}
-              solBondingTxHasFailed={solBondingTxHasFailed}
+              isAutoVaultInProgress={isAutoVaultInProgress}
+              bondingTxHasFailed={bondingTxHasFailed}
               sendSolanaBondingTx={sendSolanaBondingTx}
+              isFreeMint={isFreeMint}
             />
           </>
         )}
@@ -1417,9 +1572,10 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           }}
           bodyContent={
             <>
-              <Text mb="5">1. Sign a message to verify your wallet (no gas required).</Text>
+              <Text mb="5">1. You may be asked to sign a message to verify your wallet (no gas required).</Text>
               <Text mt="5">2. (First-time minting only) Sign a transaction to prepare your Liveliness bond.</Text>
               <Text mt="5">3. Sign a transaction to bond $ITHEUM and activate your NFMe ID for staking rewards.</Text>
+              <Text mt="5">4. (First-time minting only) Sign a transaction to upgrade bond to a vault.</Text>
               <Text fontWeight="bold" fontSize="md" color="teal.200" mt={5}>
                 Please complete all the steps above for a successful NFMe ID mint and bonding.
               </Text>{" "}

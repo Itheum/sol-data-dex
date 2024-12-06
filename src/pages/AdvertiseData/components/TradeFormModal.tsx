@@ -32,6 +32,7 @@ type TradeFormProps = {
 
 export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
   const { isOpen, setIsOpen, dataToPrefill } = props;
+  const { isFreeMint } = dataToPrefill || { isFreeMint: false };
   const { colorMode } = useColorMode();
   const [minRoyalties, setMinRoyalties] = useState<number>(-1);
   const [maxRoyalties, setMaxRoyalties] = useState<number>(-1);
@@ -42,14 +43,11 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
   const [dataNFTImgGenServiceValid, setDataNFTImgGenService] = useState(false);
   const userData = useMintStore((state) => state.userData);
   const lockPeriod = useMintStore((state) => state.lockPeriodForBond);
-  const { publicKey: solPubKey } = useWallet();
+  const { publicKey: userPublicKey } = useWallet();
   const [onSolOnlyAndWhitelistedToMint, setOnSolOnlyAndWhitelistedToMint] = useState(false);
 
   useEffect(() => {
     (async () => {
-      console.log("userData");
-      console.log(userData);
-
       const minRoyaltiesT = userData?.minRoyalties ?? 0;
       const maxRoyaltiesT = userData?.maxRoyalties ?? 8000;
       const maxSupplyT = userData?.maxSupply ?? 10000;
@@ -66,7 +64,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
 
   useEffect(() => {
     async function checkIfWhitelistedOnSolanaToMint() {
-      const resp = await fetch(`${getApiDataDex()}/solNftUtils/checkIfWhitelistedToMint?mintForSolAddr=${solPubKey?.toBase58()}`);
+      const resp = await fetch(`${getApiDataDex()}/solNftUtils/checkIfWhitelistedToMint?mintForSolAddr=${userPublicKey?.toBase58()}`);
       const data = await resp.json();
 
       if (data?.success) {
@@ -74,10 +72,10 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
       }
     }
 
-    if (solPubKey) {
+    if (userPublicKey) {
       checkIfWhitelistedOnSolanaToMint();
     }
-  }, [solPubKey]);
+  }, [userPublicKey]);
 
   const onClose = () => {
     setIsOpen(false);
@@ -200,9 +198,14 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
               }}
             />
             <Heading as="h4" fontFamily="Clash-Medium" size="lg">
-              {dataToPrefill?.isNFMeID ? "Mint Your NFMe ID" : "Mint Your Data NFT Collection"}
+              {dataToPrefill?.isNFMeID ? (isFreeMint ? "Mint Your Free NFMe ID" : "Mint Your NFMe ID") : "Mint Your Data NFT Collection"}
             </Heading>
           </HStack>
+          {isFreeMint && (
+            <Text fontFamily="Clash-Medium" fontSize={"md"} ml={"60px"}>
+              Use your NFMe ID as your web3 persona that AI agents can use to verify your identity and reputation.
+            </Text>
+          )}
         </ModalHeader>
 
         <ModalBody bgColor={colorMode === "dark" ? "#181818" : "bgWhite"} overflowX={"hidden"} maxH="85svh" pt="0">
@@ -214,7 +217,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
               dataNFTMarshalServiceStatus ||
               !dataNFTImgGenServiceValid ||
               !onSolOnlyAndWhitelistedToMint) && (
-              <Alert status="error" mb={5}>
+              <Alert status="error" mb={5} rounded="md">
                 <Stack>
                   <AlertTitle fontSize="md" mb={5}>
                     <AlertIcon display="inline-block" />
@@ -294,7 +297,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
           width="100%"
           backgroundColor="blackAlpha.800"
           rounded="lg"
-          visibility={lockPeriod.length === 0 || !solPubKey ? "visible" : "hidden"}
+          visibility={lockPeriod.length === 0 || !userPublicKey ? "visible" : "hidden"}
           borderTop="solid .1rem"
           borderColor="teal.200">
           <Text fontSize="24px" fontWeight="500" lineHeight="38px" textAlign="center" textColor="teal.200" px="2">

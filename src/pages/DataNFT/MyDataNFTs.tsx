@@ -1,56 +1,70 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "@chakra-ui/icons";
-import { Flex, Heading, SimpleGrid, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, useColorMode } from "@chakra-ui/react";
+import { Flex, Heading, SimpleGrid, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, useColorMode, useDisclosure } from "@chakra-ui/react";
+import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { FaBrush } from "react-icons/fa";
 import { MdLockOutline } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import KeyActionSuccessCTAModel from "components/KeyActionSuccessCTAModel";
 import { NoDataHere } from "components/Sections/NoDataHere";
-import WalletDataNftSol from "components/SolanaNfts/WalletDataNftSol";
 import useThrottle from "components/UtilComps/UseThrottle";
+import WalletAllDataNfts from "components/WalletDataNFTs/WalletAllDataNfts";
+import WalletUnBondedDataNfts from "components/WalletDataNFTs/WalletUnBondedDataNfts";
+import { NFME_ID_COLLECTION_ID } from "libs/config";
+import { sortDataNftsByLeafIdDesc } from "libs/Solana/utils";
 import { useNftsStore } from "store/nfts";
 
 export default function MyDataNFTs({ tabState }: { tabState: number }) {
   const { colorMode } = useColorMode();
   const navigate = useNavigate();
-  const { solNfts } = useNftsStore();
+  const { allDataNfts, bondedDataNftIds } = useNftsStore();
+  const [allDataNftsWithBestOrdering, setAllDataNftsWithBestOrdering] = useState<DasApiAsset[]>([]);
+  const [unBondedNfMeIds, setUnBondedNfMeIds] = useState<DasApiAsset[]>([]);
+  const { isOpen: isBondingSuccessCTAModalOpen, onOpen: onBondingSuccessCTAModalOpen, onClose: onBondingCompleteCTAModalClose } = useDisclosure();
 
   useEffect(() => {
-    // if (tabState == 2) {
-    //   // we are in liveliness, and if user is not logged in -- then we take them to liveliness homepage
-    //   if (!solPubKey) {
-    //     console.log("User not logged in so take them to home page");
-    //     navigate("/NFMeID");
-    //   }
-    // }
-
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   }, []);
 
+  useEffect(() => {
+    if (allDataNfts.length > 0) {
+      const sortedAllDataNfts = sortDataNftsByLeafIdDesc(allDataNfts);
+
+      setAllDataNftsWithBestOrdering(sortedAllDataNfts);
+
+      const _unBondedNeMeIdDataNfts = sortedAllDataNfts.filter(
+        (solDataNft) => !bondedDataNftIds.includes(solDataNft.id) && solDataNft.grouping[0].group_value === NFME_ID_COLLECTION_ID
+      );
+
+      setUnBondedNfMeIds(_unBondedNeMeIdDataNfts);
+    }
+  }, [allDataNfts, bondedDataNftIds]);
+
   const onChangeTab = useThrottle((newTabState: number) => {
-    navigate(`/datanfts/${newTabState === 2 ? "claim" : "wallet"}`);
-    // navigate(`/datanfts/wallet${newTabState === 2 ? "/liveliness" : ""}`);
+    navigate(`/datanfts/${newTabState === 2 ? "unbonded" : "wallet"}`);
   }, /* delay: */ 500);
 
   const walletTabs = [
     {
-      tabName: "Your Data NFT(s)",
+      tabName: "Your Data NFTs",
       icon: FaBrush,
       isDisabled: false,
-      pieces: solNfts?.length,
+      pieces: allDataNftsWithBestOrdering?.length,
     },
     {
-      tabName: "Claim Data NFT(s) - Coming Soon",
+      tabName: "Bond on Data NFTs",
       icon: MdLockOutline,
-      isDisabled: true,
+      isDisabled: false,
+      pieces: unBondedNfMeIds?.length,
     },
   ];
 
-  const getOnChainNFTs = async () => {
-    return [];
-  };
+  function handleShowBondingSuccessModal() {
+    onBondingSuccessCTAModalOpen();
+  }
 
   return (
     <>
@@ -59,7 +73,7 @@ export default function MyDataNFTs({ tabState }: { tabState: number }) {
           Data NFT Wallet
         </Heading>
         <Heading size="1rem" opacity=".7" fontFamily="Satoshi-Medium" fontWeight="light" px={{ base: 10, lg: 24 }} textAlign={{ base: "center", lg: "start" }}>
-          Manage the Data NFTs you created or purchased from the peer-to-peer Data NFT Marketplace.
+          Manage the Data NFTs you created or purchased from any peer-to-peer Data NFT Marketplace.
         </Heading>
 
         <Tabs pt={10} index={tabState - 1}>
@@ -95,31 +109,54 @@ export default function MyDataNFTs({ tabState }: { tabState: number }) {
           <TabPanels>
             {/* Your Data NFTs */}
             <TabPanel mt={2} width={"full"}>
-              {tabState === 1 && solNfts?.length > 0 ? (
+              {tabState === 1 && allDataNftsWithBestOrdering?.length > 0 ? (
                 <SimpleGrid
                   columns={{ sm: 1, md: 2, lg: 3, xl: 4 }}
                   spacingY={4}
                   mx={{ base: 0, "2xl": "24 !important" }}
                   mt="5 !important"
                   justifyItems={"center"}>
-                  {solNfts.map((item, index) => (
-                    <WalletDataNftSol key={index} index={index} solDataNft={item} />
+                  {allDataNftsWithBestOrdering.map((item, index) => (
+                    <WalletAllDataNfts key={index} index={index} solDataNft={item} />
                   ))}
                 </SimpleGrid>
               ) : (
-                <Flex onClick={getOnChainNFTs}>
+                <Flex>
                   <NoDataHere />
                 </Flex>
               )}
             </TabPanel>
 
-            {/* Claim Data NFTs */}
+            {/* Un-bonded Data NFTs */}
             <TabPanel mt={2} width={"full"}>
-              {tabState === 2 && <NoDataHere />}
+              {tabState === 2 && unBondedNfMeIds?.length > 0 ? (
+                <SimpleGrid
+                  columns={{ sm: 1, md: 2, lg: 3, xl: 4 }}
+                  spacingY={4}
+                  mx={{ base: 0, "2xl": "24 !important" }}
+                  mt="5 !important"
+                  justifyItems={"center"}>
+                  {unBondedNfMeIds.map((item, index) => (
+                    <WalletUnBondedDataNfts key={index} index={index} solDataNft={item} onShowBondingSuccessModal={handleShowBondingSuccessModal} />
+                  ))}
+                </SimpleGrid>
+              ) : (
+                <Flex>
+                  <NoDataHere />
+                </Flex>
+              )}
             </TabPanel>
           </TabPanels>
         </Tabs>
       </Stack>
+
+      <KeyActionSuccessCTAModel
+        isOpen={isBondingSuccessCTAModalOpen}
+        onClose={() => {
+          onBondingCompleteCTAModalClose();
+        }}
+        congratsActionMsg="Setting up a Bond to prove your Itheum Liveliness!"
+      />
     </>
   );
 }

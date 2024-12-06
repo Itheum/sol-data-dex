@@ -10,6 +10,7 @@ export enum SolEnvEnum {
 }
 
 export const SOLANA_EXPLORER_URL = "https://explorer.solana.com/";
+export const SOLSCAN_EXPLORER_URL = "https://solscan.io/";
 
 export enum BondStateEnum {}
 

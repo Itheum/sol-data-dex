@@ -234,7 +234,7 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
                   </Alert>
                   <Flex mt="4" flexDir={"column"} alignItems="center">
                     <Text textAlign="center" my="2">
-                      Head back to your dashboard for next steps to join the AI Data Workforce!
+                      Head back to your dashboard for next steps to join the AI Workforce!
                     </Text>
                     <Button
                       colorScheme="teal"

@@ -66,7 +66,7 @@ export const WALLETS = {
   SOLANA: "solana", // not sure if i need to check explicitly for which wallet is being used
 };
 
-export const consoleNotice = `DATA DEX NOTES --------------------------\n
+export const consoleNotice = `DApp NOTES --------------------------\n
 1) Nothing to report for now...\n
 -----------------------------------------`;
 

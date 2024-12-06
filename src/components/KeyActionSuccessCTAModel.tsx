@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Button, Stack, Flex, Modal, ModalBody, ModalContent, ModalOverlay, Text, useColorMode } from "@chakra-ui/react";
+import { Button, Flex, Modal, ModalBody, ModalContent, ModalOverlay, Text, useColorMode } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 
 export interface ProcureDataNFTSuccessCTAModelProps {
@@ -42,7 +42,7 @@ export default function KeyActionSuccessCTAModel({ isOpen, onClose, congratsActi
               </Button>
 
               <Text textAlign="center" my="2">
-                Or, head back to your dashboard for next steps to join the AI Data Workforce.
+                Or, head back to your dashboard for next steps to join the AI Workforce.
               </Text>
               <Button
                 colorScheme="teal"

@@ -1,8 +1,7 @@
-# Itheum Solana Data DEX
+# Itheum Solana AI Workforce DApp
 
 Web3 tools to tokenize your data, identity and reputation on the Solana blockchain.
 
-
 ## Contributing Code
 
-The Data DEX is open source and community developers are welcome to contribute.
+The Dapp is open source and community developers are welcome to contribute.

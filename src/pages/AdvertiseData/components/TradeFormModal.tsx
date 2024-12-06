@@ -313,7 +313,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
             onClick={() => {
               window.location.reload();
             }}>
-            Refresh Data DEX
+            Refresh App
           </Button>
         </Box>
       </ModalContent>

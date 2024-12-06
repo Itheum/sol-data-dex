@@ -223,13 +223,13 @@ const AppHeader = ({
               navigateToDiscover(MENU.LANDING);
             }}>
             <HStack>
-              <Image w="45px" ml={{ base: 0, md: 5 }} src={colorMode === "light" ? logoSmlL : logoSmlD} alt="Itheum Data DEX" />
+              <Image w="45px" ml={{ base: 0, md: 5 }} src={colorMode === "light" ? logoSmlL : logoSmlD} alt="Itheum AI Workforce" />
               <Flex flexDirection="column" onClick={onClose}>
                 <Heading fontSize={{ base: "md", xl: "xl" }} fontFamily="Clash-Medium" fontWeight="400">
                   Itheum
                 </Heading>
                 <Heading fontSize={{ base: "sm", xl: "lg" }} fontFamily="Clash-Medium" fontWeight="400" color="teal.200" onClick={onClose}>
-                  AI Data Workforce
+                  AI Workforce
                 </Heading>
               </Flex>
             </HStack>
@@ -476,7 +476,7 @@ const AppHeader = ({
         <DrawerContent>
           <DrawerHeader borderBottomWidth={"1px"} display={"flex"} alignItems={"center"} bgColor={colorMode === "dark" ? "#181818" : "bgWhite"}>
             <Heading size={"sm"} onClick={onClose}>
-              Itheum Data DEX
+              Itheum AI Workforce
             </Heading>
             <DrawerCloseButton />
           </DrawerHeader>

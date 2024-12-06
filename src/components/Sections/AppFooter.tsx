@@ -23,12 +23,11 @@ export default function () {
       <Flex flex="1" flexDir="column" alignItems="center" justifyContent="center" height="100%" mt={5} pr={5}>
         <Box>
           <Heading size={"lg"} fontFamily="Clash-Medium" color={"teal.200"}>
-            Solana Data DEX
+            Itheum Itheum AI Workforce
           </Heading>
           <Text fontSize="md" mt={3}>
             {" "}
-            Mint free NFMe IDs and bond $ITHEUM tokens to prove your web3 Liveliness, receive staking rewards on your Liveliness bonds, claim free Music Data
-            NFTs and earn BiTz XP for your activity!
+            Join the AI Data Workforce, prove your reputation, co-create new data with me and get rewarded!
           </Text>
         </Box>
 

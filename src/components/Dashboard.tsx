@@ -21,8 +21,8 @@ import {
 } from "@chakra-ui/react";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { motion, useScroll, useSpring, useTransform, useMotionValueEvent, AnimatePresence } from "framer-motion";
-import { BsDot } from "react-icons/bs";
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
+import { BsDot, BsChevronDoubleDown } from "react-icons/bs";
 import { BsBookmarkCheckFill } from "react-icons/bs";
 import { LuFlaskRound } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
@@ -39,26 +39,10 @@ import { useMintStore } from "store/mint";
 import { useNftsStore } from "store/nfts";
 import BadgesPreview from "./Dashboard/BadgesPreview";
 
-const isDebugSoAvoidAPIs = false;
-
 const parentVariants = {
   visible: { opacity: 1, y: 0 },
   hidden: { opacity: 0, y: "10rem" },
 };
-// const parentVariants = {
-//   visible: { opacity: 1, y: 0, height: "auto" },
-//   hidden: {
-//     opacity: 0,
-//     y: "10rem",
-//     height: 0,
-//     transition: {
-//       // Define sequence of animations
-//       opacity: { duration: 5 },
-//       height: { duration: 5, delay: 2.5 }, // Start height animation after opacity is mostly done
-//       y: { duration: 5 },
-//     },
-//   },
-// };
 
 const Dashboard = ({
   onShowConnectWalletModal,
@@ -106,12 +90,10 @@ const Dashboard = ({
 
   const helloHeadingRef = useRef<HTMLHeadingElement>(null);
 
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+
   useEffect(() => {
     const checkFreeClaims = async () => {
-      if (isDebugSoAvoidAPIs) {
-        return;
-      }
-
       if (userPublicKey) {
         setFreeDropCheckLoading(true);
         const freeNfMeIdMinted = await checkIfFreeDataNftGiftMinted("nfmeid", userPublicKey.toBase58());
@@ -336,64 +318,56 @@ const Dashboard = ({
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
   const [prevScroll, setPrevScroll] = useState(0);
-  const [wasEverHidden, setWasEverHidden] = useState(false);
 
   function update(latest: number, prev: number): void {
     if (latest < prev) {
       setHidden(false);
-      // console.log("visible");
     } else if (latest > 100 && latest > prev) {
       setHidden(true);
-      setWasEverHidden(true); // Mark that image was hidden at least once
-      // console.log("hidden");
     }
   }
 
   useMotionValueEvent(scrollY, "change", (latest: number) => {
     update(latest, prevScroll);
     setPrevScroll(latest);
+
+    // Show indicator when near top, hide when scrolling down
+    if (latest <= 50) {
+      setShowScrollIndicator(true);
+    } else {
+      setShowScrollIndicator(false);
+    }
   });
   // E: Animation
 
   return (
     <Flex mt={{ base: "10", md: "0" }} flexDirection="column" alignItems="center" justifyContent="center">
-      <Box width={"100%"} padding={5} textAlign="center">
-        <Box as={motion.div}>
-          <Heading ref={helloHeadingRef} as="h1" size="2xl" fontFamily="Satoshi-Regular" my="5">
+      <Box width={"100%"} padding={{ base: "2", md: "5" }} textAlign="center">
+        <Box>
+          <Heading ref={helloHeadingRef} as="h1" size="2xl" fontFamily="Satoshi-Regular" my={{ base: "0", md: "5" }}>
             Hello Human,
           </Heading>
-          <Heading as="h1" size="xl" fontFamily="Satoshi-Regular" w="70%" textAlign="center" margin="auto" my="5">
-            Join the AI Data Workforce, prove your reputation, co-create new data with me and get rewarded
+          <Heading as="h1" size={{ base: "lg", md: "xl" }} fontFamily="Satoshi-Regular" w="70%" textAlign="center" margin="auto" my={{ base: "2", md: "5" }}>
+            Join the AI Workforce, prove your reputation, co-create new data with me and get rewarded
           </Heading>
         </Box>
 
         {!isUserLoggedIn && (
           <AnimatePresence>
-            {/* {!hidden && !wasEverHidden && ( */}
-            {/* {!hidden && !wasEverHidden && ( */}
             <motion.nav
               variants={parentVariants}
               initial="visible"
-              // animate="visible"
-              // animate={hidden || wasEverHidden ? "hidden" : "visible"}
               animate={hidden ? "hidden" : "visible"}
               exit="hidden"
               transition={{
                 ease: [0.1, 0.25, 0.3, 1],
                 duration: 3,
                 staggerChildren: 0.05,
-              }}
-              onAnimationComplete={() => {
-                // helloHeadingRef.current?.scrollIntoView({
-                //   behavior: "smooth",
-                //   block: "center", // centers the element in the viewport
-                // });
               }}>
               <div className="navLinksWrapper">
                 <motion.img className="rounded-[.1rem] m-auto -z-1 w-[50%] h-[100%]" src={nfMeIDVault} />
               </div>
             </motion.nav>
-            {/* )} */}
           </AnimatePresence>
         )}
 
@@ -404,15 +378,15 @@ const Dashboard = ({
             </Text>
             <FocusOnThisEffect />
           </Box>
-          <Box width={"100%"} backgroundColor={"xblue.800"} minH="400px" padding={5}>
-            <Flex backgroundColor={"xblue.700"} flexDirection={["column", null, "row"]} gap={2} minH="90%">
-              <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+          <Box width={"100%"} minH="400px" padding={5}>
+            <Flex flexDirection={["column", null, "row"]} gap={2} minH="90%">
+              <Box flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
                 <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
                   Get Started for Free
                 </Heading>
 
                 <Flex flexDirection="column" gap="3">
-                  <Flex flexDirection="column" backgroundColor={"xgray.500"} gap={2} p={2} borderBottom="1px solid" borderColor="teal.200">
+                  <Flex flexDirection="column" gap={2} p={2} borderBottom="1px solid" borderColor="teal.200">
                     {!isUserLoggedIn && <FocusOnThisEffect />}
 
                     <Heading as="h3" size="md" textAlign="center" fontFamily="Satoshi-Regular">
@@ -447,7 +421,6 @@ const Dashboard = ({
                   {/* Get the BiTz XP airdrop -- ONLY ENABLE if the user has logged in & does NOT have a BitZ XP already */}
                   <Flex
                     flexDirection="column"
-                    backgroundColor={"xgray.500"}
                     gap={2}
                     p={2}
                     borderBottom="1px solid"
@@ -498,7 +471,6 @@ const Dashboard = ({
                   {/* Get the NFMe ID airdrop -- ONLY ENABLE if the user has logged in & does NOT have a free NFMe ID already */}
                   <Flex
                     flexDirection="column"
-                    backgroundColor={"xgray.500"}
                     gap={2}
                     p={2}
                     borderBottom="1px solid"
@@ -554,7 +526,7 @@ const Dashboard = ({
                 </Flex>
               </Box>
 
-              <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+              <Box flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
                 <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
                   Grow Reputation
                 </Heading>
@@ -563,7 +535,6 @@ const Dashboard = ({
                   {/* Play the BiTz Game -- ONLY ENABLE if the user has a BiTz Data NFT */}
                   <Flex
                     flexDirection="column"
-                    backgroundColor={"xgray.500"}
                     gap={2}
                     p={2}
                     borderBottom="1px solid"
@@ -676,7 +647,6 @@ const Dashboard = ({
                   {/* Bond on your NFMe and Make it a vault -- ONLY ENABLE if the user has no bonded NFMe and a Vault */}
                   <Flex
                     flexDirection="column"
-                    backgroundColor={"xgray.500"}
                     gap={2}
                     p={2}
                     opacity={!isUserLoggedIn || !freeNfMeIdClaimed ? 0.5 : "initial"}
@@ -743,7 +713,7 @@ const Dashboard = ({
                 </Flex>
               </Box>
 
-              <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+              <Box flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
                 <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
                   Co-Create with AI
                 </Heading>
@@ -751,7 +721,6 @@ const Dashboard = ({
                 <Flex flexDirection="column" gap="3">
                   <Flex
                     flexDirection="column"
-                    backgroundColor={"xgray.500"}
                     gap={2}
                     p={2}
                     borderBottom="1px solid"
@@ -772,7 +741,6 @@ const Dashboard = ({
 
                   <Flex
                     flexDirection="column"
-                    backgroundColor={"xgray.500"}
                     gap={2}
                     p={2}
                     borderBottom="1px solid"
@@ -837,13 +805,7 @@ const Dashboard = ({
                   </Flex>
 
                   {/* lets people vote on content with BitZ: ONLY ENABLE if the user has a BiTz Data NFT and have more than 0 BiTz balance */}
-                  <Flex
-                    flexDirection="column"
-                    backgroundColor={"xgray.500"}
-                    gap={2}
-                    p={2}
-                    opacity={!hasBitzNft ? 0.5 : "initial"}
-                    pointerEvents={!hasBitzNft ? "none" : "initial"}>
+                  <Flex flexDirection="column" gap={2} p={2} opacity={!hasBitzNft ? 0.5 : "initial"} pointerEvents={!hasBitzNft ? "none" : "initial"}>
                     {isUserLoggedIn && !hasBitzNft && (
                       <Alert status="warning" rounded="md" fontSize="md">
                         <AlertIcon />
@@ -882,7 +844,7 @@ const Dashboard = ({
                 </Flex>
               </Box>
 
-              <Box backgroundColor={"xgreen.700"} flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+              <Box flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
                 <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
                   Share Rewards
                 </Heading>
@@ -891,7 +853,6 @@ const Dashboard = ({
                 <Flex flexDirection="column" gap="3">
                   <Flex
                     flexDirection="column"
-                    backgroundColor={"xgray.500"}
                     gap={2}
                     p={2}
                     borderBottom="1px solid"
@@ -1151,6 +1112,44 @@ const Dashboard = ({
           </ModalBody>
         </ModalContent>
       </Modal>
+
+      {!isUserLoggedIn && (
+        <AnimatePresence>
+          {showScrollIndicator && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{
+                position: "fixed",
+                bottom: "2rem",
+                right: "2rem",
+                zIndex: 10,
+              }}>
+              <Box
+                as={BsChevronDoubleDown}
+                color="teal.200"
+                fontSize="2.5rem"
+                className="animate-bounce"
+                sx={{
+                  animation: "pulse-and-bounce 2s infinite",
+                  "@keyframes pulse-and-bounce": {
+                    "0%, 100%": {
+                      transform: "translateY(0)",
+                      opacity: 0.5,
+                    },
+                    "50%": {
+                      transform: "translateY(10px)",
+                      opacity: 1,
+                    },
+                  },
+                }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </Flex>
   );
 };

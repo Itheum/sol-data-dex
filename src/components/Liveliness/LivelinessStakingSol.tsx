@@ -36,7 +36,7 @@ import { NoDataHere } from "components/Sections/NoDataHere";
 import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
-import { BOND_CONFIG_INDEX, SOLANA_EXPLORER_URL } from "libs/Solana/config";
+import { BOND_CONFIG_INDEX, SOLANA_EXPLORER_URL, SOLSCAN_EXPLORER_URL } from "libs/Solana/config";
 import { CoreSolBondStakeSc } from "libs/Solana/CoreSolBondStakeSc";
 import { Bond } from "libs/Solana/types";
 import { sendAndConfirmTransaction, createAddBondAsVaultTransaction, checkIfFreeDataNftGiftMinted } from "libs/Solana/utils";
@@ -919,9 +919,7 @@ export const LivelinessStakingSol: React.FC = () => {
                         </Box>
                       ) : (
                         <Box>
-                          <Text fontWeight="bold">
-                            No NFMe ID yet? bonds = {bonds?.length.toString()} freeNfMeIdClaimed ={freeNfMeIdClaimed.toString()}
-                          </Text>
+                          <Text fontWeight="bold">No NFMe ID yet?</Text>
                           <Text mt="1">Mint one now to:</Text>
                           <Text mt={2}>
                             <ul>
@@ -1101,7 +1099,7 @@ export const LivelinessStakingSol: React.FC = () => {
                           Collection {dataNft.grouping[0].group_value}
                         </Text> */}
                         <Text fontFamily="Clash-Medium">{metadata.name}</Text>
-                        <Link isExternal href={`${SOLANA_EXPLORER_URL}address/${dataNft.id}?cluster=${networkConfiguration}`}>
+                        <Link isExternal href={`${SOLSCAN_EXPLORER_URL}token/${dataNft.id}?cluster=${networkConfiguration}`}>
                           <Text fontSize="sm" pb={3}>
                             {`${dataNft.id.substring(0, 6)}...${dataNft.id.substring(dataNft.id.length - 6)}`}
                             <ExternalLinkIcon marginLeft={3} marginBottom={1} />

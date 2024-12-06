@@ -33,7 +33,7 @@ import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { labels } from "libs/language";
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
-import { SOLANA_EXPLORER_URL, BOND_CONFIG_INDEX } from "libs/Solana/config";
+import { SOLANA_EXPLORER_URL, SOLSCAN_EXPLORER_URL, BOND_CONFIG_INDEX } from "libs/Solana/config";
 import {
   createBondTransaction,
   getNftMetaForDelayedBonding,
@@ -362,7 +362,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
               </Text> */}
             </Box>
             <Link
-              onClick={() => window.open(`${SOLANA_EXPLORER_URL}address/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}
+              onClick={() => window.open(`${SOLSCAN_EXPLORER_URL}token/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}
               fontSize="md"
               color="#929497">
               <ShortAddress address={solDataNft.id} fontSize="lg" tooltipLabel="Check Data Nft on explorer" /> <ExternalLinkIcon ml={1} mt={-2} />
@@ -401,7 +401,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                       display="flex"
                       alignItems="center"
                       isExternal
-                      href={`${SOLANA_EXPLORER_URL}address/${creator.address}?cluster=${networkConfiguration}`}>
+                      href={`${SOLSCAN_EXPLORER_URL}account/${creator.address}?cluster=${networkConfiguration}`}>
                       <ShortAddress address={creator.address} fontSize="sm" tooltipLabel="Check on explorer" />{" "}
                       <MdOutlineInfo style={{ marginLeft: "5px", color: "#00c797" }} fontSize="lg" />
                     </Link>

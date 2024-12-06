@@ -20,7 +20,7 @@ import NftMediaComponent from "components/NftMediaComponent";
 import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
-import { SOLANA_EXPLORER_URL } from "libs/Solana/config";
+import { SOLSCAN_EXPLORER_URL } from "libs/Solana/config";
 import { transformDescription } from "libs/utils";
 
 interface WalletAllDataNftsProps {
@@ -70,7 +70,7 @@ const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft
             Collection {solDataNft.grouping[0].group_value}
           </Text> */}
           <Link
-            onClick={() => window.open(`${SOLANA_EXPLORER_URL}address/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}
+            onClick={() => window.open(`${SOLSCAN_EXPLORER_URL}token/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}
             fontSize="md"
             color="#929497">
             <ShortAddress address={solDataNft.id} fontSize="lg" tooltipLabel="Check Data Nft on explorer" /> <ExternalLinkIcon ml={1} mt={-2} />
@@ -109,7 +109,7 @@ const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft
                     alignItems="center"
                     key={index}
                     isExternal
-                    href={`${SOLANA_EXPLORER_URL}address/${creator.address}?cluster=${networkConfiguration}`}>
+                    href={`${SOLSCAN_EXPLORER_URL}account/${creator.address}?cluster=${networkConfiguration}`}>
                     <ShortAddress address={creator.address} fontSize="sm" tooltipLabel="Check on explorer" />{" "}
                     <MdOutlineInfo style={{ marginLeft: "5px", color: "#00c797" }} fontSize="lg" />
                   </Link>

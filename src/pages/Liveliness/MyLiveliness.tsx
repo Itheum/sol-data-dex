@@ -20,7 +20,7 @@ export default function MyLiveliness() {
           My Liveliness Reputation
         </Heading>
         <Heading size="1rem" opacity=".7" fontFamily="Satoshi-Medium" fontWeight="light" px={{ base: 10, lg: 24 }} textAlign={{ base: "center", lg: "start" }}>
-          Bond ITHEUM tokens into your NFMe ID to prove your on-chain reputation and receive protocol staking rewards in return.
+          Bond $ITHEUM tokens into your NFMe ID to prove your on-chain reputation and receive protocol staking rewards in return.
         </Heading>
 
         <Box mt={10} mx={{ base: 2, lg: 10 }}>

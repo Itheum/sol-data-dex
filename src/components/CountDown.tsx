@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Box, Text } from "@chakra-ui/react";
+import { useAccountStore } from "store/account";
 
 interface CountdownProps {
   unixTime: number;
 }
 
 const Countdown: React.FC<CountdownProps> = ({ unixTime }) => {
+  const { updateCooldown } = useAccountStore();
+
   const calculateTimeLeft = () => {
     const difference = (unixTime - Date.now()) / 1000;
 
@@ -25,6 +28,7 @@ const Countdown: React.FC<CountdownProps> = ({ unixTime }) => {
 
     return timeLeft;
   };
+
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
   useEffect(() => {
@@ -35,10 +39,17 @@ const Countdown: React.FC<CountdownProps> = ({ unixTime }) => {
     return () => clearInterval(timer);
   }, [unixTime]); // Make sure to run the effect whenever unixTime changes
 
+  useEffect(() => {
+    if (timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0) {
+      // update the cooldown to 0, so that the animation appears on the icons
+      updateCooldown(0);
+    }
+  }, [timeLeft]);
+
   return (
     <Box>
       {timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0 ? (
-        <span> Claim Your {`<BiTz>`} XP</span>
+        <span> Claim Your {`BiTz`} XP</span>
       ) : (
         <Text>
           Play again in {timeLeft.hours > 0 ? <>{`${timeLeft.hours} ${timeLeft.hours === 1 ? " Hour " : " Hours "}`}</> : ""}

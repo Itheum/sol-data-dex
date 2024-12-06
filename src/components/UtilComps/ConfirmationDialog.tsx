@@ -12,12 +12,14 @@ import {
 
 export function ConfirmationDialog({
   dialogData: { title, proceedBtnTxt, cancelBtnText, proceedBtnColorScheme },
+  isCentered,
   bodyContent,
   isOpen,
   onCancel,
   onProceed,
 }: {
   dialogData: { title: string; proceedBtnTxt: string; cancelBtnText: string; proceedBtnColorScheme?: string };
+  isCentered?: boolean;
   bodyContent: React.ReactNode;
   isOpen: boolean;
   onCancel: () => void;
@@ -27,20 +29,30 @@ export function ConfirmationDialog({
 
   return (
     <>
-      <AlertDialog motionPreset="slideInBottom" leastDestructiveRef={cancelRef} onClose={onCancel} isOpen={isOpen} isCentered>
+      <AlertDialog
+        motionPreset="slideInBottom"
+        leastDestructiveRef={cancelRef}
+        onClose={onCancel}
+        isOpen={isOpen}
+        isCentered={isCentered === false ? false : true}
+        size={{ base: "md", md: "lg" }}>
         <AlertDialogOverlay />
 
         <AlertDialogContent>
           <AlertDialogHeader>{title}</AlertDialogHeader>
-          <AlertDialogCloseButton />
+          {cancelBtnText.trim() !== "" && <AlertDialogCloseButton />}
           <AlertDialogBody>{bodyContent}</AlertDialogBody>
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={onCancel}>
-              {cancelBtnText}
-            </Button>
-            <Button colorScheme={proceedBtnColorScheme || "teal"} ml={3} onClick={onProceed}>
-              {proceedBtnTxt}
-            </Button>
+            {cancelBtnText.trim() !== "" && (
+              <Button ref={cancelRef} onClick={onCancel}>
+                {cancelBtnText}
+              </Button>
+            )}
+            {proceedBtnTxt.trim() !== "" && (
+              <Button colorScheme={proceedBtnColorScheme || "teal"} ml={3} onClick={onProceed}>
+                {proceedBtnTxt}
+              </Button>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

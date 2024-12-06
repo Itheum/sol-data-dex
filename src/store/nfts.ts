@@ -1,19 +1,27 @@
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { create } from "zustand";
 
+/*
+This store holds things related to the users data nft collections
+*/
+
 type State = {
-  solNfts: DasApiAsset[];
-  isLoadingSol: boolean;
+  allDataNfts: DasApiAsset[];
+  bondedDataNftIds: string[];
+  bitzDataNfts: DasApiAsset[];
 };
 
 type Action = {
-  updateSolNfts: (solNfts: State["solNfts"]) => void;
-  updateIsLoadingSol: (isLoading: boolean) => void;
+  updateAllDataNfts: (allDataNfts: State["allDataNfts"]) => void;
+  updateBondedDataNftIds: (bondedDataNftIds: State["bondedDataNftIds"]) => void;
+  updateBitzDataNfts: (bitzDataNfts: State["bitzDataNfts"]) => void;
 };
 
 export const useNftsStore = create<State & Action>((set) => ({
-  solNfts: [],
-  updateSolNfts: (value: DasApiAsset[]) => set(() => ({ solNfts: value })),
-  isLoadingSol: false,
-  updateIsLoadingSol: (value: boolean) => set(() => ({ isLoadingSol: value })),
+  allDataNfts: [],
+  updateAllDataNfts: (value: DasApiAsset[]) => set(() => ({ allDataNfts: value })),
+  bondedDataNftIds: [],
+  updateBondedDataNftIds: (value: string[]) => set(() => ({ bondedDataNftIds: value })),
+  bitzDataNfts: [],
+  updateBitzDataNfts: (value: DasApiAsset[]) => set(() => ({ bitzDataNfts: value })),
 }));

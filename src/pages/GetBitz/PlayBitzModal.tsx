@@ -1,6 +1,6 @@
+//https://github.com/effectussoftware/react-custom-roulette
 import React, { useEffect, useState } from "react";
 import { useColorMode } from "@chakra-ui/react";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { LuFlaskRound } from "react-icons/lu";
 import { Link } from "react-router-dom";
 import { EXPLORER_APP_FOR_TOKEN } from "libs/config";
@@ -15,10 +15,10 @@ type PathwaysModalProps = {
 
 export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
   const { showPlayBitzModel, handleHideBitzModel } = props;
-  const { connected } = useWallet();
   const bitzBalance = useAccountStore((state: any) => state.bitzBalance);
   const { colorMode } = useColorMode();
   const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SolEnvEnum.devnet : SolEnvEnum.mainnet;
+  const [isFetchingDataMarshal, setIsFetchingDataMarshal] = useState<boolean>(false);
 
   // add the dark class for tailwind css
   useEffect(() => {
@@ -37,7 +37,7 @@ export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Play To Get BiTz XP</h3>
             <div className="flex flex-row text-gray-900 dark:text-white ">
               {bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}
-              <LuFlaskRound fontSize={"1.4rem"} fill="#38bdf8" />
+              <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />
             </div>
             <div>
               <Link target="_blank" to={`${EXPLORER_APP_FOR_TOKEN[chainId]["bitzgame"]}`} onClick={handleHideBitzModel}>
@@ -49,7 +49,7 @@ export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
               </Link>
               <button
                 type="button"
-                className="text-gray-400 ml-2 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                className={` ${isFetchingDataMarshal ? "opacity-30 pointer-events-none" : "text-gray-400"} text-gray-400 ml-2 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white`}
                 onClick={handleHideBitzModel}
                 data-modal-hide="static-modal">
                 <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
@@ -60,7 +60,12 @@ export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
             </div>
           </div>
           <div className="min-h-[23rem]">
-            <GetBitz modalMode={true} />
+            <GetBitz
+              modalMode={true}
+              onIsDataMarshalFetching={(isFetching: boolean) => {
+                setIsFetchingDataMarshal(isFetching);
+              }}
+            />
           </div>
         </div>
       </div>

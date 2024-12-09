@@ -71,7 +71,7 @@ const Dashboard = ({
   const [errFreeMintGeneric, setErrFreeMintGeneric] = useState<string | null>(null);
   const bitzBalance = useAccountStore((state) => state.bitzBalance);
   const cooldown = useAccountStore((state) => state.cooldown);
-  const { updateAllDataNfts, bondedDataNftIds, bitzDataNfts } = useNftsStore();
+  const { updateAllDataNfts, bondedDataNftIds, bitzDataNfts, userHasG2BiTzNft } = useNftsStore();
   const { usersNfMeIdVaultBondId, updateFreeNfMeIdClaimed, freeNfMeIdClaimed } = useMintStore();
   const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SolEnvEnum.devnet : SolEnvEnum.mainnet;
 
@@ -455,6 +455,13 @@ const Dashboard = ({
                       }}>
                       {freeBitzClaimed ? "Claimed" : "Free Mint Now"}
                     </Button>
+
+                    {userHasG2BiTzNft && (
+                      <Alert status="info" rounded="md" fontSize="sm">
+                        <AlertIcon />
+                        You have the G2 BiTz XP NFT from DRiP. Claim the new G3 version for free and contact us on itheum.io/discord to migrate your XP.
+                      </Alert>
+                    )}
 
                     {isUserLoggedIn && !freeBitzClaimed ? (
                       <Text fontSize="xs" textAlign="center">

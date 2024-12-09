@@ -38,7 +38,7 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
     updateCooldown,
     updateUserBadges,
   } = useAccountStore();
-  const { updateAllDataNfts, updateBondedDataNftIds, updateBitzDataNfts, bitzDataNfts, allDataNfts } = useNftsStore();
+  const { updateAllDataNfts, updateBondedDataNftIds, updateBitzDataNfts, updateUserHasG2BiTzNft, bitzDataNfts, allDataNfts } = useNftsStore();
   const { updateLockPeriodForBond, updateUserBonds, updateUsersNfMeIdVaultBondId, updateCurrentMaxApr } = useMintStore();
 
   useEffect(() => {
@@ -141,6 +141,13 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
       const _bitzDataNfts: DasApiAsset[] = IS_DEVNET
         ? allDataNfts.filter((nft) => nft.content.metadata.name.includes("XP"))
         : allDataNfts.filter((nft) => nft.content.metadata.name.includes("IXPG")); // @TODO, what is the user has multiple BiTz? IXPG2 was from drip and IXPG3 will be from us direct via the airdrop
+
+      // on mainnet, if the user has the old G2 BitZ NFT, we can still let them mint the new G3 free one
+      // ... and then in future, we can migrate them to the G3
+      if (!IS_DEVNET) {
+        const hasG2BiTzNft = _bitzDataNfts.some((nft) => nft.content.metadata.name.includes("XPG2"));
+        updateUserHasG2BiTzNft(hasG2BiTzNft);
+      }
 
       updateBitzDataNfts(_bitzDataNfts);
 

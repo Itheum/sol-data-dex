@@ -497,8 +497,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                         )}
                       </Box>
                       <Text fontSize="sm" pb={3} opacity=".8">
-                        {`Let's`} establish a bond for Data NFT ID {reEstablishBondConfirmationWorkflow?.dataNftId}. usersNfMeIdVaultBondId ={" "}
-                        {usersNfMeIdVaultBondId}
+                        {`Let's`} establish a bond for Data NFT ID {reEstablishBondConfirmationWorkflow?.dataNftId}.{usersNfMeIdVaultBondId}
                       </Text>
                       <Text fontWeight="bold" pb={3} opacity="1">
                         This Data NFT has no active {`"Bond."`} You can bond{" "}

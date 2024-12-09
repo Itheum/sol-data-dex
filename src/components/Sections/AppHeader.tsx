@@ -250,7 +250,7 @@ const AppHeader = ({
                     display={shouldDisplayQuickMenuItem(quickMenuItem, isUserLoggedIn)}>
                     <Button
                       borderColor="teal.200"
-                      fontSize="md"
+                      fontSize="sm"
                       variant="outline"
                       display={isHidden || isHiddenOnHeaderBar ? "none" : "initial"}
                       h={"12"}
@@ -490,43 +490,6 @@ const AppHeader = ({
                         <PopoverTrigger>
                           <Flex px={4} pb={1.5} position={"relative"} w={"100px"} mt={3}>
                             <FlaskBottleAnimation cooldown={cooldown} />
-                            {/* {cooldown <= 0 && cooldown != -2 && (
-                              <>
-                                <Box
-                                  position={"absolute"}
-                                  w={"full"}
-                                  h={"full"}
-                                  left="-20px"
-                                  top="-16px"
-                                  as={BsDot}
-                                  color="#03c797"
-                                  size="15px"
-                                  animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"></Box>{" "}
-                                <Box
-                                  position={"absolute"}
-                                  w={"full"}
-                                  h={"full"}
-                                  left="-25px"
-                                  top="-18px"
-                                  as={BsDot}
-                                  color="#03c797"
-                                  size="15px"
-                                  animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
-                                  style={{ animationDelay: "0.5s" }}></Box>{" "}
-                                <Box
-                                  position={"absolute"}
-                                  w={"full"}
-                                  h={"full"}
-                                  left="-23px"
-                                  top="-25px"
-                                  as={BsDot}
-                                  color="#03c797"
-                                  size="55px"
-                                  animation="ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
-                                  style={{ animationDelay: "1s" }}></Box>{" "}
-                              </>
-                            )}
-                            <LuFlaskRound fontSize={"1.4rem"} fill="#03c797" />{" "} */}
                             {bitzBalance === -2 ? <span>...</span> : <>{bitzBalance === -1 ? <div>0</div> : <div>{bitzBalance}</div>}</>}
                           </Flex>
                         </PopoverTrigger>

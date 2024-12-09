@@ -107,7 +107,7 @@ const AppHeader = ({
           shortLbl: "Mint",
           Icon: RiExchangeFill,
           needToBeLoggedIn: true,
-          isHidden: false,
+          isHidden: true,
           isHiddenOnHeaderBar: true,
         },
         {
@@ -125,8 +125,8 @@ const AppHeader = ({
           label: "NFMe ID",
           shortLbl: "NFMe ID",
           Icon: FaUserAstronaut,
-          needToBeLoggedIn: false,
-          isHidden: true,
+          needToBeLoggedIn: true,
+          isHidden: false,
         },
         {
           menuEnum: MENU.LIVELINESS,
@@ -274,7 +274,7 @@ const AppHeader = ({
                 <Button
                   mx={"2px"}
                   borderColor="teal.200"
-                  fontSize="md"
+                  fontSize="sm"
                   variant="outline"
                   display={"initial"}
                   h={"12"}

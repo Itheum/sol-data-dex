@@ -968,12 +968,12 @@ const Dashboard = ({
                   With Itheum, your XP Data is yours to own! 🚀
                 </Text>
                 <Text mt="5" textAlign="center">
-                  {`BiTz`} are{" "}
+                  BiTz are{" "}
                   <Text as="span" fontWeight="bold" color="teal.200">
                     Itheum XP
                   </Text>{" "}
-                  stored in a Data NFT in your wallet. Collect them to curate, power-up, and like data—and earn rewards! Your BiTz NFT is your gateway to the
-                  Itheum Protocol and the Web3 AI Data Era {`we're`} enabling.
+                  stored as Data NFTs in your wallet. Use them to curate, power up, and interact with data while earning rewards. Your BiTz NFT unlocks access
+                  to the Itheum Protocol and the Web3 AI Data Era.
                 </Text>
 
                 {!errFreeMintGeneric && !freeNfMeIdClaimed && (

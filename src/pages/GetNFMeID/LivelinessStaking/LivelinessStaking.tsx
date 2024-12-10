@@ -37,7 +37,7 @@ export const LivelinessStaking = ({ onShowConnectWalletModal }: { onShowConnectW
                 borderRadius="lg"
               />
             </Box>
-            <Text p="5" fontSize="lg" textAlign={{ base: "center", md: "left" }}>
+            <Text p="5" fontSize="lg" textAlign={{ base: "center", md: "left" }} fontFamily="Clash-Regular">
               Bond a minimum amount of $ITHEUM to mint your NFMe ID and activate your Liveliness score—your on-chain reputation as a Data Creator.
               <br />
               <br />
@@ -45,7 +45,7 @@ export const LivelinessStaking = ({ onShowConnectWalletModal }: { onShowConnectW
             </Text>
           </Flex>
           <Flex flexDirection={{ base: "column-reverse", md: "row" }} my="5" alignItems="center">
-            <Text p="5" fontSize="lg" textAlign={{ base: "center", md: "right" }}>
+            <Text p="5" fontSize="lg" textAlign={{ base: "center", md: "right" }} fontFamily="Clash-Regular">
               You can mint unlimited NFMe IDs, each with a bond attached. The more you mint and bond, the greater your staking rewards.
               <br />
               <br />
@@ -78,7 +78,7 @@ export const LivelinessStaking = ({ onShowConnectWalletModal }: { onShowConnectW
                 borderRadius="lg"
               />
             </Box>
-            <Text p="5" fontSize="lg" textAlign={{ base: "center", md: "left" }}>
+            <Text p="5" fontSize="lg" textAlign={{ base: "center", md: "left" }} fontFamily="Clash-Regular">
               Lock more $ITHEUM bonds and maintain high {`"Vault Liveliness"`} across your Data NFTs or NFMe IDs to boost your rewards.
               <br />
               <br />
@@ -116,7 +116,7 @@ export const LivelinessStaking = ({ onShowConnectWalletModal }: { onShowConnectW
             onClick={() => {
               gtagGo("nfm", "guide", "stake");
             }}
-            href="https://docs.itheum.io/product-docs/product/liveliness-on-chain-reputation/liveliness-staking-guide"
+            href="https://docs.itheum.io/product-docs/integrators/data-dex-guides/liveliness-staking-guide-solana"
             isExternal>
             Read & Follow a Guide
           </Button>

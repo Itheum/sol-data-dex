@@ -114,7 +114,6 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
       );
 
       if (mintMeta && mintMeta.error) {
-        console.log(mintMeta);
         setSolBondingTxHasFailedMsg("Error fetching the nft compressed nft metadata, which is needed for the bond");
         setBondingInProgress(false);
       } else {
@@ -451,7 +450,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                     </Alert>
                   ) : (
                     <>
-                      {/* Does user have enough ITHEUM for the bond? */}
+                      {/* Does user have enough $ITHEUM for the bond? */}
                       <Box>
                         {!userHasEnoughItheumTokensForBond && (
                           <Alert status="error" rounded="md" mb={4}>

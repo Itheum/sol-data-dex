@@ -19,6 +19,7 @@ import {
   useColorMode,
 } from "@chakra-ui/react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { useNavigate } from "react-router-dom";
 import { labels } from "libs/language";
 import { getApiDataDex, getApiDataMarshal } from "libs/utils";
 import { useMintStore } from "store";
@@ -45,6 +46,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
   const lockPeriod = useMintStore((state) => state.lockPeriodForBond);
   const { publicKey: userPublicKey } = useWallet();
   const [onSolOnlyAndWhitelistedToMint, setOnSolOnlyAndWhitelistedToMint] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
@@ -79,6 +81,7 @@ export const TradeFormModal: React.FC<TradeFormProps> = (props) => {
 
   const onClose = () => {
     setIsOpen(false);
+    navigate("/dashboard");
   };
 
   function makeRequest(url: string, sendBackResponse?: boolean): Promise<{ statusCode: number; isError: boolean; callResponse?: string }> {

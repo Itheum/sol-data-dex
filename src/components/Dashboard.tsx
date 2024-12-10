@@ -38,6 +38,7 @@ import { useAccountStore } from "store/account";
 import { useMintStore } from "store/mint";
 import { useNftsStore } from "store/nfts";
 import BadgesPreview from "./Dashboard/BadgesPreview";
+import { NFMeIDMintModal } from "./Dashboard/NFMeIDMintModal";
 
 const parentVariants = {
   visible: { opacity: 1, y: 0 },
@@ -72,12 +73,13 @@ const Dashboard = ({
   const bitzBalance = useAccountStore((state) => state.bitzBalance);
   const cooldown = useAccountStore((state) => state.cooldown);
   const { updateAllDataNfts, bondedDataNftIds, bitzDataNfts, userHasG2BiTzNft } = useNftsStore();
-  const { usersNfMeIdVaultBondId, updateFreeNfMeIdClaimed, freeNfMeIdClaimed } = useMintStore();
+  const { usersNfMeIdVaultBondId, updateFreeNfMeIdClaimed, freeNfMeIdClaimed, currentMaxApr } = useMintStore();
   const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SolEnvEnum.devnet : SolEnvEnum.mainnet;
 
   // conditional displays
   const [hasBitzNft, setHasBitzNft] = useState(false);
   const [hasUnclaimedBadges, setHasUnclaimedBadges] = useState(false);
+  const [isNFMeIDModalOpen, setIsNFMeIDModalOpen] = useState(false);
 
   // S: Cached Signature Store Items
   const solPreaccessNonce = useAccountStore((state: any) => state.solPreaccessNonce);
@@ -175,8 +177,12 @@ const Dashboard = ({
     (async () => {
       if (freeMintBitzXpGameComingUp) {
         await sleep(10);
-        setFreeMintBitzXpGameComingUp(false);
-        onProgressModalClose();
+
+        handleProgressModalClose();
+
+        // setFreeMintBitzXpGameComingUp(false);
+        // onProgressModalClose();
+
         onRemoteTriggerOfBiTzPlayModel(true);
       }
     })();
@@ -373,8 +379,8 @@ const Dashboard = ({
 
         <Box className="mt-5">
           <Box display="inline-flex" mt="5">
-            <Text fontSize="2xl" fontWeight="bold" fontFamily="Satoshi-Regular">
-              Pulsating orbs guide you to your next task
+            <Text fontSize="xl" fontWeight="bold" fontFamily="Satoshi-Regular">
+              Pulsating orbs guide you to your next task/s
             </Text>
             <FocusOnThisEffect />
           </Box>
@@ -514,7 +520,8 @@ const Dashboard = ({
                       isLoading={freeDropCheckLoading}
                       isDisabled={!isUserLoggedIn || freeNfMeIdClaimed}
                       onClick={() => {
-                        navigate("/mintdata?launchTemplate=nfMeIdFreeMint");
+                        setIsNFMeIDModalOpen(true);
+                        // navigate("/mintdata?launchTemplate=nfMeIdFreeMint");
                       }}>
                       {freeNfMeIdClaimed ? "Claimed" : "Free Mint Now"}
                     </Button>
@@ -886,7 +893,7 @@ const Dashboard = ({
                       </Text>
                       . Currently{" "}
                       <Text as="span" fontWeight="bold" color="teal.200">
-                        40% APR
+                        {currentMaxApr}% APR
                       </Text>{" "}
                       on your NFMe Id Bonds
                     </Text>
@@ -1120,6 +1127,21 @@ const Dashboard = ({
         </ModalContent>
       </Modal>
 
+      {/* NFMe Minting Options */}
+      <NFMeIDMintModal
+        isOpen={isNFMeIDModalOpen}
+        onClose={() => setIsNFMeIDModalOpen(false)}
+        onFreeMint={() => {
+          navigate("/mintdata?launchTemplate=nfMeIdFreeMint");
+          setIsNFMeIDModalOpen(false);
+        }}
+        onMintAndBond={() => {
+          navigate("/mintdata?launchTemplate=nfMeIdWithBond");
+          setIsNFMeIDModalOpen(false);
+        }}
+      />
+
+      {/* Scroll Down Indicator if user is not logged in  */}
       {!isUserLoggedIn && (
         <AnimatePresence>
           {showScrollIndicator && (

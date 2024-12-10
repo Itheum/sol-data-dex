@@ -6,6 +6,7 @@ import darkNfMeIDVaultHero from "assets/img/landing/nfme/dark-hero-nfme-landing-
 import liteNfMeIDVaultHero from "assets/img/landing/nfme/lite-hero-nfme-landing-page.jpg";
 import solIcon from "assets/img/sol-logo.png";
 import { gtagGo } from "libs/utils";
+import { NFMeIDMintOptions } from "components/Dashboard/NFMeIDMintOptions";
 
 export const LandingPage = ({ onShowConnectWalletModal }: { onShowConnectWalletModal?: any }) => {
   const { colorMode } = useColorMode();
@@ -27,12 +28,18 @@ export const LandingPage = ({ onShowConnectWalletModal }: { onShowConnectWalletM
           <ClaimCTAs onShowConnectWalletModal={onShowConnectWalletModal} />
         </Box>
 
-        <Flex flexDirection={{ base: "column", md: "row" }} justifyContent="center" alignItems={{ base: "center", md: "normal" }} mt="20">
+        <Box mt="20">
+          <Heading as="h2" color="teal.200" fontWeight="bold" fontSize="3xl" fontFamily="Clash-Regular">
+            What is NFMe ID?
+          </Heading>
+        </Box>
+
+        <Flex flexDirection={{ base: "column", md: "row" }} justifyContent="center" alignItems={{ base: "center", md: "normal" }} mt="10">
           <Box border="1px solid" borderColor="teal.400" borderRadius="lg" p="5" mx={{ base: "0", md: "5" }} my={{ base: "5", md: "0" }} width="320px">
             <Heading as="h2" color="teal.200" fontWeight="bold" fontSize="2xl" fontFamily="Clash-Regular">
               Your Gateway Into the Itheum Protocol{" "}
             </Heading>
-            <Text fontSize="lg" mt="1rem">
+            <Text fontSize="lg" mt="1rem" fontFamily="Clash-Regular">
               NFMe ID Vaults are special Data NFTs that anyone can mint to prove their on-chain reputation. <br />
               <br />
               Minting an NFMe ID requires a fully refundable $ITHEUM bond, which signals your on-chain {`'Liveliness'`} reputation. <br />
@@ -43,7 +50,7 @@ export const LandingPage = ({ onShowConnectWalletModal }: { onShowConnectWalletM
             <Heading as="h2" color="teal.200" fontWeight="bold" fontSize="2xl" fontFamily="Clash-Regular">
               Farm Reputation Staking Rewards
             </Heading>
-            <Text fontSize="lg" mt="1rem">
+            <Text fontSize="lg" mt="1rem" fontFamily="Clash-Regular">
               Farming your Liveliness reputation will earn you $ITHEUM rewards as staking APR.
               <br />
               <br />
@@ -55,7 +62,7 @@ export const LandingPage = ({ onShowConnectWalletModal }: { onShowConnectWalletM
             <Heading as="h2" color="teal.200" fontWeight="bold" fontSize="2xl" fontFamily="Clash-Regular">
               Connect your {`"Personas"`}, Boost Your Rewards
             </Heading>
-            <Text fontSize="lg" mt="1rem">
+            <Text fontSize="lg" mt="1rem" fontFamily="Clash-Regular">
               Each free mint gives you a unique NFMe ID with randomly generated layers, some potentially rare.
               <br />
               <br />
@@ -99,63 +106,46 @@ const ClaimCTAs = ({ onShowConnectWalletModal }: { onShowConnectWalletModal?: an
 
   return (
     <Flex flexDirection={{ base: "column", md: "row" }} justifyContent="space-around" alignItems="center">
-      <Flex
-        flexDirection="column"
-        justifyContent="space-between"
-        h={`${connectedSolWallet ? "310px" : "210px"}`}
-        w={`${connectedSolWallet ? "420px" : "390px"}`}
-        my={{ base: "5", md: "0" }}>
+      <Flex flexDirection="column" justifyContent="space-between" my={{ base: "5", md: "0" }}>
         <Box h="100px">
           <Image m="auto" mt="10px" boxSize="73px" height="auto" src={solIcon} alt="Solana" borderRadius="lg" />
         </Box>
         <Spacer />
         <Flex flexDirection="column" gap={4} mt={4}>
-          <Button
-            m="auto"
-            variant="solid"
-            colorScheme="teal"
-            px={7}
-            py={6}
-            rounded="lg"
-            size={connectedSolWallet ? "xl" : "xl"}
-            w="100%"
-            onClick={() => {
-              gtagGo("nfm", "mint", "sol");
-
-              if (connectedSolWallet) {
-                navigate("/mintdata?launchTemplate=nfMeIdWithBond");
-              } else {
-                onShowConnectWalletModal();
-              }
-            }}>
-            {connectedSolWallet ? "Mint NFMe ID (with $ITHEUM Bond and Staking APR)" : "Login via Wallet to Start"}
-          </Button>
-          {connectedSolWallet && (
+          {!connectedSolWallet && (
             <Button
               m="auto"
               variant="solid"
               colorScheme="teal"
               px={7}
               py={6}
-              rounded="md"
-              size="xl"
+              rounded="lg"
+              size={connectedSolWallet ? "xl" : "xl"}
               w="100%"
               onClick={() => {
                 gtagGo("nfm", "mint", "sol");
 
-                if (connectedSolWallet) {
-                  navigate("/mintdata?launchTemplate=nfMeIdFreeMint");
-                } else {
-                  onShowConnectWalletModal();
-                }
+                onShowConnectWalletModal();
               }}>
-              Free Mint NFMe ID (Bond $ITHEUM Bond Later)
+              Login via Wallet to Start
             </Button>
           )}
+
+          {connectedSolWallet && (
+            <NFMeIDMintOptions
+              onFreeMint={() => {
+                navigate("/mintdata?launchTemplate=nfMeIdFreeMint");
+              }}
+              onMintAndBond={() => {
+                navigate("/mintdata?launchTemplate=nfMeIdWithBond");
+              }}
+            />
+          )}
+
           {connectedSolWallet && (
             <Button
               m="auto"
-              variant="solid"
+              variant="outline"
               colorScheme="teal"
               px={7}
               py={6}

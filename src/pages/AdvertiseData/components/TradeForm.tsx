@@ -57,7 +57,7 @@ import { UserDataType } from "libs/Bespoke/types";
 import { IS_DEVNET, PRINT_UI_DEBUG_PANELS } from "libs/config";
 import { labels } from "libs/language";
 import { BONDING_PROGRAM_ID, SOLANA_EXPLORER_URL, BOND_CONFIG_INDEX } from "libs/Solana/config";
-import { CoreSolBondStakeSc, IDL } from "libs/Solana/CoreSolBondStakeSc";
+import { CoreSolBondStakeSc } from "libs/Solana/CoreSolBondStakeSc";
 import {
   createBondTransaction,
   fetchRewardsConfigSol,
@@ -253,7 +253,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   const bondingPreSchema = {
     bondingAmount: Yup.number()
       .typeError("Bonding amount must be a number.")
-      .min(1, "Minimum value of bonding amount is 10 ITHEUM.")
+      .min(1, "Minimum value of bonding amount is 10 $ITHEUM.")
       .required("Bond Deposit is required"),
     bondingPeriod: Yup.number()
       .typeError("Bonding period must be a number.")
@@ -359,11 +359,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   useEffect(() => {
     async function fetchBondingRelatedDataFromSolana() {
       if (userPublicKey) {
-        // const programId = new PublicKey(BONDING_PROGRAM_ID);
-        // const program = new Program<CoreSolBondStakeSc>(IDL, programId, {
-        //   connection,
-        // });
-
         const programObj = getBondingProgramInterface(connection);
 
         setBondingProgram(programObj.programInterface);
@@ -387,7 +382,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       // check if "defaults" are passed (i.e. we have the final values to calculate)
       if (itheumBalance >= 0 && antiSpamTax >= 0 && antiSpamTax >= 0) {
         if (itheumBalance < antiSpamTax + bondingAmount) {
-          // we can use this to send a CTA to get them to buy ITHEUM tokens on the market
+          // we can use this to send a CTA to get them to buy $ITHEUM tokens on the market
           setNeedsMoreITHEUMToProceed(true);
         }
       }
@@ -421,7 +416,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     setIsMintingModalOpen(false);
     setSaveProgress({ s1: 0, s2: 0, s3: 0, s4: 0 });
     setMintingSuccessful(false);
-    // setMakePrimaryNFMeIdSuccessful(false);
     setDataNFTImg("");
     closeTradeFormModal();
     setBondTransaction(undefined);
@@ -490,7 +484,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     if (isValidInput) {
       setErrDataNFTStreamGeneric(null);
       setMintingSuccessful(false);
-      // setMakePrimaryNFMeIdSuccessful(false);
       setIsMintingModalOpen(true);
 
       // we simulate the "encrypting" step for UX, as this was prev done manually and now its all part of the .mint() SDK
@@ -503,13 +496,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       mintDataNftSol();
     }
   };
-
-  // const prepareMint = async () => {
-  //   await sleep(1);
-  //   setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s2: 1 }));
-
-  //   await mintDataNftSol();
-  // };
 
   const mintDataNftSol = async () => {
     setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s2: 1 }));
@@ -604,10 +590,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
           updateAllDataNfts(_allDataNfts);
 
-          // fetchSolNfts(userPublicKey?.toBase58()).then((nfts) => {
-          //   updateAllDataNfts(nfts);
-          // });
-
           if (isFreeMint) {
             // in a free mint, we are now done...
             setMintingSuccessful(true);
@@ -628,33 +610,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
               await executeTransaction({ transaction: initializeAddressTransaction, customErrorMessage: "Bonding Program address initialization failed" });
             }
 
-            // const programId = new PublicKey(BONDING_PROGRAM_ID);
-            // const addressBondsRewardsPda = PublicKey.findProgramAddressSync([Buffer.from("address_bonds_rewards"), userPublicKey?.toBuffer()], programId)[0];
-            // const accountInfo = await connection.getAccountInfo(addressBondsRewardsPda);
-            // const isExist = accountInfo !== null;
-
-            // // if no addressBondsRewardsPda was found, this means the user has never minted and bonded on Solana NFMe contract before -- so we first need to "initializeAddress"
-            // // ... in this workflow, the user has to sign and submit 2 transactions (initializeAddress and then createBondTransaction)
-            // if (!isExist) {
-            //   const program = new Program<CoreSolBondStakeSc>(IDL, programId, {
-            //     connection,
-            //   });
-
-            //   const rewardsConfigPda = PublicKey.findProgramAddressSync([Buffer.from("rewards_config")], programId)[0];
-            //   const transactionInitializeAddress = await program.methods
-            //     .initializeAddress()
-            //     .accounts({
-            //       addressBondsRewards: addressBondsRewardsPda,
-            //       rewardsConfig: rewardsConfigPda,
-            //       authority: userPublicKey,
-            //     })
-            //     .transaction();
-
-            //   await executeTransaction({ transaction: transactionInitializeAddress, customErrorMessage: "Bonding Program address initialization failed" });
-            // }
-
-            // const bondTransaction = await createBondTransaction(mintMeta, userPublicKey, connection);
-
             const createTxResponse = await createBondTransaction(mintMeta, userPublicKey, connection);
 
             let nextBondTransaction;
@@ -667,7 +622,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
             } else {
               setErrDataNFTStreamGeneric(new Error("Could not generate the Data NFT bond transaction."));
             }
-
             // E: BONDING STEP ------------------->
           }
         }
@@ -690,7 +644,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
           // User is minting new NFMe IDs, AFTER then have already setup a Vault. So we can end the flow here...
           if (usersNfMeIdVaultBondId > 0) {
-            // setMakePrimaryNFMeIdSuccessful(true);
             setErrDataNFTStreamGeneric(null);
 
             // in solana, the mint was a success already above in the API, but we only consider it a success here if all the steps complete (i.e. mint + bond)
@@ -1252,7 +1205,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
                     <>
                       <FormControl isInvalid={!!errors.bondingAmount}>
                         <Text fontWeight="bold" fontSize="md" mt={{ base: "1", md: "4" }}>
-                          Bonding Amount (in ITHEUM)
+                          Bonding Amount (in $ITHEUM)
                         </Text>
 
                         <Controller

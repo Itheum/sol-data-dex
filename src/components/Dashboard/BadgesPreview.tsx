@@ -121,8 +121,8 @@ const BadgesPreview: React.FC<BadgesPreviewProps> = ({ isUserLoggedIn, onHasUncl
       <Text
         textAlign="center"
         fontSize="md"
-        title="When you Grow your reputation and Co-Create with AI, your key achievements translate into badges that you can display proudly on your NFMe ID. If you have a NFMe ID Vault with ITHEUM bonds then Monthly badges also earn you bonus ITHEUM rewards that you can top-up your vault for extra APR.">
-        Earn badges through reputation growth and AI co-creation to get bonus ITHEUM rewards monthly.
+        title="When you Grow your reputation and Co-Create with AI, your key achievements translate into badges that you can display proudly on your NFMe ID. If you have a NFMe ID Vault with $ITHEUM bonds then Monthly badges also earn you bonus $ITHEUM rewards that you can top-up your vault for extra APR.">
+        Earn badges through reputation growth and AI co-creation to get bonus $ITHEUM rewards monthly.
       </Text>
 
       <Text textAlign="center" fontSize="sm">

@@ -61,7 +61,7 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
     (async () => {
       updateIsKeyChainDataForAppLoading(true);
 
-      // get users sol ITHEUM Balance
+      // get users sol $ITHEUM Balance
       (async () => {
         const itheumTokens = await getItheumBalanceOnSolana(connection, userPublicKey);
         if (itheumTokens != undefined) {

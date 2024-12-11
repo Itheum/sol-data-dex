@@ -341,24 +341,15 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
             <Box my="2">
               <Button
                 w={"100%"}
-                size={"sm"}
-                p={5}
+                size={"md"}
+                p={8}
                 colorScheme="teal"
                 onClick={() => {
                   setReEstablishBondConfirmationWorkflow({ dataNftId: solDataNft.id });
                 }}>
-                Bond To Get Liveliness <br />+ Staking Rewards
+                Bond Now To Get Liveliness <br />+ Staking Rewards
               </Button>
               <br />
-              {/* <Text fontSize="sm">
-                ID: {solDataNft.id}
-                <br />
-                Leaf {solDataNft.compression.leaf_id}
-                <br />
-                Length {solDataNft.grouping.length}
-                <br />
-                Collection {solDataNft.grouping[0].group_value}
-              </Text> */}
             </Box>
             <Link
               onClick={() => window.open(`${SOLSCAN_EXPLORER_URL}token/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}

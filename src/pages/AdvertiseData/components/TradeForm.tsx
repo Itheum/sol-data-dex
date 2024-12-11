@@ -584,8 +584,10 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           // let's attempt to checks 3 times if the IPFS data is loaded and available on the gateway
           await checkIfNftImgAndMetadataIsAvailableOnIPFS(_imageUrl, _metadataUrl);
 
-          // let's wait 15 seconds, and then we fetch the user NFTs again as the new NFT should appear
-          await sleep(15);
+          // let's wait 20 seconds, and then we fetch the user NFTs again as the new NFT should appear
+          await sleep(20);
+
+          setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s3: 1 }));
 
           const _allDataNfts: DasApiAsset[] = await fetchSolNfts(userPublicKey?.toBase58());
           updateAllDataNfts(_allDataNfts);
@@ -601,7 +603,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
               setIsAutoVaultInProgress(true);
             }
 
-            setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s4: 1 }));
+            // setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s4: 1 }));
 
             // for the first time user interacts, we need to initialize their rewards PDA
             const initializeAddressTransaction = await getInitAddressBondsRewardsPdaTransaction(connection, userPublicKey);
@@ -703,6 +705,9 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
             }
           }
           // E: AUTO-VAULT STEP
+
+          // here we set the progress to 100% as the bonding tx is done on ui
+          setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s4: 1 }));
         } else {
           setBondingTxHasFailed(true);
           setErrDataNFTStreamGeneric("Error: Bonding transaction signature was not returned");
@@ -810,7 +815,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     }
 
     if (assetsLoadedOnIPFSwasSuccess) {
-      setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s3: 1 }));
+      // setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s3: 1 }));
       await sleep(1);
 
       const imgCIDOnIPFS = _imageUrl.split("ipfs/")[1];

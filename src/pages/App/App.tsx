@@ -60,7 +60,16 @@ function App({ onShowConnectWalletModal }: { onShowConnectWalletModal: any }) {
   function commonRoutes() {
     return (
       <>
-        <Route path="/" element={<LandingPage onShowConnectWalletModal={onShowConnectWalletModal} handleLogout={handleLogout} />} />
+        <Route
+          path="/"
+          element={
+            <LandingPage
+              onShowConnectWalletModal={onShowConnectWalletModal}
+              handleLogout={handleLogout}
+              onRemoteTriggerOfBiTzPlayModel={handleRemoteTriggerOfBiTzPlayModel}
+            />
+          }
+        />
         <Route path="NFMeID" element={<Outlet />}>
           <Route path="" element={<GetNFMeID onShowConnectWalletModal={onShowConnectWalletModal} />} />
         </Route>

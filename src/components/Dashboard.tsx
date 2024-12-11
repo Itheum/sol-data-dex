@@ -18,6 +18,7 @@ import {
   useBreakpointValue,
   useDisclosure,
   useColorMode,
+  Badge,
 } from "@chakra-ui/react";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -387,12 +388,15 @@ const Dashboard = ({
           <Box width={"100%"} minH="400px" padding={5}>
             <Flex flexDirection={["column", null, "row"]} gap={2} minH="90%">
               <Box flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+                <Badge colorScheme="teal" fontSize="md">
+                  Stage 1
+                </Badge>
                 <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
                   Get Started for Free
                 </Heading>
 
                 <Flex flexDirection="column" gap="3">
-                  <Flex flexDirection="column" gap={2} p={2} borderBottom="1px solid" borderColor="teal.200">
+                  <Flex flexDirection="column" gap={2} p={2} pb={5} borderBottom="1px solid" borderColor="teal.200">
                     {!isUserLoggedIn && <FocusOnThisEffect />}
 
                     <Heading as="h3" size="md" textAlign="center" fontFamily="Satoshi-Regular">
@@ -429,6 +433,7 @@ const Dashboard = ({
                     flexDirection="column"
                     gap={2}
                     p={2}
+                    pb={5}
                     borderBottom="1px solid"
                     borderColor="teal.200"
                     opacity={!isUserLoggedIn ? 0.5 : "initial"}
@@ -486,8 +491,6 @@ const Dashboard = ({
                     flexDirection="column"
                     gap={2}
                     p={2}
-                    borderBottom="1px solid"
-                    borderColor="teal.200"
                     opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
                     pointerEvents={!isUserLoggedIn || !hasBitzNft ? "none" : "initial"}>
                     {isUserLoggedIn && !hasBitzNft && (
@@ -541,6 +544,9 @@ const Dashboard = ({
               </Box>
 
               <Box flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+                <Badge colorScheme="teal" fontSize="md">
+                  Stage 2
+                </Badge>
                 <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
                   Grow Reputation
                 </Heading>
@@ -551,6 +557,7 @@ const Dashboard = ({
                     flexDirection="column"
                     gap={2}
                     p={2}
+                    pb={5}
                     borderBottom="1px solid"
                     borderColor="teal.200"
                     opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
@@ -583,7 +590,7 @@ const Dashboard = ({
 
                       <LuFlaskRound fontSize={"2.2rem"} fill="#03c797" />
 
-                      {cooldown <= 0 && cooldown != -2 && (
+                      {hasBitzNft && cooldown <= 0 && cooldown != -2 && (
                         <>
                           {" "}
                           <Box
@@ -656,6 +663,13 @@ const Dashboard = ({
                       }}>
                       Buy BiTz
                     </Button>
+
+                    {/* if the user has recently ed and the countdown to next play is active then consider this done */}
+                    {isUserLoggedIn && hasBitzNft && cooldown > 0 && (
+                      <Box margin="auto">
+                        <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
+                      </Box>
+                    )}
                   </Flex>
 
                   {/* Bond on your NFMe and Make it a vault -- ONLY ENABLE if the user has no bonded NFMe and a Vault */}
@@ -702,32 +716,53 @@ const Dashboard = ({
                       Bond $ITHEUM on your NFMe ID
                     </Button>
 
-                    {/* check if the user has no vault and then allow them to action that */}
-                    <Button
-                      m="auto"
-                      colorScheme="teal"
-                      variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
-                      fontSize={{ base: "sm", md: "md" }}
-                      size={{ base: "sm", lg: "lg" }}
-                      w={{ base: "100%", md: "280px" }}
-                      isLoading={freeDropCheckLoading}
-                      isDisabled={!isUserLoggedIn || bondedDataNftIds.length === 0 || usersNfMeIdVaultBondId > 0}
-                      onClick={() => {
-                        navigate("/liveliness?hl=makevault");
-                      }}>
-                      Upgrade the NFMe ID into a Vault
-                    </Button>
+                    <Text textAlign="center" fontSize="sm">
+                      Currently{" "}
+                      <Text as="span" fontWeight="bold" color="teal.200">
+                        {currentMaxApr}% APR
+                      </Text>{" "}
+                      on your NFMe ID Bonds
+                    </Text>
 
-                    {bondedDataNftIds.length > 0 && usersNfMeIdVaultBondId > 0 && (
+                    {isUserLoggedIn && hasBitzNft && bondedDataNftIds.length > 0 && (
                       <Box margin="auto">
                         <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
                       </Box>
+                    )}
+
+                    {/* check if the user has no vault and then allow them to action that -- only show if the user has a NFMe ID with bonds but no vault (which is a boundary case) */}
+                    {isUserLoggedIn && bondedDataNftIds.length > 0 && usersNfMeIdVaultBondId === 0 && (
+                      <>
+                        <Button
+                          m="auto"
+                          colorScheme="teal"
+                          variant={usersNfMeIdVaultBondId > 0 ? "solid" : "outline"}
+                          fontSize={{ base: "sm", md: "md" }}
+                          size={{ base: "sm", lg: "lg" }}
+                          w={{ base: "100%", md: "280px" }}
+                          isLoading={freeDropCheckLoading}
+                          isDisabled={!isUserLoggedIn || bondedDataNftIds.length === 0 || usersNfMeIdVaultBondId > 0}
+                          onClick={() => {
+                            navigate("/liveliness?hl=makevault");
+                          }}>
+                          Upgrade the NFMe ID into a Vault
+                        </Button>
+
+                        {bondedDataNftIds.length > 0 && usersNfMeIdVaultBondId > 0 && (
+                          <Box margin="auto">
+                            <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
+                          </Box>
+                        )}
+                      </>
                     )}
                   </Flex>
                 </Flex>
               </Box>
 
               <Box flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+                <Badge colorScheme="teal" fontSize="md">
+                  Stage 3
+                </Badge>
                 <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
                   Co-Create with AI
                 </Heading>
@@ -737,6 +772,7 @@ const Dashboard = ({
                     flexDirection="column"
                     gap={2}
                     p={2}
+                    pb={5}
                     borderBottom="1px solid"
                     borderColor="teal.200"
                     opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
@@ -757,6 +793,7 @@ const Dashboard = ({
                     flexDirection="column"
                     gap={2}
                     p={2}
+                    pb={5}
                     borderBottom="1px solid"
                     borderColor="teal.200"
                     opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
@@ -859,9 +896,19 @@ const Dashboard = ({
               </Box>
 
               <Box flex="1" border="1px solid" borderColor="teal.200" borderRadius="md" p={2}>
+                <Badge colorScheme="teal" fontSize="md">
+                  Stage 4
+                </Badge>
                 <Heading fontFamily="Satoshi-Regular" color="teal.200" as="h2" size="lg" textAlign="center" mb={5}>
                   Share Rewards
                 </Heading>
+
+                {isUserLoggedIn && usersNfMeIdVaultBondId === 0 && (
+                  <Alert status="warning" rounded="md" fontSize="md" mb="5">
+                    <AlertIcon />
+                    {`You need to ${isUserLoggedIn ? "" : "login and "} complete STAGE 2 to access these benefits!`}
+                  </Alert>
+                )}
 
                 {/* lets people top up their vault or withdraw rewards etc:  ONLY ENABLE if the user is Logged IN && has a BiTz Data NFT && has already setup a NFMeId Vault */}
                 <Flex flexDirection="column" gap="3">
@@ -869,17 +916,11 @@ const Dashboard = ({
                     flexDirection="column"
                     gap={2}
                     p={2}
+                    pb={5}
                     borderBottom="1px solid"
                     borderColor="teal.200"
                     opacity={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? 0.5 : "initial"}
                     pointerEvents={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? "none" : "initial"}>
-                    {isUserLoggedIn && usersNfMeIdVaultBondId === 0 && (
-                      <Alert status="warning" rounded="md" fontSize="md">
-                        <AlertIcon />
-                        {`You need to ${isUserLoggedIn ? "" : "login and "} have a NFMe ID that has been upgraded into a Vault first!`}
-                      </Alert>
-                    )}
-
                     {isUserLoggedIn && usersNfMeIdVaultBondId > 0 && <FocusOnThisEffect />}
 
                     <Heading as="h3" size="md" textAlign="center">
@@ -895,7 +936,7 @@ const Dashboard = ({
                       <Text as="span" fontWeight="bold" color="teal.200">
                         {currentMaxApr}% APR
                       </Text>{" "}
-                      on your NFMe Id Bonds
+                      on your NFMe ID Bonds
                     </Text>
 
                     {/* if the user has a vault allow them to top-up */}
@@ -932,20 +973,15 @@ const Dashboard = ({
                   </Flex>
                 </Flex>
 
-                {/* Claim Badges - only available if the user has a BiTz Data NFT */}
+                {/* Claim Badges - ONLY ENABLE if the user is Logged IN && has a BiTz Data NFT && has already setup a NFMeId Vault */}
                 <Flex
                   flexDirection="column"
                   gap="3"
                   mt="5"
-                  opacity={!isUserLoggedIn || !hasBitzNft ? 0.5 : "initial"}
-                  pointerEvents={!isUserLoggedIn || !hasBitzNft ? "none" : "initial"}>
+                  opacity={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? 0.5 : "initial"}
+                  pointerEvents={!isUserLoggedIn || usersNfMeIdVaultBondId === 0 ? "none" : "initial"}>
                   {hasUnclaimedBadges && <FocusOnThisEffect />}
-                  {isUserLoggedIn && !hasBitzNft && (
-                    <Alert status="warning" rounded="md" fontSize="md">
-                      <AlertIcon />
-                      {`You need to ${isUserLoggedIn ? "" : "login and "} get your free BiTz XP Data NFT first!`}
-                    </Alert>
-                  )}
+
                   <BadgesPreview
                     isUserLoggedIn={isUserLoggedIn}
                     onHasUnclaimedBadges={(status: boolean) => {
@@ -961,6 +997,7 @@ const Dashboard = ({
         </Box>
       </Box>
 
+      {/* Modal : Free Claims */}
       <Modal
         size={modelSize}
         isOpen={isProgressModalOpen}
@@ -1020,7 +1057,7 @@ const Dashboard = ({
                       <Alert status={"success"} mt={5} rounded="md" mb={8}>
                         <AlertIcon />
                         <Box>
-                          <Text> Success! {`Let's`} get you your first event BiTz XP, game coming up in 3,2,1...</Text>
+                          <Text> Success! {`Let's`} get you your first event BiTz XP, game coming up in 5,4,3,2,1...</Text>
                         </Box>
                       </Alert>
                     )}
@@ -1127,7 +1164,7 @@ const Dashboard = ({
         </ModalContent>
       </Modal>
 
-      {/* NFMe Minting Options */}
+      {/* Modal : NFMe Minting Options */}
       <NFMeIDMintModal
         isOpen={isNFMeIDModalOpen}
         onClose={() => setIsNFMeIDModalOpen(false)}

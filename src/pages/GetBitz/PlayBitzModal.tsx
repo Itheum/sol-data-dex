@@ -65,6 +65,7 @@ export const PlayBitzModal: React.FC<PathwaysModalProps> = (props) => {
               onIsDataMarshalFetching={(isFetching: boolean) => {
                 setIsFetchingDataMarshal(isFetching);
               }}
+              onHideBitzModel={handleHideBitzModel}
             />
           </div>
         </div>

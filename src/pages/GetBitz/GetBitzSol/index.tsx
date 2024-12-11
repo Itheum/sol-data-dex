@@ -86,7 +86,7 @@ const MEME_IMGS = [
 ];
 
 const GetBitzSol = (props: any) => {
-  const { modalMode, onIsDataMarshalFetching } = props;
+  const { modalMode, onIsDataMarshalFetching, onHideBitzModel } = props;
   const { publicKey: userPublicKey, signMessage } = useWallet();
   const address = userPublicKey?.toBase58();
   const [checkingIfHasGameDataNFT, setCheckingIfHasGameDataNFT] = useState<boolean>(true);
@@ -496,6 +496,11 @@ const GetBitzSol = (props: any) => {
                           <p className="my-4 text-xl md:text-3xl "> You can play again in: </p>{" "}
                           {props.hours > 0 ? <>{`${props.hours} ${props.hours === 1 ? " Hour " : " Hours "}`}</> : ""}
                           {props.minutes > 0 ? props.minutes + " Min " : ""} {props.seconds} Sec
+                          <div
+                            onClick={onHideBitzModel}
+                            className="text-sm cursor-pointer border border-primary rounded-md p-2 mt-5 bg-teal-200 hover:bg-teal-300 text-black">
+                            Close & Return
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -658,6 +663,7 @@ const GetBitzSol = (props: any) => {
                       </>
                     )) ||
                       null}
+
                     {(((_viewDataRes.data.gamePlayResult.bonusTriesBeforeThisPlay > 0 && _viewDataRes.data.gamePlayResult.bonusTriesAfterThisPlay === -1) ||
                       _viewDataRes.data.gamePlayResult.bonusTriesAfterThisPlay > 0) && (
                       <div className="text-center mt-[2rem]">
@@ -687,6 +693,10 @@ const GetBitzSol = (props: any) => {
                         </div>
                       </div>
                     )}
+
+                    <div onClick={onHideBitzModel} className="cursor-pointer border border-primary rounded-md p-2 mt-2 bg-teal-200 hover:bg-teal-300">
+                      Close & Return
+                    </div>
                   </div>
                 )}
               </>

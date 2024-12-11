@@ -35,7 +35,6 @@ import {
   Spinner,
   Stack,
   Text,
-  Tooltip,
   useBreakpointValue,
   useColorMode,
   useDisclosure,
@@ -608,19 +607,39 @@ function shouldDisplayQuickMenuItem(quickMenuItem: any, isUserLoggedIn: boolean)
 }
 
 function ItheumTokenBalanceBadge({ displayParams, connectedChain }: { displayParams: any; connectedChain: any }) {
-  const itheumBalance = useAccountStore((state) => state.itheumBalance);
+  const { publicKey: userPublicKey } = useWallet();
+  const { connection } = useConnection();
+
+  const { itheumBalance, updateItheumBalance } = useAccountStore();
 
   return (
     <Box
       display={displayParams}
       fontSize={{ md: "sm", "2xl": "md" }}
+      cursor="pointer"
+      title="Click to Refresh Your Balance"
       minWidth="5.5rem"
       textAlign="center"
       color="black"
       bgColor="teal.200"
       borderRadius="md"
       paddingX={{ md: "3", xl: "5" }}
-      paddingY={{ md: "10px", xl: "14px" }}>
+      paddingY={{ md: "10px", xl: "14px" }}
+      onClick={() => {
+        // refresh users sol $ITHEUM Balance
+        (async () => {
+          if (!userPublicKey) {
+            return;
+          }
+
+          const itheumTokens = await getItheumBalanceOnSolana(connection, userPublicKey);
+          if (itheumTokens != undefined) {
+            updateItheumBalance(itheumTokens);
+          } else {
+            updateItheumBalance(-1);
+          }
+        })();
+      }}>
       {itheumBalance === -1 ? (
         <Spinner size="xs" />
       ) : itheumBalance === -2 ? (

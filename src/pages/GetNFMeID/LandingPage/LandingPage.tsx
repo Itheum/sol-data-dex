@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import darkNfMeIDVaultHero from "assets/img/landing/nfme/dark-hero-nfme-landing-page.jpg";
 import liteNfMeIDVaultHero from "assets/img/landing/nfme/lite-hero-nfme-landing-page.jpg";
 import solIcon from "assets/img/sol-logo.png";
-import { gtagGo } from "libs/utils";
 import { NFMeIDMintOptions } from "components/Dashboard/NFMeIDMintOptions";
+import { gtagGo } from "libs/utils";
 
 export const LandingPage = ({ onShowConnectWalletModal }: { onShowConnectWalletModal?: any }) => {
   const { colorMode } = useColorMode();

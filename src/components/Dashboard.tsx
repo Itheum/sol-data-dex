@@ -229,7 +229,7 @@ const Dashboard = ({
         _errInWorkflow = "Misc mint passed, but the db log failed";
       }
 
-      if (miscMintRes?.assetId) {
+      if (miscMintRes?.mintDoneMintMetaSkipped) {
         // check 15 seconds and check if the API in the backend to mark the free mint as done
         await sleep(15);
 
@@ -290,7 +290,7 @@ const Dashboard = ({
         _errInWorkflow = "Misc mint passed, but the db log failed";
       }
 
-      if (miscMintRes?.assetId) {
+      if (miscMintRes?.mintDoneMintMetaSkipped) {
         // check 15 seconds and check if the API in the backend to mark the free mint as done
         await sleep(15);
 
@@ -1057,7 +1057,7 @@ const Dashboard = ({
                       <Alert status={"success"} mt={5} rounded="md" mb={8}>
                         <AlertIcon />
                         <Box>
-                          <Text> Success! {`Let's`} get you your first event BiTz XP, game coming up in 5,4,3,2,1...</Text>
+                          <Text> Success! {`Let's`} get you your first ever BiTz XP, game coming up in 5,4,3,2,1...</Text>
                         </Box>
                       </Alert>
                     )}

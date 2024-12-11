@@ -519,6 +519,12 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
         optionalSDKMintCallFields["imgGenSet"] = "set9_series_nfmeid_gen1";
       }
 
+      // for a free mint, we skip getting the mint meta as its too much overhead and can also cause issues during high congestion
+      // ... in the backend, we return an empty mint meta object in this instance like this {"mintDoneMintMetaSkipped":"1"}
+      if (isFreeMint) {
+        optionalSDKMintCallFields["skipGettingMintMeta"] = "1";
+      }
+
       if (!userPublicKey) {
         return;
       }

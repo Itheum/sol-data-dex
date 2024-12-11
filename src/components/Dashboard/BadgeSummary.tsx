@@ -5,6 +5,7 @@ import { Badge } from "./BadgesPreview";
 interface BadgeSummaryProps {
   badgeCategoryMapWithCatNameAsKey: { [key: string]: { icon: string; shortName: string; gradient: string[]; description: string } };
   groupedBadges: Record<string, Badge[]>;
+  onUserClick: any;
 }
 
 const pulseKeyframe = keyframes`
@@ -27,7 +28,7 @@ const pulseKeyframe = keyframes`
 
 const pulse = `${pulseKeyframe} 2s infinite`;
 
-export const BadgeSummary: React.FC<BadgeSummaryProps> = ({ badgeCategoryMapWithCatNameAsKey, groupedBadges }) => {
+export const BadgeSummary: React.FC<BadgeSummaryProps> = ({ badgeCategoryMapWithCatNameAsKey, groupedBadges, onUserClick }) => {
   const { colorMode } = useColorMode();
 
   // Calculate claimed and unclaimed totals
@@ -80,7 +81,7 @@ export const BadgeSummary: React.FC<BadgeSummaryProps> = ({ badgeCategoryMapWith
                     },
                   }}>
                   <Box position="relative">
-                    <HStack spacing={2} p={2} borderRadius="full" _hover={{ bg: "gray.100" }} cursor="pointer">
+                    <HStack spacing={2} p={2} borderRadius="full" _hover={{ bg: "gray.100" }} cursor="pointer" onClick={onUserClick}>
                       <Box position="relative">
                         <Circle
                           size="30px"

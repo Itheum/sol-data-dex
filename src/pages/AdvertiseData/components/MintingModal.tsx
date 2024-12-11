@@ -105,7 +105,7 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
                 <HStack>
                   <Box w={6}>{(!saveProgress.s3 && <Spinner size="md" />) || <CheckCircleIcon w={6} h={6} />}</Box>
                   <Text fontSize="lg">
-                    Loading metadata to durable decentralized storage {isFreeMint ? " and minting your NFMe ID. " : " "} (⏳ This can take a few minutes.)
+                    Loading metadata to durable decentralized storage {isFreeMint ? " and minting your NFMe ID. " : " "} (⏳ This can take a few minutes)
                   </Text>
                 </HStack>
 
@@ -114,7 +114,7 @@ export const MintingModal: React.FC<MintingModalProps> = memo((props) => {
                     <Box w={6}>{(!saveProgress.s4 && <Spinner size="md" />) || <CheckCircleIcon w={6} h={6} />}</Box>
                     <Text fontSize="lg">
                       Minting your {isNFMeIDMint ? "NFMe ID" : "Data NFT"}, bonding $ITHEUM to generate your liveliness staking rewards{" "}
-                      {isAutoVaultInProgress ? "and setting it as your vault. " : " "}. (⏳ This can take a few minutes.)
+                      {isAutoVaultInProgress ? "and setting it as your vault. " : " "}. (⏳ This can take a few minutes)
                     </Text>
                   </HStack>
                 )}

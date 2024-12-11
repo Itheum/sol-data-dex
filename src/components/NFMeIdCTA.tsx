@@ -35,11 +35,7 @@ const NFMeIdCTA = () => {
           rounded="lg"
           mt={7}
           onClick={() => {
-            if (isSolWalletConnected) {
-              navigate("/mintdata?launchTemplate=nfMeIdWithBond");
-            } else {
-              navigate("/NFMeId");
-            }
+            navigate("/NFMeID");
           }}>
           Mint Your NFMe ID
         </Button>

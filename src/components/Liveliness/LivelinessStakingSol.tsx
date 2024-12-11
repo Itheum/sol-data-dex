@@ -929,14 +929,8 @@ export const LivelinessStakingSol: React.FC = () => {
                               <li>- Earn awesome staking rewards</li>
                             </ul>
                           </Text>
-                          <Button
-                            colorScheme="teal"
-                            borderRadius="12px"
-                            variant="outline"
-                            size="lg"
-                            mt="5"
-                            onClick={() => navigate("/mintdata?launchTemplate=nfMeIdWithBond")}>
-                            <Text px={2}>Mint NFMe ID</Text>
+                          <Button colorScheme="teal" borderRadius="12px" variant="outline" size="lg" mt="5" onClick={() => navigate("/NFMeID")}>
+                            <Text px={2}>Get NFMe ID</Text>
                           </Button>
                         </Box>
                       )}

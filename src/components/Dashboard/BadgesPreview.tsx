@@ -137,7 +137,11 @@ const BadgesPreview: React.FC<BadgesPreviewProps> = ({ isUserLoggedIn, onHasUncl
         </Flex>
       ) : (
         <>
-          <BadgeSummary groupedBadges={groupedBadges} badgeCategoryMapWithCatNameAsKey={badgeCategoryMapWithCatNameAsKey} />
+          <BadgeSummary
+            groupedBadges={groupedBadges}
+            badgeCategoryMapWithCatNameAsKey={badgeCategoryMapWithCatNameAsKey}
+            onUserClick={() => (isMobile ? setIsExpanded(!isExpanded) : setIsModalOpen(true))}
+          />
 
           {hasUnclaimedBadges && (
             <Alert status="success" borderRadius="md">

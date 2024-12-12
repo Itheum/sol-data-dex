@@ -49,7 +49,7 @@ import {
   fetchAddressBondsRewards,
   getBondingProgramInterface,
 } from "libs/Solana/utils";
-import { formatNumberToShort, isValidNumericCharacter, sleep } from "libs/utils";
+import { formatNumberToShort, isValidNumericCharacter, sleep, replacePublicIPFSImgWithGatewayLink } from "libs/utils";
 import { useAccountStore } from "store";
 import { useMintStore } from "store/mint";
 import { useNftsStore } from "store/nfts";
@@ -997,7 +997,11 @@ export const LivelinessStakingSol: React.FC = () => {
                     <Box minW="250px" textAlign="center">
                       <Box>
                         <NftMediaComponent
-                          imageUrls={[dataNft.content.links && dataNft.content.links["image"] ? (dataNft.content.links["image"] as string) : DEFAULT_NFT_IMAGE]}
+                          imageUrls={[
+                            dataNft.content.links && dataNft.content.links["image"]
+                              ? replacePublicIPFSImgWithGatewayLink(dataNft.content.links["image"] as string)
+                              : DEFAULT_NFT_IMAGE,
+                          ]}
                           imageHeight="160px"
                           imageWidth="160px"
                           borderRadius="10px"

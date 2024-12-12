@@ -45,7 +45,7 @@ import {
   swapForItheumTokensOnJupiter,
   getItheumBalanceOnSolana,
 } from "libs/Solana/utils";
-import { transformDescription, timeUntil, sleep } from "libs/utils";
+import { transformDescription, timeUntil, sleep, replacePublicIPFSImgWithGatewayLink } from "libs/utils";
 import { useAccountStore, useMintStore } from "store";
 import { useNftsStore } from "store/nfts";
 
@@ -322,7 +322,11 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
           position="relative"
           pb="1rem">
           <NftMediaComponent
-            imageUrls={[solDataNft.content.links && solDataNft.content.links["image"] ? (solDataNft.content.links["image"] as string) : DEFAULT_NFT_IMAGE]}
+            imageUrls={[
+              solDataNft.content.links && solDataNft.content.links["image"]
+                ? replacePublicIPFSImgWithGatewayLink(solDataNft.content.links["image"] as string)
+                : DEFAULT_NFT_IMAGE,
+            ]}
             autoSlide
             imageHeight="236px"
             imageWidth="236px"

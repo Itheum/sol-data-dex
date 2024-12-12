@@ -21,7 +21,7 @@ import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { SOLSCAN_EXPLORER_URL } from "libs/Solana/config";
-import { transformDescription } from "libs/utils";
+import { transformDescription, replacePublicIPFSImgWithGatewayLink } from "libs/utils";
 
 interface WalletAllDataNftsProps {
   index: number;
@@ -44,7 +44,11 @@ const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft
         position="relative"
         pb="1rem">
         <NftMediaComponent
-          imageUrls={[solDataNft.content.links && solDataNft.content.links["image"] ? (solDataNft.content.links["image"] as string) : DEFAULT_NFT_IMAGE]}
+          imageUrls={[
+            solDataNft.content.links && solDataNft.content.links["image"]
+              ? replacePublicIPFSImgWithGatewayLink(solDataNft.content.links["image"] as string)
+              : DEFAULT_NFT_IMAGE,
+          ]}
           autoSlide
           imageHeight="236px"
           imageWidth="236px"

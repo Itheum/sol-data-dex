@@ -152,3 +152,18 @@ export const computeRemainingCooldown = (startTime: number, cooldown: number) =>
 
   return _cooldown > 0 ? _cooldown + Date.now() : 0;
 };
+
+/*
+  convert images like this:
+  https://ipfs.io/ipfs/QmXvejPK55ds46fyek6jtNCHw1Pujx9iSzd3xjCjkvEvZc
+  to 
+  https://gateway.pinata.cloud/ipfs/QmXvejPK55ds46fyek6jtNCHw1Pujx9iSzd3xjCjkvEvZc
+  */
+export function replacePublicIPFSImgWithGatewayLink(ipfsImgLink: string) {
+  if (ipfsImgLink.includes("https://ipfs.io/ipfs/")) {
+    const CID = ipfsImgLink.split("https://ipfs.io/ipfs/")[1];
+    return `https://gateway.pinata.cloud/ipfs/${CID}`;
+  } else {
+    return ipfsImgLink;
+  }
+}

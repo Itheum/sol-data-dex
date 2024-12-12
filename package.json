@@ -1,13 +1,13 @@
 {
   "name": "sol-data-dex",
-  "version": "1.0.0-beta.25",
+  "version": "1.0.0-beta.26",
   "description": "Web3 tools to tokenize your data, identity and reputation on the Solana blockchain.",
   "dependencies": {
     "@chakra-ui/icons": "2.1.1",
     "@chakra-ui/react": "2.8.2",
     "@coral-xyz/anchor": "0.29.0",
     "@hookform/resolvers": "3.6.0",
-    "@itheum/sdk-mx-data-nft": "3.8.0-alpha.18",
+    "@itheum/sdk-mx-data-nft": "3.8.0-alpha.19",
     "@metaplex-foundation/digital-asset-standard-api": "1.0.4",
     "@sentry/react": "7.118.0",
     "@solana-mobile/wallet-adapter-mobile": "2.1.3",

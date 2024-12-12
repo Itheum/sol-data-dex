@@ -9,7 +9,7 @@ import { NATIVE_MINT } from "@solana/spl-token";
 import { AccountMeta, Connection, PublicKey, Transaction, TransactionConfirmationStrategy, Commitment } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { SOL_ENV_ENUM } from "libs/config";
-import { getApiDataDex, getApiDataMarshal } from "libs/utils";
+import { backendApi, getApiDataDex, getApiDataMarshal } from "libs/utils";
 import { BOND_CONFIG_INDEX, BONDING_PROGRAM_ID } from "./config";
 import { CoreSolBondStakeSc, IDL } from "./CoreSolBondStakeSc";
 import { Bond } from "./types";
@@ -28,7 +28,8 @@ export async function fetchSolNfts(solAddress: string | undefined) {
   if (!solAddress) {
     return [];
   } else {
-    const resp = await fetch(`${getApiDataDex()}/bespoke/sol/getDataNFTsByOwner?publicKeyb58=${solAddress}`);
+    // const resp = await fetch(`${getApiDataDex()}/bespoke/sol/getDataNFTsByOwner?publicKeyb58=${solAddress}`);
+    const resp = await fetch(`${backendApi()}/solana/getDataNFTsByOwner?owner=${solAddress}`);
     const data = await resp.json();
 
     return data.nfts;

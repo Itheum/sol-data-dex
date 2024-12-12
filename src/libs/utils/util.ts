@@ -7,11 +7,12 @@ export const qsParams = () => {
 
 export const sleep = (sec: number) => new Promise((r) => setTimeout(r, sec * 1000));
 
-export const backendApi = (chainID: string) => {
-  const envKey = chainID === "1" ? "VITE_ENV_BACKEND_MAINNET_API" : "VITE_ENV_BACKEND_API";
-  const defaultUrl = chainID === "1" ? "https://production-itheum-api.up.railway.app" : "https://staging-itheum-api.up.railway.app";
-
-  return import.meta.env[envKey] || defaultUrl;
+export const backendApi = () => {
+  if (import.meta.env.VITE_ENV_NETWORK === "mainnet") {
+    return "https://production-itheum-api.up.railway.app";
+  } else {
+    return "https://staging-itheum-api.up.railway.app";
+  }
 };
 
 export const gtagGo = (category: string, action: any, label: any, value?: any) => {

@@ -12,7 +12,7 @@ interface NFMeIDMintModalProps {
 
 export const NFMeIDMintModal = ({ isOpen, onClose, onFreeMint, onMintAndBond }: NFMeIDMintModalProps) => {
   const { colorMode } = useColorMode();
-  const modelSize = useBreakpointValue({ base: "xs", md: "xl" });
+  const modelSize = useBreakpointValue({ base: "xs", md: "2xl" });
   const { currentMaxApr } = useMintStore();
 
   return (
@@ -32,7 +32,7 @@ export const NFMeIDMintModal = ({ isOpen, onClose, onFreeMint, onMintAndBond }: 
             in staking rewards.
           </Text>
 
-          <NFMeIDMintOptions onFreeMint={onFreeMint} onMintAndBond={onMintAndBond} />
+          <NFMeIDMintOptions onFreeMint={onFreeMint} onMintAndBond={onMintAndBond} skipFreeMintCheck={true} />
         </ModalBody>
 
         <ModalFooter alignSelf="center">

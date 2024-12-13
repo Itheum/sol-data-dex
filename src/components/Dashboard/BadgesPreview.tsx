@@ -27,6 +27,8 @@ import { BadgeSummary } from "./BadgeSummary";
 interface BadgesPreviewProps {
   isUserLoggedIn: boolean;
   onHasUnclaimedBadges: (status: boolean) => void;
+  badgeSummaryHeaderMode?: boolean;
+  showStage2Disclaimer?: boolean;
 }
 
 export interface Badge {
@@ -47,7 +49,12 @@ interface BadgeMetadataType {
   };
 }
 
-const BadgesPreview: React.FC<BadgesPreviewProps> = ({ isUserLoggedIn, onHasUnclaimedBadges }) => {
+const BadgesPreview: React.FC<BadgesPreviewProps> = ({
+  isUserLoggedIn,
+  onHasUnclaimedBadges,
+  badgeSummaryHeaderMode = false,
+  showStage2Disclaimer = false,
+}) => {
   const { userBadges } = useAccountStore();
   const [userBadgesReadable, setUserBadgesReadable] = useState<Badge[]>([]);
   const [groupedBadges, setGroupedBadges] = useState<Record<string, any[]>>({});
@@ -114,20 +121,24 @@ const BadgesPreview: React.FC<BadgesPreviewProps> = ({ isUserLoggedIn, onHasUncl
 
   return (
     <Flex flexDirection="column" gap={2} p={2} opacity={!isUserLoggedIn ? 0.5 : "initial"} pointerEvents={!isUserLoggedIn ? "none" : "initial"}>
-      <Heading as="h3" size="md" textAlign="center">
-        Badges
-      </Heading>
+      {!badgeSummaryHeaderMode && (
+        <>
+          <Heading as="h3" size="md" textAlign="center">
+            Badges
+          </Heading>
 
-      <Text
-        textAlign="center"
-        fontSize="md"
-        title="When you Grow your reputation and Co-Create with AI, your key achievements translate into badges that you can display proudly on your NFMe ID. If you have a NFMe ID Vault with $ITHEUM bonds then Monthly badges also earn you bonus $ITHEUM rewards that you can top-up your vault for extra APR.">
-        Earn badges through reputation growth and AI co-creation to get bonus $ITHEUM rewards monthly.
-      </Text>
+          <Text
+            textAlign="center"
+            fontSize="md"
+            title="When you Grow your reputation and Co-Create with AI, your key achievements translate into badges that you can display proudly on your NFMe ID. If you have a NFMe ID Vault with $ITHEUM bonds then Monthly badges also earn you bonus $ITHEUM rewards that you can top-up your vault for extra APR.">
+            Earn badges through reputation growth and AI co-creation to get bonus $ITHEUM rewards monthly.
+          </Text>
 
-      <Text textAlign="center" fontSize="sm">
-        Badges are sent out on the 1st of every month.
-      </Text>
+          <Text textAlign="center" fontSize="sm">
+            Badges are sent out on the 1st of every month.
+          </Text>
+        </>
+      )}
 
       {badgesLoading ? (
         <Flex mt={2} gap={2} alignItems="center" justifyContent="center">
@@ -141,22 +152,26 @@ const BadgesPreview: React.FC<BadgesPreviewProps> = ({ isUserLoggedIn, onHasUncl
             groupedBadges={groupedBadges}
             badgeCategoryMapWithCatNameAsKey={badgeCategoryMapWithCatNameAsKey}
             onUserClick={() => (isMobile ? setIsExpanded(!isExpanded) : setIsModalOpen(true))}
+            badgeSummaryHeaderMode={badgeSummaryHeaderMode}
+            showStage2Disclaimer={showStage2Disclaimer}
           />
 
           {hasUnclaimedBadges && (
             <Alert status="success" borderRadius="md">
               <AlertIcon />
-              <Text fontSize="md">You have Unclaimed Badges! Expand Below and Claim them Now!</Text>
+              <Text fontSize="md">You have Unclaimed Badges! Claim Now!</Text>
             </Alert>
           )}
 
-          <Button
-            variant="ghost"
-            onClick={() => (isMobile ? setIsExpanded(!isExpanded) : setIsModalOpen(true))}
-            rightIcon={isMobile && isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-            _hover={{ bg: colorMode === "dark" ? "#181818" : "bgWhite" }}>
-            {isMobile && isExpanded ? "Show Less" : "See All Badges"}
-          </Button>
+          {!badgeSummaryHeaderMode && (
+            <Button
+              variant="ghost"
+              onClick={() => (isMobile ? setIsExpanded(!isExpanded) : setIsModalOpen(true))}
+              rightIcon={isMobile && isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              _hover={{ bg: colorMode === "dark" ? "#181818" : "bgWhite" }}>
+              {isMobile && isExpanded ? "Show Less" : "See All Badges"}
+            </Button>
+          )}
 
           {/* Collapse panel for mobile */}
           {isMobile && (

@@ -349,6 +349,20 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                 p={8}
                 colorScheme="teal"
                 onClick={() => {
+                  // refresh users sol $ITHEUM Balance (in case they moved some ITH into this account)
+                  (async () => {
+                    if (!userPublicKey) {
+                      return;
+                    }
+
+                    const itheumTokens = await getItheumBalanceOnSolana(connection, userPublicKey);
+                    if (itheumTokens != undefined) {
+                      updateItheumBalance(itheumTokens);
+                    } else {
+                      updateItheumBalance(-1);
+                    }
+                  })();
+
                   setReEstablishBondConfirmationWorkflow({ dataNftId: solDataNft.id });
                 }}>
                 Bond Now To Get Liveliness <br />+ Staking Rewards
@@ -467,7 +481,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                                       toast({
                                         title: "Swap Successful",
                                         description: "$ITHEUM token swap was successful",
-                                        status: "info",
+                                        status: "success",
                                         duration: 15000,
                                         isClosable: true,
                                       });

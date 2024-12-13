@@ -131,7 +131,7 @@ const AppHeader = ({
           menuEnum: MENU.LIVELINESS,
           path: "/liveliness",
           label: "Liveliness Staking",
-          shortLbl: "Liveliness",
+          shortLbl: "Staking",
           Icon: FaTachometerAlt,
           needToBeLoggedIn: true,
           isHidden: false,

@@ -81,6 +81,8 @@ export const ClaimBadgeModal: React.FC<ClaimBadgeModalProps> = ({
   const categoryStyle = badgeCategoryMapWithCatNameAsKey[selectedBadge.category];
   const issuedDate = new Date(selectedBadge.issuedOn).toLocaleDateString();
 
+  console.log("selectedBadge", selectedBadge);
+
   return (
     <Modal size={modelSize} isOpen={isOpen} onClose={onClose} closeOnEsc={!isLoading} closeOnOverlayClick={!isLoading} blockScrollOnMount={false}>
       <ModalOverlay backdropFilter="blur(10px)" />
@@ -97,6 +99,9 @@ export const ClaimBadgeModal: React.FC<ClaimBadgeModalProps> = ({
 
             <Text fontSize="2xl" fontWeight="bold" textAlign="center">
               {categoryStyle.shortName} Badge
+            </Text>
+            <Text fontSize="xl" fontWeight="bold" textAlign="center" mt={2} color="teal.200">
+              {selectedBadge.badge}
             </Text>
 
             <Text mt="5" textAlign="center">

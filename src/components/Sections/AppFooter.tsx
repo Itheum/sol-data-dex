@@ -27,7 +27,7 @@ export default function () {
           </Heading>
           <Text fontSize="md" mt={3}>
             {" "}
-            Join the AI Data Workforce, prove your reputation, co-create new data with me and get rewarded!
+            Join the AI Data Workforce, prove your reputation, co-create new data with AI Agents and get rewarded!
           </Text>
         </Box>
 

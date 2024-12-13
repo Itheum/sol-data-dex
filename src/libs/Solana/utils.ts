@@ -650,3 +650,25 @@ export async function claimBadge(addr: string | undefined, claimThisBadgeId: str
     }
   }
 }
+
+export async function issueBadge(addr: string | undefined, issueThisBadgeId: string, solPreaccessNonce: string, solPreaccessSignature: string) {
+  if (!addr || !issueThisBadgeId || !solPreaccessNonce || !solPreaccessSignature) {
+    return { error: true };
+  } else {
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    const requestBody = { addr, issueThisBadgeId, solSignature: solPreaccessSignature, signatureNonce: solPreaccessNonce };
+
+    const res = await fetch(`${getApiDataDex()}/userAccounts/issueBadge`, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await res.json();
+
+    return data;
+  }
+}

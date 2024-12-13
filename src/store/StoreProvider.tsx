@@ -14,6 +14,7 @@ import {
   retrieveBondsAndNftMeIdVault,
   getItheumBalanceOnSolana,
   fetchUserBadges,
+  issueBadge,
 } from "libs/Solana/utils";
 import { computeRemainingCooldown } from "libs/utils";
 import { sleep } from "libs/utils/util";
@@ -37,9 +38,10 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
     updateBonusBitzSum,
     updateCooldown,
     updateUserBadges,
+    userBadges,
   } = useAccountStore();
   const { updateAllDataNfts, updateBondedDataNftIds, updateBitzDataNfts, updateUserHasG2BiTzNft, bitzDataNfts, allDataNfts } = useNftsStore();
-  const { updateLockPeriodForBond, updateUserBonds, updateUsersNfMeIdVaultBondId, updateCurrentMaxApr } = useMintStore();
+  const { updateLockPeriodForBond, updateUserBonds, updateUsersNfMeIdVaultBondId, updateCurrentMaxApr, usersNfMeIdVaultBondId } = useMintStore();
 
   useEffect(() => {
     getItheumPrice();
@@ -207,6 +209,29 @@ export const StoreProvider = ({ children }: PropsWithChildren) => {
       }
     })();
   }, [userPublicKey, bitzDataNfts, solPreaccessNonce, solPreaccessSignature]);
+
+  // if the user has a usersNfMeIdVaultBondId and have not got their badge for this, then we should check and issue a badge that they are in stage 4
+  useEffect(() => {
+    (async () => {
+      // if the user does NOT have ["1-1-1"]; // Ninja : Stage 4 Achieve
+      // then we should issue it
+      if (
+        usersNfMeIdVaultBondId !== 0 &&
+        solPreaccessNonce !== "" &&
+        solPreaccessSignature !== "" &&
+        !userBadges.some((badge) => badge.typeIdCatIdLeafId === "1-1-1")
+      ) {
+        const resp = await issueBadge(userPublicKey?.toBase58(), "1-1-1", solPreaccessNonce, solPreaccessSignature);
+
+        if (resp.error) {
+          console.log("FAILED to get the Ninja : Stage 4 Achieve badge!");
+        } else {
+          // here, we created the badge and also, the server will have returned a fresh copy of all the badges that includes the new one
+          updateUserBadges(resp);
+        }
+      }
+    })();
+  }, [usersNfMeIdVaultBondId, userBadges, solPreaccessNonce, solPreaccessSignature]);
 
   function resetBitzValsToZeroSOL() {
     updateBitzBalance(-1);

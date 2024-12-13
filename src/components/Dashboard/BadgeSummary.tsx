@@ -6,6 +6,8 @@ interface BadgeSummaryProps {
   badgeCategoryMapWithCatNameAsKey: { [key: string]: { icon: string; shortName: string; gradient: string[]; description: string } };
   groupedBadges: Record<string, Badge[]>;
   onUserClick: any;
+  badgeSummaryHeaderMode?: boolean;
+  showStage2Disclaimer?: boolean;
 }
 
 const pulseKeyframe = keyframes`
@@ -28,7 +30,7 @@ const pulseKeyframe = keyframes`
 
 const pulse = `${pulseKeyframe} 2s infinite`;
 
-export const BadgeSummary: React.FC<BadgeSummaryProps> = ({ badgeCategoryMapWithCatNameAsKey, groupedBadges, onUserClick }) => {
+export const BadgeSummary: React.FC<BadgeSummaryProps> = ({ badgeCategoryMapWithCatNameAsKey, groupedBadges, onUserClick, badgeSummaryHeaderMode = false, showStage2Disclaimer = false }) => {
   const { colorMode } = useColorMode();
 
   // Calculate claimed and unclaimed totals
@@ -49,13 +51,16 @@ export const BadgeSummary: React.FC<BadgeSummaryProps> = ({ badgeCategoryMapWith
   return (
     <>
       <Box p={4} borderWidth="1px" borderRadius="lg" mb={4} boxShadow="sm">
+        {showStage2Disclaimer && <Text textAlign="center" fontSize="sm">
+          ❗ You need to complete STAGE 2 to access badges!
+        </Text>}
         <Flex flexDirection="column" justify="space-between" mb={3}>
           <Flex align="center" gap={2} flexDirection="column">
             <Text fontSize="lg" fontWeight="bold">
-              Your Badge Collection
+              {badgeSummaryHeaderMode ? "" : "Your Badge Collection"}
             </Text>
             <Text fontSize="md" color="gray.600">
-              ({badgeCounts.claimed} claimed • {badgeCounts.unclaimed} pending)
+              {badgeSummaryHeaderMode ? "Badges " : ""} ({badgeCounts.claimed} claimed • {badgeCounts.unclaimed} pending)
             </Text>
           </Flex>
         </Flex>

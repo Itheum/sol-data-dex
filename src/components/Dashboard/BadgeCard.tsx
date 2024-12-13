@@ -169,7 +169,11 @@ export const BadgeCard: React.FC<BadgeGroupProps> = ({ badgeCategoryMapWithCatNa
                     whiteSpace="nowrap"
                     color={badge.claimedOn === -1 ? "gray.500" : badge.claimedOn === 0 ? "blue.500" : "inherit"}
                     fontWeight={badge.claimedOn === 0 ? "bold" : "normal"}>
-                    {badge.claimedOn === -1 ? "Complete activities to unlock" : badge.claimedOn === 0 ? `${badge.badge} - Claim Now!` : badge.badge}
+                    {badge.claimedOn === -1
+                      ? `Complete activities to unlock badge: ${badge.badge}`
+                      : badge.claimedOn === 0
+                        ? `${badge.badge} - Claim Now!`
+                        : badge.badge}
                   </Text>
                 </Box>
               </WrapItem>

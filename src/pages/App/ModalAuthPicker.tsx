@@ -70,9 +70,10 @@ function ModalAuthPicker({ openConnectModal, onShowConnectWalletModal }: { openC
         // redirect user to the dashboard if there are from home or other certain routes
         if (pathname === "/") {
           navigate("/dashboard");
-        } else if (pathname === "/NFMeID") {
-          navigate("/liveliness");
         }
+        // else if (pathname === "/NFMeID") {
+        //   navigate("/liveliness");
+        // }
 
         const chainId = import.meta.env.VITE_ENV_NETWORK === "devnet" ? SOL_ENV_ENUM.devnet : SOL_ENV_ENUM.mainnet;
         logUserLoggedInInUserAccounts(addressSol, chainId);

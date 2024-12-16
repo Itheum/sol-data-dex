@@ -30,7 +30,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_I
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import moment from "moment/moment";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import NftMediaComponent from "components/NftMediaComponent";
 import { NoDataHere } from "components/Sections/NoDataHere";
 import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
@@ -50,6 +50,8 @@ import {
   getBondingProgramInterface,
 } from "libs/Solana/utils";
 import { formatNumberToShort, isValidNumericCharacter, sleep, replacePublicIPFSImgWithGatewayLink } from "libs/utils";
+import { FocusOnThisEffect } from "libs/utils/ui";
+import { scrollToSection } from "libs/utils/ui";
 import { useAccountStore } from "store";
 import { useMintStore } from "store/mint";
 import { useNftsStore } from "store/nfts";
@@ -97,6 +99,8 @@ export const LivelinessStakingSol: React.FC = () => {
   const [hasPendingTransaction, setHasPendingTransaction] = useState<boolean>(false);
   const { networkConfiguration } = useNetworkConfiguration();
   const [dateNowTS, setDateNowTS] = useState<number>(0); // we use Date.now() or .getTime() in various parts of the code that need to be synced. It's best we only use one so its all in sync. BUT only for parts that need syncing (e.g. vault liveliness)
+  const [searchParams] = useSearchParams();
+  const [deepLinkHlSection, setDeepLinkHlSection] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userPublicKey) return;
@@ -142,6 +146,21 @@ export const LivelinessStakingSol: React.FC = () => {
       fetchBondConfigPDAs();
 
       setDateNowTS(Date.now()); // this is the master Date.now() we can use to sync liveliness etc
+
+      // now that we have the data, we can scroll down to some focus sections if the user came from a deep link
+      await sleep(3);
+
+      const isHlWorkflowDeepLink = searchParams.get("hl");
+
+      if (isHlWorkflowDeepLink) {
+        setDeepLinkHlSection(isHlWorkflowDeepLink);
+
+        if (isHlWorkflowDeepLink === "topup") {
+          scrollToSection("section-topup", 200);
+        } else if (isHlWorkflowDeepLink === "makevault") {
+          scrollToSection("section-makevault", 200);
+        }
+      }
     }
 
     bootstrapLogicAfterDelay();
@@ -700,7 +719,8 @@ export const LivelinessStakingSol: React.FC = () => {
                 </Button>
               </HStack>
             </Box>
-            <Box textAlign={{ base: "right", md: "initial" }} ml="10px">
+            <Box textAlign={{ base: "right", md: "initial" }} ml="10px" position="relative">
+              {deepLinkHlSection === "topup" && <FocusOnThisEffect top="-10px" />}
               <Button
                 colorScheme="teal"
                 px={6}
@@ -721,6 +741,7 @@ export const LivelinessStakingSol: React.FC = () => {
               Estimated Bond Annual Rewards (After Top-Up): {formatNumberToShort(currentBondEstAnnualRewards / 10 ** 9)} $ITHEUM
             </Text>
           )}
+          <Box id="section-topup" />
         </VStack>
       </HStack>
     );
@@ -818,27 +839,30 @@ export const LivelinessStakingSol: React.FC = () => {
                             shouldWrapChildren
                             isDisabled={!(!userPublicKey || claimableAmount < 1 || vaultLiveliness === 0)}
                             label={"Rewards claiming is disabled if liveliness is 0, rewards amount is lower than 1 or there are transactions pending"}>
-                            <Button
-                              fontSize="lg"
-                              colorScheme="teal"
-                              px={6}
-                              width="180px"
-                              onClick={() => {
-                                if (
-                                  computeBondScore(
-                                    bondConfigData.lockPeriod.toNumber(),
-                                    Math.floor(Date.now() / 1000),
-                                    vaultBondData.unbondTimestamp.toNumber()
-                                  )
-                                ) {
-                                  handleClaimRewardsClick(vaultBondId!);
-                                } else {
-                                  setClaimRewardsConfirmationWorkflow(true);
-                                }
-                              }}
-                              isDisabled={!userPublicKey || claimableAmount < 1 || vaultLiveliness === 0 || hasPendingTransaction || vaultBondId === 0}>
-                              Claim Rewards
-                            </Button>
+                            <Box position="relative">
+                              {deepLinkHlSection === "claim" && <FocusOnThisEffect top="-10px" />}
+                              <Button
+                                fontSize="lg"
+                                colorScheme="teal"
+                                px={6}
+                                width="180px"
+                                onClick={() => {
+                                  if (
+                                    computeBondScore(
+                                      bondConfigData.lockPeriod.toNumber(),
+                                      Math.floor(Date.now() / 1000),
+                                      vaultBondData.unbondTimestamp.toNumber()
+                                    )
+                                  ) {
+                                    handleClaimRewardsClick(vaultBondId!);
+                                  } else {
+                                    setClaimRewardsConfirmationWorkflow(true);
+                                  }
+                                }}
+                                isDisabled={!userPublicKey || claimableAmount < 1 || vaultLiveliness === 0 || hasPendingTransaction || vaultBondId === 0}>
+                                Claim Rewards
+                              </Button>
+                            </Box>
                           </Tooltip>
                         </VStack>
                         <VStack>
@@ -975,7 +999,7 @@ export const LivelinessStakingSol: React.FC = () => {
               return 0;
             })
             .map((currentBond, index) => {
-              const dataNft = allDataNfts?.find((dataNft) => currentBond.assetId.toString() === dataNft.id);
+              const dataNft = allDataNfts?.find((_dataNft) => currentBond.assetId.toString() === _dataNft.id);
               if (!dataNft) {
                 return null;
               }
@@ -1063,39 +1087,34 @@ export const LivelinessStakingSol: React.FC = () => {
                             {formatNumberToShort(new BN(currentBond?.bondAmount ?? 0).div(BN10_9).toNumber())}
                             &nbsp;$ITHEUM Bonded
                           </Text>
-                          <Box w="100%">
+                          <Box w="100%" position="relative">
                             {currentBond.bondId !== vaultBondId ? (
-                              <Button
-                                colorScheme="blue"
-                                variant="outline"
-                                mt={2}
-                                w="100%"
-                                isDisabled={currentBond.state === 0 || hasPendingTransaction}
-                                onClick={() => {
-                                  updateVaultBond(currentBond.bondId, dataNft.compression.leaf_id);
-                                }}>
-                                Set as NFMe ID Vault
-                              </Button>
+                              <>
+                                {deepLinkHlSection === "makevault" && <FocusOnThisEffect top="-10px" />}
+                                <Button
+                                  colorScheme="blue"
+                                  variant="outline"
+                                  mt={2}
+                                  w="100%"
+                                  isDisabled={currentBond.state === 0 || hasPendingTransaction}
+                                  onClick={() => {
+                                    updateVaultBond(currentBond.bondId, dataNft.compression.leaf_id);
+                                  }}>
+                                  Set as NFMe ID Vault
+                                </Button>
+                              </>
                             ) : (
                               <Box fontSize="lg" w="80%" m="auto" mt="2">
                                 ✅ Currently set as your NFMe ID Vault
                               </Box>
                             )}
                           </Box>
+                          <Box id="section-makevault" />
                         </Flex>
                       </Flex>{" "}
                     </Box>
                     <Flex p={0} ml={{ md: "3" }} flexDirection="column" alignItems="start" w="full">
                       <Flex flexDirection="column" w="100%">
-                        {/* <Text fontSize="sm" mb="5">
-                          ID: {dataNft.id}
-                          <br />
-                          Leaf {dataNft.compression.leaf_id}
-                          <br />
-                          Length {dataNft.grouping.length}
-                          <br />
-                          Collection {dataNft.grouping[0].group_value}
-                        </Text> */}
                         <Text fontFamily="Clash-Medium">{metadata.name}</Text>
                         <Link isExternal href={`${SOLSCAN_EXPLORER_URL}token/${dataNft.id}?cluster=${networkConfiguration}`}>
                           <Text fontSize="sm" pb={3}>

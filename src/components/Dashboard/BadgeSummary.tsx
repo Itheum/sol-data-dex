@@ -30,7 +30,13 @@ const pulseKeyframe = keyframes`
 
 const pulse = `${pulseKeyframe} 2s infinite`;
 
-export const BadgeSummary: React.FC<BadgeSummaryProps> = ({ badgeCategoryMapWithCatNameAsKey, groupedBadges, onUserClick, badgeSummaryHeaderMode = false, showStage2Disclaimer = false }) => {
+export const BadgeSummary: React.FC<BadgeSummaryProps> = ({
+  badgeCategoryMapWithCatNameAsKey,
+  groupedBadges,
+  onUserClick,
+  badgeSummaryHeaderMode = false,
+  showStage2Disclaimer = false,
+}) => {
   const { colorMode } = useColorMode();
 
   // Calculate claimed and unclaimed totals
@@ -50,11 +56,13 @@ export const BadgeSummary: React.FC<BadgeSummaryProps> = ({ badgeCategoryMapWith
 
   return (
     <>
-      <Box p={4} borderWidth="1px" borderRadius="lg" mb={4} boxShadow="sm">
-        {showStage2Disclaimer && <Text textAlign="center" fontSize="sm">
-          ❗ You need to complete STAGE 2 to access badges!
-        </Text>}
-        <Flex flexDirection="column" justify="space-between" mb={3}>
+      <Box p={badgeSummaryHeaderMode ? 1 : 4} borderWidth="1px" borderRadius="lg" mb={4} boxShadow="sm">
+        {showStage2Disclaimer && (
+          <Text textAlign="center" fontSize="sm">
+            ❗ You need to complete STAGE 2 to access badges!
+          </Text>
+        )}
+        <Flex flexDirection="column" justify="space-between" mb={badgeSummaryHeaderMode ? 0 : 3}>
           <Flex align="center" gap={2} flexDirection="column">
             <Text fontSize="lg" fontWeight="bold">
               {badgeSummaryHeaderMode ? "" : "Your Badge Collection"}
@@ -65,7 +73,7 @@ export const BadgeSummary: React.FC<BadgeSummaryProps> = ({ badgeCategoryMapWith
           </Flex>
         </Flex>
 
-        <Wrap spacing={4}>
+        <Wrap spacing={4} justify={"center"}>
           {Object.entries(groupedBadges).map(([category, badges]) => {
             const categoryStyle = badgeCategoryMapWithCatNameAsKey[category] || {
               icon: "🏆",

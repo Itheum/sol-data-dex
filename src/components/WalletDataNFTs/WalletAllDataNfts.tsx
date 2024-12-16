@@ -17,6 +17,7 @@ import {
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { MdOutlineInfo } from "react-icons/md";
 import NftMediaComponent from "components/NftMediaComponent";
+import ExploreAppButton from "components/UtilComps/ExploreAppButton";
 import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
@@ -36,6 +37,7 @@ const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft
       <Box
         key={index}
         w="275px"
+        h="550px"
         mx="3 !important"
         border="1px solid transparent"
         borderColor="#00C79740"
@@ -64,15 +66,6 @@ const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft
           <Text fontWeight="semibold" fontSize="lg" mt="1.5" noOfLines={1}>
             {solDataNft.content.metadata.name}
           </Text>
-          {/* <Text fontSize="sm">
-            ID: {solDataNft.id}
-            <br />
-            Leaf {solDataNft.compression.leaf_id}
-            <br />
-            Length {solDataNft.grouping.length}
-            <br />
-            Collection {solDataNft.grouping[0].group_value}
-          </Text> */}
           <Link
             onClick={() => window.open(`${SOLSCAN_EXPLORER_URL}token/${solDataNft.id}?cluster=${networkConfiguration}`, "_blank")}
             fontSize="md"
@@ -102,6 +95,7 @@ const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft
               </PopoverContent>
             </Popover>
           </Box>
+          <ExploreAppButton tokenName={solDataNft.content.metadata.name} customLabel="Listen on NF-Tunes" />
           {solDataNft.creators && (
             <Box mt={3} color="#8c8f92d0" fontSize="sm" display="flex" alignItems="start">
               Creator{solDataNft.creators.length > 1 && "s"}:&nbsp;{" "}

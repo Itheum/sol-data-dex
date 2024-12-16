@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "@chakra-ui/react";
+import { Box, Link } from "@chakra-ui/react";
 import clsx, { ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -21,4 +21,23 @@ export const transformDescription = (description: string) => {
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export const scrollToSection = (sectionId: string, addMoreOffset?: number) => {
+  const section = document.getElementById(sectionId);
+
+  if (section) {
+    window.scrollTo({
+      top: section.offsetTop + (addMoreOffset || 0),
+      behavior: "smooth",
+    });
+  }
+};
+
+export function FocusOnThisEffect({ top, left }: { top?: string; left?: string }) {
+  return (
+    <Box className="absolute flex h-5 w-5" style={{ top: top || "initial", left: left || "initial" }}>
+      <Box className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#03c797] opacity-75"></Box>
+    </Box>
+  );
 }

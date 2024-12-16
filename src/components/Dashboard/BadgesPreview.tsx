@@ -192,7 +192,13 @@ const BadgesPreview: React.FC<BadgesPreviewProps> = ({
           )}
 
           {/* Modal for desktop */}
-          <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} closeOnEsc={false} closeOnOverlayClick={false} blockScrollOnMount={false}>
+          <Modal
+            isOpen={isModalOpen}
+            size={isMobile ? "sm" : "2xl"}
+            onClose={() => setIsModalOpen(false)}
+            closeOnEsc={false}
+            closeOnOverlayClick={false}
+            blockScrollOnMount={false}>
             <ModalOverlay backdropFilter="blur(10px)" />
             <ModalContent bgColor={colorMode === "dark" ? "#181818" : "bgWhite"}>
               <ModalHeader>All Badges</ModalHeader>

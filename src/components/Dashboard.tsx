@@ -14,10 +14,11 @@ import {
   ModalCloseButton,
   ModalHeader,
   ModalBody,
+  Link,
+  Badge,
   useBreakpointValue,
   useDisclosure,
   useColorMode,
-  Badge,
 } from "@chakra-ui/react";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { useLocalStorage, useWallet } from "@solana/wallet-adapter-react";
@@ -33,6 +34,7 @@ import ShortAddress from "components/UtilComps/ShortAddress";
 import { EXPLORER_APP_FOR_TOKEN } from "libs/config";
 import { SolEnvEnum } from "libs/Solana/config";
 import { checkIfFreeDataNftGiftMinted, mintMiscDataNft, getOrCacheAccessNonceAndSignature, fetchSolNfts } from "libs/Solana/utils";
+import { FocusOnThisEffect } from "libs/utils/ui";
 import { sleep } from "libs/utils/util";
 import { useAccountStore } from "store/account";
 import { useMintStore } from "store/mint";
@@ -435,8 +437,6 @@ const Dashboard = ({
 
                 <Flex flexDirection="column" gap="3">
                   <Flex flexDirection="column" gap={2} p={2} pb={5} borderBottom="1px solid" borderColor="teal.200">
-                    {!isUserLoggedIn && <FocusOnThisEffect />}
-
                     <Heading as="h3" size="md" textAlign="center" fontFamily="Satoshi-Regular">
                       Login via Wallet
                     </Heading>
@@ -446,16 +446,20 @@ const Dashboard = ({
                     </Text>
 
                     {!isUserLoggedIn ? (
-                      <Button
-                        m="auto"
-                        colorScheme="teal"
-                        fontSize={{ base: "sm", md: "md" }}
-                        size={{ base: "sm", lg: "lg" }}
-                        onClick={() => {
-                          onShowConnectWalletModal("sol");
-                        }}>
-                        Login via Wallet
-                      </Button>
+                      <Box position="relative">
+                        <FocusOnThisEffect top="-10px" />
+                        <Button
+                          m="auto"
+                          colorScheme="teal"
+                          fontSize={{ base: "sm", md: "md" }}
+                          size={{ base: "sm", lg: "lg" }}
+                          w={{ base: "100%", md: "280px" }}
+                          onClick={() => {
+                            onShowConnectWalletModal("sol");
+                          }}>
+                          Login via Wallet
+                        </Button>
+                      </Box>
                     ) : (
                       <Flex flexDirection="column" alignItems="center">
                         <BsBookmarkCheckFill fontSize="2rem" color="#03c797" />
@@ -510,7 +514,13 @@ const Dashboard = ({
                     {userHasG2BiTzNft && (
                       <Alert status="info" rounded="md" fontSize="sm">
                         <AlertIcon />
-                        You have the G2 BiTz XP NFT from DRiP. Claim the new G3 version for free and contact us on itheum.io/discord to migrate your XP.
+                        <Text>
+                          You have the G2 BiTz XP NFT from DRiP. Claim the new G3 version for free (if you have not already) and contact us on{" "}
+                          <Link href="https://itheum.io/discord" isExternal textDecoration="underline">
+                            itheum.io/discord
+                          </Link>{" "}
+                          to migrate your XP from G2 to G3.
+                        </Text>
                       </Alert>
                     )}
 
@@ -749,13 +759,15 @@ const Dashboard = ({
                       </Button>
                     </Box>
 
-                    <Text textAlign="center" fontSize="sm">
-                      Currently{" "}
-                      <Text as="span" fontWeight="bold" color="teal.200">
-                        {currentMaxApr}% APR
-                      </Text>{" "}
-                      on your NFMe ID Bonds
-                    </Text>
+                    {currentMaxApr > 0 && (
+                      <Text textAlign="center" fontSize="sm">
+                        Currently{" "}
+                        <Text as="span" fontWeight="bold" color="teal.200">
+                          {currentMaxApr}% APR
+                        </Text>{" "}
+                        on your NFMe ID Bonds
+                      </Text>
+                    )}
 
                     {isUserLoggedIn && hasBitzNft && bondedDataNftIds.length > 0 && (
                       <Box margin="auto">
@@ -982,11 +994,16 @@ const Dashboard = ({
                       <Text as="span" fontWeight="bold" color="teal.200">
                         Liveliness
                       </Text>
-                      . Currently{" "}
-                      <Text as="span" fontWeight="bold" color="teal.200">
-                        {currentMaxApr}% APR
-                      </Text>{" "}
-                      on your NFMe ID Bonds
+                      .
+                      {currentMaxApr > 0 && (
+                        <>
+                          Currently{" "}
+                          <Text as="span" fontWeight="bold" color="teal.200">
+                            {currentMaxApr}% APR
+                          </Text>{" "}
+                          on your NFMe ID Bonds
+                        </>
+                      )}
                     </Text>
 
                     <Box position="relative">
@@ -1281,13 +1298,5 @@ const Dashboard = ({
     </Flex>
   );
 };
-
-function FocusOnThisEffect({ top, left }: { top?: string; left?: string }) {
-  return (
-    <Box className="absolute flex h-5 w-5" style={{ top: top || "initial", left: left || "initial" }}>
-      <Box className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#03c797] opacity-75"></Box>
-    </Box>
-  );
-}
 
 export default Dashboard;

@@ -130,18 +130,6 @@ export default function () {
             <ul className="text-xs md:text-sm flex flex-col gap-1">
               <li>
                 {"> "}
-                <a href="https://datadex.itheum.com" target="_blank" className="hover:underline" rel="noreferrer">
-                  MultiversX Data DEX
-                </a>
-              </li>
-              <li>
-                {"> "}
-                <a href="https://portal.itheum.com" target="_blank" className="hover:underline" rel="noreferrer">
-                  {`Solana <> MultiversX `}Token Bridge
-                </a>
-              </li>
-              <li>
-                {"> "}
                 <a href="/NFMeID" className="hover:underline" rel="noreferrer">
                   Claim your NFMe ID
                 </a>
@@ -162,6 +150,18 @@ export default function () {
                 {"> "}
                 <a href="https://drip.haus/itheum" target="_blank" className="hover:underline" rel="noreferrer">
                   Free Music Data NFTs on {`Solana's`} DRiP Haus
+                </a>
+              </li>
+              <li>
+                {"> "}
+                <a href="https://datadex.itheum.com" target="_blank" className="hover:underline" rel="noreferrer">
+                  MultiversX Data DEX
+                </a>
+              </li>
+              <li>
+                {"> "}
+                <a href="https://portal.itheum.com" target="_blank" className="hover:underline" rel="noreferrer">
+                  {`Solana <> MultiversX `}Token Bridge
                 </a>
               </li>
             </ul>

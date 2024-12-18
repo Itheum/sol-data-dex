@@ -304,7 +304,7 @@ const AppHeader = ({
               )}
             </HStack>
 
-            {isUserLoggedIn ? (
+            {isUserLoggedIn && (
               <>
                 <ItheumTokenBalanceBadge displayParams={["none", null, "block"]} connectedChain={connectedChain} />
                 <LoggedInChainBadge chain={chainFriendlyName} displayParams={["none", null, "block"]} />
@@ -401,16 +401,6 @@ const AppHeader = ({
                   </PopoverContent>
                 </Popover>
               </>
-            ) : (
-              <Button
-                display={{ base: "none", md: "inline-flex" }}
-                size={{ md: "md", xl: "md", "2xl": "lg" }}
-                p="5 !important"
-                onClick={() => {
-                  onShowConnectWalletModal("sol");
-                }}>
-                <FlaskBottleAnimation cooldown={cooldown} /> <Text ml="2">BiTz XP</Text>
-              </Button>
             )}
 
             {onShowConnectWalletModal && !isUserLoggedIn && (
@@ -465,7 +455,12 @@ const AppHeader = ({
                 </MenuList>
               </Menu>
             </Box>
-            {keyChainDataForAppLoading ? <MdOutlineDownloading size={"1.3em"} /> : <MdCheckCircle size={"1.3em"} />}
+
+            {isUserLoggedIn && (
+              <Box title="on-chain data sync indicator">
+                {keyChainDataForAppLoading ? <MdOutlineDownloading size={"1.3em"} /> : <MdCheckCircle size={"1.3em"} />}
+              </Box>
+            )}
           </HStack>
         </Flex>
       </Flex>

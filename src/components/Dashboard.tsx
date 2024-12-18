@@ -258,8 +258,8 @@ const Dashboard = ({
           _errInWorkflow = "Error! Free minting has failed, have you met all the requirements below? if so, please try again.";
         }
       }
-    } catch (e: any) {
-      _errInWorkflow = e.toString();
+    } catch (err: any) {
+      _errInWorkflow = err.toString();
     }
 
     if (!_errInWorkflow) {
@@ -319,8 +319,8 @@ const Dashboard = ({
           _errInWorkflow = "Error! Free minting has failed, have you met all the requirements below? if so, please try again.";
         }
       }
-    } catch (e: any) {
-      _errInWorkflow = e.toString();
+    } catch (err: any) {
+      _errInWorkflow = err.toString();
     }
 
     if (!_errInWorkflow) {

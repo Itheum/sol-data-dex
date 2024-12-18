@@ -1,3 +1,4 @@
+// Comp Err Identifier: C1
 import React, { useState, useEffect } from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import {
@@ -114,7 +115,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
       );
 
       if (mintMeta && mintMeta.error) {
-        setSolBondingTxHasFailedMsg("Error fetching the nft compressed nft metadata, which is needed for the bond");
+        setSolBondingTxHasFailedMsg("ER-C1-2 : Error fetching the nft compressed nft metadata, which is needed for the bond");
         setBondingInProgress(false);
       } else {
         // for the first time user interacts, we need to initialize their rewards PDA
@@ -128,21 +129,22 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
 
         let bondTransaction;
 
-        if (createTxResponse) {
+        if (!createTxResponse.error) {
           bondTransaction = createTxResponse.transaction;
           setDataNftNonce(createTxResponse.nonce);
           setNextBondId(createTxResponse.bondId);
-        }
 
-        if (!bondTransaction) {
-          setSolBondingTxHasFailedMsg("Error creating the bond transaction");
-          setBondingInProgress(false);
-        } else {
           setSolanaBondTransaction(bondTransaction);
+        } else {
+          setSolBondingTxHasFailedMsg(`ER-C1-1 : Error creating the bond transaction. Err Details = ${createTxResponse?.errorMsg}`);
+          setBondingInProgress(false);
         }
       }
-    } catch (error) {
-      console.error("Transaction withdraw failed:", error);
+    } catch (err: any) {
+      console.error(err);
+
+      setSolBondingTxHasFailedMsg(`ER-C1-3 : Error establishing bond. Err Details = ${err.toString()}`);
+      setBondingInProgress(false);
     }
   }
 
@@ -204,7 +206,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                   } else {
                     console.error("Failed to create the vault bond transaction");
                   }
-                } catch (err) {
+                } catch (err: any) {
                   console.error(err);
                 }
               } else {
@@ -226,7 +228,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
           setBondingInProgress(false);
           setReEstablishBondConfirmationWorkflow(undefined);
         }
-      } catch (err) {
+      } catch (err: any) {
         setSolBondingTxHasFailedMsg(err?.toString());
       }
     } else {
@@ -289,16 +291,16 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
       }
 
       return txSignature;
-    } catch (error) {
+    } catch (err: any) {
       toast({
         title: "Transaction Failed",
-        description: customErrorMessage + " : " + (error as Error).message,
+        description: customErrorMessage + " : " + (err as Error).message,
         status: "error",
         duration: 9000,
         isClosable: true,
       });
 
-      throw error;
+      throw err;
     }
   }
 

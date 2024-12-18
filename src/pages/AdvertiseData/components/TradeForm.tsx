@@ -1,3 +1,4 @@
+// Comp Err Identifier: C2
 import React, { useEffect, useState } from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import {
@@ -115,7 +116,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   const itheumBalance = useAccountStore((state) => state.itheumBalance);
   const { colorMode } = useColorMode();
   const toast = useToast();
-  // const lockPeriod = useMintStore((state) => state.lockPeriodForBond);
   const dataNFTMarshalService: string = getApiDataMarshal();
   const [isNFMeIDMint, setIsNFMeIDMint] = useState<boolean>(false);
   const [currDataCATSellObj] = useState<any>(dataToPrefill ?? null);
@@ -125,7 +125,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   const [isMintingModalOpen, setIsMintingModalOpen] = useState<boolean>(false);
   const [errDataNFTStreamGeneric, setErrDataNFTStreamGeneric] = useState<any>(null);
   const [mintingSuccessful, setMintingSuccessful] = useState<boolean>(false);
-  // const [makePrimaryNFMeIdSuccessful, setMakePrimaryNFMeIdSuccessful] = useState<boolean>(false);
   const [dataNFTImg, setDataNFTImg] = useState<string>("");
   const [dataNFTTraits, setDataNFTTraits] = useState<any>(undefined);
   const [saveProgress, setSaveProgress] = useState({ s1: 0, s2: 0, s3: 0, s4: 0 });
@@ -572,7 +571,7 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       }
 
       if (tryParseForPossibleErrs && tryParseForPossibleErrs?.error) {
-        errorMsg = "There was a minting error.";
+        errorMsg = "ER-C2-2 : There was a minting error.";
 
         if (tryParseForPossibleErrs?.errMsg) {
           errorMsg += ` Technical details: ${tryParseForPossibleErrs?.errMsg}`;
@@ -583,9 +582,13 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
         setErrDataNFTStreamGeneric(new Error(errorMsg));
       } else {
         if (!_imageUrl || _imageUrl.trim() === "" || !_metadataUrl || _metadataUrl.trim() === "") {
-          setErrDataNFTStreamGeneric(new Error(labels.ERR_IPFS_ASSET_SAVE_FAILED));
+          setErrDataNFTStreamGeneric(
+            new Error(
+              `ER-C2-11 : Could not save the img and or metadata assets to IPFS. There is a chance that your firewall is blocking IPFS, please disable it and try again.`
+            )
+          );
         } else if (!mintMeta || mintMeta?.error || Object.keys(mintMeta).length === 0) {
-          setErrDataNFTStreamGeneric(new Error(labels.ERR_MINT_TX_GEN_COMMAND_FAILED));
+          setErrDataNFTStreamGeneric(new Error(`ER-C2-12 : Could not generate the Data NFT mint transaction.`));
         } else {
           // let's attempt to checks 3 times if the IPFS data is loaded and available on the gateway
           await checkIfNftImgAndMetadataIsAvailableOnIPFS(_imageUrl, _metadataUrl);
@@ -622,21 +625,21 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
 
             let nextBondTransaction;
 
-            if (createTxResponse) {
+            if (!createTxResponse.error) {
               nextBondTransaction = createTxResponse.transaction;
               setDataNftNonce(createTxResponse.nonce);
               setNextBondId(createTxResponse.bondId);
               setBondTransaction(nextBondTransaction);
             } else {
-              setErrDataNFTStreamGeneric(new Error("Could not generate the Data NFT bond transaction."));
+              setErrDataNFTStreamGeneric(new Error(`ER-C2-1 : Could not generate the Data NFT bond transaction. Err Details = ${createTxResponse?.errorMsg}`));
             }
             // E: BONDING STEP ------------------->
           }
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      setErrDataNFTStreamGeneric(new Error(labels.ERR_MINT_TX_GEN_COMMAND_FAILED));
+      setErrDataNFTStreamGeneric(new Error(`ER-C2-3 : Could not generate the Data NFT mint transaction.. Err Details = ${e.toString()}`));
     }
   };
 
@@ -700,13 +703,13 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
                 } else {
                   console.error("Failed to create the vault bond transaction");
                 }
-              } catch (err) {
-                setErrDataNFTStreamGeneric("Error: Adding the bond as a vault failed");
+              } catch (err: any) {
                 console.error(err);
+                setErrDataNFTStreamGeneric(`ER-C2-4 : Adding the bond as a vault failed. Err Details = ${err.toString()}`);
               }
             } else {
               setErrDataNFTStreamGeneric(
-                new Error("We should auto vault the last minted data nft, but we could not as we did not have the required parameters")
+                new Error("ER-C2-5 : We should auto vault the last minted data nft, but we could not as we did not have the required parameters")
               );
             }
           }
@@ -716,16 +719,18 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s4: 1 }));
         } else {
           setBondingTxHasFailed(true);
-          setErrDataNFTStreamGeneric("Error: Bonding transaction signature was not returned");
+          setErrDataNFTStreamGeneric("ER-C2-6 : Bonding transaction signature was not returned");
         }
-      } catch (err) {
+      } catch (err: any) {
         setBondingTxHasFailed(true);
-        setErrDataNFTStreamGeneric(new Error(labels.ERR_SUCCESS_MINT_BUT_BONDING_TRANSACTION_FAILED));
-        console.error("createBondTransaction failed to sign and send bond transaction", err);
+        setErrDataNFTStreamGeneric(
+          new Error(
+            `ER-C2-7 : Your mint was a success, but the bonding transaction has failed. You can try and re-bond by going to your 'Wallet'. Err Details = ${err.toString()}`
+          )
+        );
       }
     } else {
-      setErrDataNFTStreamGeneric(new Error(labels.ERR_SUCCESS_MINT_BUT_BOND_NOT_CREATED));
-      console.error("createBondTransaction failed to create bond transaction");
+      setErrDataNFTStreamGeneric(new Error(`ER-C2-8 : Your mint was a success, but could not create a bonding transaction`));
     }
   };
 
@@ -815,8 +820,12 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
         } else {
           await sleep(tries * 5); // wait 10 seconds extra if it's a fail in case IPFS is slow
         }
-      } catch (err) {
-        setErrDataNFTStreamGeneric(new Error(labels.ERR_IPFS_ASSET_SAVE_FAILED));
+      } catch (err: any) {
+        setErrDataNFTStreamGeneric(
+          new Error(
+            `ER-C2-9 : Could not save the img and or metadata assets to IPFS. There is a chance that your firewall is blocking IPFS, please disable it and try again. Err Details = ${err.toString()}`
+          )
+        );
       }
     }
 
@@ -828,7 +837,11 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       setDataNFTImg(`https://gateway.pinata.cloud/ipfs/${imgCIDOnIPFS}`);
       setDataNFTTraits(dataNFTTraitsFetched);
     } else {
-      setErrDataNFTStreamGeneric(new Error(labels.ERR_IPFS_ASSET_SAVE_FAILED));
+      setErrDataNFTStreamGeneric(
+        new Error(
+          `ER-C2-10 : Could not save the img and or metadata assets to IPFS. There is a chance that your firewall is blocking IPFS, please disable it and try again.`
+        )
+      );
     }
   };
 

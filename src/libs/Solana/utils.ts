@@ -193,7 +193,7 @@ export async function createBondTransaction(
   userPublicKey: PublicKey,
   connection: Connection,
   skipDeepParse?: boolean
-): Promise<{ transaction: Transaction; bondId: number; nonce: number } | undefined> {
+): Promise<{ error: boolean; errorMsg?: string; transaction?: Transaction; bondId?: number; nonce?: number }> {
   try {
     const mintMetaJSON = skipDeepParse ? mintMeta : JSON.parse(mintMeta.toString());
     const {
@@ -263,10 +263,14 @@ export async function createBondTransaction(
       transaction,
       bondId,
       nonce,
+      error: false,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Transaction creation failed:", error);
-    return undefined;
+    return {
+      error: true,
+      errorMsg: error.toString(),
+    };
   }
 }
 

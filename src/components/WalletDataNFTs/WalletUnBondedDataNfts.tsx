@@ -1,3 +1,4 @@
+// Comp Err Identifier: C1
 import React, { useState, useEffect } from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import {
@@ -114,7 +115,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
       );
 
       if (mintMeta && mintMeta.error) {
-        setSolBondingTxHasFailedMsg("Error fetching the nft compressed nft metadata, which is needed for the bond");
+        setSolBondingTxHasFailedMsg("ER-C1-2 : Error fetching the nft compressed nft metadata, which is needed for the bond");
         setBondingInProgress(false);
       } else {
         // for the first time user interacts, we need to initialize their rewards PDA
@@ -128,21 +129,29 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
 
         let bondTransaction;
 
-        if (createTxResponse) {
+        if (!createTxResponse.error) {
           bondTransaction = createTxResponse.transaction;
           setDataNftNonce(createTxResponse.nonce);
           setNextBondId(createTxResponse.bondId);
+
+          setSolanaBondTransaction(bondTransaction);
+        } else {
+          setSolBondingTxHasFailedMsg(`ER-C1-1 : Error creating the bond transaction. Err Details = ${createTxResponse?.errorMsg}`);
+          setBondingInProgress(false);
         }
 
-        if (!bondTransaction) {
-          setSolBondingTxHasFailedMsg("Error creating the bond transaction");
-          setBondingInProgress(false);
-        } else {
-          setSolanaBondTransaction(bondTransaction);
-        }
+        // if (!bondTransaction) {
+        //   setSolBondingTxHasFailedMsg("Error creating the bond transaction");
+        //   setBondingInProgress(false);
+        // } else {
+        //   setSolanaBondTransaction(bondTransaction);
+        // }
       }
-    } catch (error) {
-      console.error("Transaction withdraw failed:", error);
+    } catch (error: any) {
+      console.error(error);
+
+      setSolBondingTxHasFailedMsg(`ER-C1-3 : Error establishing bond. Err Details = ${error.toString()}`);
+      setBondingInProgress(false);
     }
   }
 

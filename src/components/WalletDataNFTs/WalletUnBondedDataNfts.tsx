@@ -139,18 +139,11 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
           setSolBondingTxHasFailedMsg(`ER-C1-1 : Error creating the bond transaction. Err Details = ${createTxResponse?.errorMsg}`);
           setBondingInProgress(false);
         }
-
-        // if (!bondTransaction) {
-        //   setSolBondingTxHasFailedMsg("Error creating the bond transaction");
-        //   setBondingInProgress(false);
-        // } else {
-        //   setSolanaBondTransaction(bondTransaction);
-        // }
       }
-    } catch (error: any) {
-      console.error(error);
+    } catch (err: any) {
+      console.error(err);
 
-      setSolBondingTxHasFailedMsg(`ER-C1-3 : Error establishing bond. Err Details = ${error.toString()}`);
+      setSolBondingTxHasFailedMsg(`ER-C1-3 : Error establishing bond. Err Details = ${err.toString()}`);
       setBondingInProgress(false);
     }
   }
@@ -213,7 +206,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
                   } else {
                     console.error("Failed to create the vault bond transaction");
                   }
-                } catch (err) {
+                } catch (err: any) {
                   console.error(err);
                 }
               } else {
@@ -235,7 +228,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
           setBondingInProgress(false);
           setReEstablishBondConfirmationWorkflow(undefined);
         }
-      } catch (err) {
+      } catch (err: any) {
         setSolBondingTxHasFailedMsg(err?.toString());
       }
     } else {
@@ -298,16 +291,16 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
       }
 
       return txSignature;
-    } catch (error) {
+    } catch (err: any) {
       toast({
         title: "Transaction Failed",
-        description: customErrorMessage + " : " + (error as Error).message,
+        description: customErrorMessage + " : " + (err as Error).message,
         status: "error",
         duration: 9000,
         isClosable: true,
       });
 
-      throw error;
+      throw err;
     }
   }
 

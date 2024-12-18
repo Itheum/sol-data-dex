@@ -566,8 +566,8 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       try {
         // note that this parse will fail if it was a success
         tryParseForPossibleErrs = JSON.parse(mintMeta.toString());
-      } catch (e) {
-        console.log(e);
+      } catch (err: any) {
+        console.error(err);
       }
 
       if (tryParseForPossibleErrs && tryParseForPossibleErrs?.error) {
@@ -612,8 +612,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
               setIsAutoVaultInProgress(true);
             }
 
-            // setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s4: 1 }));
-
             // for the first time user interacts, we need to initialize their rewards PDA
             const initializeAddressTransaction = await getInitAddressBondsRewardsPdaTransaction(connection, userPublicKey);
 
@@ -637,9 +635,9 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
           }
         }
       }
-    } catch (e: any) {
-      console.error(e);
-      setErrDataNFTStreamGeneric(new Error(`ER-C2-3 : Could not generate the Data NFT mint transaction.. Err Details = ${e.toString()}`));
+    } catch (err: any) {
+      console.error(err);
+      setErrDataNFTStreamGeneric(new Error(`ER-C2-3 : Could not generate the Data NFT mint transaction. Err Details = ${err.toString()}`));
     }
   };
 
@@ -789,16 +787,16 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
       }
 
       return txSignature;
-    } catch (error) {
+    } catch (err: any) {
       toast({
         title: "Transaction Failed",
-        description: customErrorMessage + " : " + (error as Error).message,
+        description: customErrorMessage + " : " + (err as Error).message,
         status: "error",
         duration: 9000,
         isClosable: true,
       });
 
-      throw error;
+      throw err;
     }
   }
 
@@ -830,7 +828,6 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
     }
 
     if (assetsLoadedOnIPFSwasSuccess) {
-      // setSaveProgress((prevSaveProgress) => ({ ...prevSaveProgress, s3: 1 }));
       await sleep(1);
 
       const imgCIDOnIPFS = _imageUrl.split("ipfs/")[1];

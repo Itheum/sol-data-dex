@@ -4,10 +4,13 @@ import { Box, Container, Flex, IconButton, Image, Text } from "@chakra-ui/react"
 import { motion } from "framer-motion";
 import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { NftMedia } from "libs/types";
+import { getImageUrls } from "libs/utils";
 import Card3DAnimation from "./Card3DAnimation";
 
 interface NftMediaComponentProps {
+  printIdForDebug?: string; // was used for debugging to see if we can improve the performance of rendering (useMeme)
   imageUrls?: string[];
+  getImgsFromNftMetadataContent?: any;
   nftMedia?: NftMedia[];
   autoSlide?: boolean;
   autoSlideInterval?: number;
@@ -29,7 +32,9 @@ const spring = {
 
 const NftMediaComponent: React.FC<NftMediaComponentProps> = (props) => {
   const {
+    printIdForDebug,
     imageUrls,
+    getImgsFromNftMetadataContent,
     nftMedia,
     autoSlide = false,
     autoSlideInterval = 6000,
@@ -42,21 +47,43 @@ const NftMediaComponent: React.FC<NftMediaComponentProps> = (props) => {
     openNftDetailsDrawer,
   } = props;
 
-  const media = imageUrls || nftMedia?.map((mediaObj) => mediaObj.url) || [DEFAULT_NFT_IMAGE];
   const [imageIndex, setImageIndex] = useState(0);
   const [switchedImageManually, setSwitchedImageManually] = useState(false);
   const [nextImageIndex, setNextImageIndex] = useState(0);
   const makeFlip = nextImageIndex !== imageIndex;
   const isMobile = window.innerWidth <= 480;
+  const [imageUrlsFromNftMetadataContent, setImageUrlsFromNftMetadataContent] = useState<string[]>([]);
+  const [mediaToUse, setMediaToUse] = useState<string[]>([]);
 
   useEffect(() => {
-    if (autoSlide && media.length > 1 && !switchedImageManually) {
+    if (autoSlide && mediaToUse.length > 1 && !switchedImageManually) {
       const interval = setInterval(() => {
         goToNextImage();
       }, autoSlideInterval);
       return () => clearInterval(interval);
     }
-  }, [switchedImageManually]);
+  }, [switchedImageManually, mediaToUse]);
+
+  useEffect(() => {
+    if (getImgsFromNftMetadataContent) {
+      (async () => {
+        const _imageUrls = await getImageUrls(getImgsFromNftMetadataContent);
+        setImageUrlsFromNftMetadataContent(_imageUrls);
+      })();
+    }
+  }, [getImgsFromNftMetadataContent]);
+
+  useEffect(() => {
+    if (imageUrls) {
+      setMediaToUse(imageUrls);
+    } else if (imageUrlsFromNftMetadataContent) {
+      setMediaToUse(imageUrlsFromNftMetadataContent);
+    } else if (nftMedia) {
+      setMediaToUse(nftMedia.map((mediaObj) => mediaObj.url));
+    } else {
+      setMediaToUse([DEFAULT_NFT_IMAGE]);
+    }
+  }, [imageUrls, imageUrlsFromNftMetadataContent, nftMedia]);
 
   function transformSizeInNumber(input: string): number {
     return Number(input.replace(/\D+/g, ""));
@@ -67,12 +94,12 @@ const NftMediaComponent: React.FC<NftMediaComponentProps> = (props) => {
   }
 
   function goToPreviousImage(autoSwitch = false) {
-    setNextImageIndex((prevIndex) => (prevIndex === 0 ? media.length - 1 : prevIndex - 1));
+    setNextImageIndex((prevIndex) => (prevIndex === 0 ? mediaToUse.length - 1 : prevIndex - 1));
     setSwitchedImageManually(autoSwitch);
   }
 
   function goToNextImage(autoSwitch = false) {
-    setNextImageIndex((prevIndex) => (prevIndex === media.length - 1 ? 0 : prevIndex + 1));
+    setNextImageIndex((prevIndex) => (prevIndex === mediaToUse.length - 1 ? 0 : prevIndex + 1));
     setSwitchedImageManually(autoSwitch);
   }
 
@@ -112,7 +139,7 @@ const NftMediaComponent: React.FC<NftMediaComponentProps> = (props) => {
                           loop
                           muted
                           playsInline>
-                          <source src={media[imageIndex]} type="video/mp4" />
+                          <source src={mediaToUse[imageIndex]} type="video/mp4" />
                         </video>
                       </Box>
                     </Box>
@@ -121,7 +148,7 @@ const NftMediaComponent: React.FC<NftMediaComponentProps> = (props) => {
                       w={imageWidth}
                       h={imageHeight}
                       borderRadius={borderRadius}
-                      src={media[imageIndex]}
+                      src={mediaToUse[imageIndex]}
                       onLoad={onLoad}
                       onError={({ currentTarget }) => {
                         currentTarget.src = DEFAULT_NFT_IMAGE;
@@ -150,7 +177,7 @@ const NftMediaComponent: React.FC<NftMediaComponentProps> = (props) => {
                       w={imageWidth}
                       h={imageHeight}
                       borderRadius={borderRadius}
-                      src={media[nextImageIndex]}
+                      src={mediaToUse[nextImageIndex]}
                       onLoad={onLoad}
                       onError={({ currentTarget }) => {
                         currentTarget.src = DEFAULT_NFT_IMAGE;
@@ -162,7 +189,7 @@ const NftMediaComponent: React.FC<NftMediaComponentProps> = (props) => {
             </Card3DAnimation>
           </Flex>
 
-          {shouldDisplayArrows && media.length > 1 && (
+          {shouldDisplayArrows && mediaToUse.length > 1 && (
             <Flex justifyContent="center" my={2}>
               <IconButton
                 isDisabled={makeFlip}

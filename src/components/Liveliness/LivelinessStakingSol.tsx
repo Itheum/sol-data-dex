@@ -35,7 +35,6 @@ import NftMediaComponent from "components/NftMediaComponent";
 import { NoDataHere } from "components/Sections/NoDataHere";
 import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
-import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { BOND_CONFIG_INDEX, SOLANA_EXPLORER_URL, SOLSCAN_EXPLORER_URL } from "libs/Solana/config";
 import { CoreSolBondStakeSc } from "libs/Solana/CoreSolBondStakeSc";
 import { Bond } from "libs/Solana/types";
@@ -49,7 +48,7 @@ import {
   fetchAddressBondsRewards,
   getBondingProgramInterface,
 } from "libs/Solana/utils";
-import { formatNumberToShort, isValidNumericCharacter, sleep, replacePublicIPFSImgWithGatewayLink } from "libs/utils";
+import { formatNumberToShort, isValidNumericCharacter, sleep } from "libs/utils";
 import { FocusOnThisEffect } from "libs/utils/ui";
 import { scrollToSection } from "libs/utils/ui";
 import { useAccountStore } from "store";
@@ -101,6 +100,7 @@ export const LivelinessStakingSol: React.FC = () => {
   const [dateNowTS, setDateNowTS] = useState<number>(0); // we use Date.now() or .getTime() in various parts of the code that need to be synced. It's best we only use one so its all in sync. BUT only for parts that need syncing (e.g. vault liveliness)
   const [searchParams] = useSearchParams();
   const [deepLinkHlSection, setDeepLinkHlSection] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   useEffect(() => {
     if (!userPublicKey) return;
@@ -1040,16 +1040,7 @@ export const LivelinessStakingSol: React.FC = () => {
                   <Flex gap={5} flexDirection={{ base: "column", md: "row" }}>
                     <Box minW="250px" textAlign="center">
                       <Box>
-                        <NftMediaComponent
-                          imageUrls={[
-                            dataNft.content.links && dataNft.content.links["image"]
-                              ? replacePublicIPFSImgWithGatewayLink(dataNft.content.links["image"] as string)
-                              : DEFAULT_NFT_IMAGE,
-                          ]}
-                          imageHeight="160px"
-                          imageWidth="160px"
-                          borderRadius="10px"
-                        />
+                        <NftMediaComponent getImgsFromNftMetadataContent={dataNft.content} imageHeight="160px" imageWidth="160px" borderRadius="10px" />
                       </Box>
                       <Flex pt={3} flexDirection={"column"} alignItems="center" w="100%">
                         <Button

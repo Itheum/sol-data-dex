@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import {
   Box,
@@ -20,17 +20,45 @@ import NftMediaComponent from "components/NftMediaComponent";
 import ExploreAppButton from "components/UtilComps/ExploreAppButton";
 import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
-import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { SOLSCAN_EXPLORER_URL } from "libs/Solana/config";
 import { transformDescription, replacePublicIPFSImgWithGatewayLink } from "libs/utils";
 
-interface WalletAllDataNftsProps {
+interface NormalDataNftProps {
   index: number;
   solDataNft: DasApiAsset;
 }
 
-const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft }) => {
+const NormalDataNft: React.FC<NormalDataNftProps> = ({ index, solDataNft }) => {
   const { networkConfiguration } = useNetworkConfiguration();
+
+  // Memoize the openNftDetailsDrawer callback
+  const handleNftDetailsOpen = useCallback(() => {
+    window.open(replacePublicIPFSImgWithGatewayLink(solDataNft.content.json_uri), "_blank");
+  }, [solDataNft.content.json_uri]);
+
+  // Memoize the autoSlideInterval calculation
+  const autoSlideInterval = useMemo(() => {
+    return Math.floor(Math.random() * 6000 + 6000);
+  }, []); // Empty dependency array as we want this to be constant per instance
+
+  // Memoize the NftMediaComponent
+  const nftMedia = useMemo(
+    () => (
+      <NftMediaComponent
+        printIdForDebug={index.toString()}
+        getImgsFromNftMetadataContent={solDataNft.content}
+        autoSlide
+        imageHeight="236px"
+        imageWidth="236px"
+        autoSlideInterval={autoSlideInterval}
+        onLoad={() => {}}
+        openNftDetailsDrawer={handleNftDetailsOpen}
+        marginTop="1.5rem"
+        borderRadius="16px"
+      />
+    ),
+    [index, solDataNft.content, autoSlideInterval, handleNftDetailsOpen]
+  );
 
   return (
     <Skeleton fitContent={true} isLoaded={true} borderRadius="16px" display="flex" alignItems="center" justifyContent="center">
@@ -45,23 +73,7 @@ const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft
         mb="1rem"
         position="relative"
         pb="1rem">
-        <NftMediaComponent
-          imageUrls={[
-            solDataNft.content.links && solDataNft.content.links["image"]
-              ? replacePublicIPFSImgWithGatewayLink(solDataNft.content.links["image"] as string)
-              : DEFAULT_NFT_IMAGE,
-          ]}
-          autoSlide
-          imageHeight="236px"
-          imageWidth="236px"
-          autoSlideInterval={Math.floor(Math.random() * 6000 + 6000)} // random number between 6 and 12 seconds
-          onLoad={() => {}}
-          openNftDetailsDrawer={() => {
-            window.open(solDataNft.content.json_uri, "_blank");
-          }}
-          marginTop="1.5rem"
-          borderRadius="16px"
-        />
+        {nftMedia}
         <Flex mx={6} direction="column">
           <Text fontWeight="semibold" fontSize="lg" mt="1.5" noOfLines={1}>
             {solDataNft.content.metadata.name}
@@ -121,4 +133,4 @@ const WalletAllDataNfts: React.FC<WalletAllDataNftsProps> = ({ index, solDataNft
   );
 };
 
-export default WalletAllDataNfts;
+export default NormalDataNft;

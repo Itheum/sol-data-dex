@@ -33,7 +33,6 @@ import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
 import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { labels } from "libs/language";
-import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { SOLANA_EXPLORER_URL, SOLSCAN_EXPLORER_URL, BOND_CONFIG_INDEX } from "libs/Solana/config";
 import {
   createBondTransaction,
@@ -46,17 +45,17 @@ import {
   swapForItheumTokensOnJupiter,
   getItheumBalanceOnSolana,
 } from "libs/Solana/utils";
-import { transformDescription, timeUntil, sleep, replacePublicIPFSImgWithGatewayLink } from "libs/utils";
+import { transformDescription, timeUntil, sleep } from "libs/utils";
 import { useAccountStore, useMintStore } from "store";
 import { useNftsStore } from "store/nfts";
 
-interface WalletUnBondedDataNftsProps {
+interface UnBondedDataNftProps {
   index: number;
   solDataNft: DasApiAsset;
   onShowBondingSuccessModal: any;
 }
 
-const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, solDataNft, onShowBondingSuccessModal }) => {
+const UnBondedDataNft: React.FC<UnBondedDataNftProps> = ({ index, solDataNft, onShowBondingSuccessModal }) => {
   const { networkConfiguration } = useNetworkConfiguration();
   const [reEstablishBondConfirmationWorkflow, setReEstablishBondConfirmationWorkflow] = useState<{ dataNftId: string }>();
   const { publicKey: userPublicKey, sendTransaction, signMessage, wallet } = useWallet();
@@ -347,11 +346,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
           position="relative"
           pb="1rem">
           <NftMediaComponent
-            imageUrls={[
-              solDataNft.content.links && solDataNft.content.links["image"]
-                ? replacePublicIPFSImgWithGatewayLink(solDataNft.content.links["image"] as string)
-                : DEFAULT_NFT_IMAGE,
-            ]}
+            getImgsFromNftMetadataContent={solDataNft.content}
             autoSlide
             imageHeight="236px"
             imageWidth="236px"
@@ -586,4 +581,4 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
   );
 };
 
-export default WalletUnBondedDataNfts;
+export default UnBondedDataNft;

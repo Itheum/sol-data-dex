@@ -33,7 +33,6 @@ import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
 import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { labels } from "libs/language";
-import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
 import { SOLANA_EXPLORER_URL, SOLSCAN_EXPLORER_URL, BOND_CONFIG_INDEX } from "libs/Solana/config";
 import {
   createBondTransaction,
@@ -46,17 +45,17 @@ import {
   swapForItheumTokensOnJupiter,
   getItheumBalanceOnSolana,
 } from "libs/Solana/utils";
-import { transformDescription, timeUntil, sleep, replacePublicIPFSImgWithGatewayLink } from "libs/utils";
+import { transformDescription, timeUntil, sleep } from "libs/utils";
 import { useAccountStore, useMintStore } from "store";
 import { useNftsStore } from "store/nfts";
 
-interface WalletUnBondedDataNftsProps {
+interface UnBondedDataNftProps {
   index: number;
   solDataNft: DasApiAsset;
   onShowBondingSuccessModal: any;
 }
 
-const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, solDataNft, onShowBondingSuccessModal }) => {
+const UnBondedDataNft: React.FC<UnBondedDataNftProps> = ({ index, solDataNft, onShowBondingSuccessModal }) => {
   const { networkConfiguration } = useNetworkConfiguration();
   const [reEstablishBondConfirmationWorkflow, setReEstablishBondConfirmationWorkflow] = useState<{ dataNftId: string }>();
   const { publicKey: userPublicKey, sendTransaction, signMessage, wallet } = useWallet();
@@ -122,7 +121,11 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
         const initializeAddressTransaction = await getInitAddressBondsRewardsPdaTransaction(connection, userPublicKey);
 
         if (initializeAddressTransaction) {
-          await executeTransaction({ transaction: initializeAddressTransaction, customErrorMessage: "Bonding Program address initialization failed" });
+          await executeTransaction({
+            txIs: "addrInitTx",
+            transaction: initializeAddressTransaction,
+            customErrorMessage: "Bonding Program address initialization failed",
+          });
         }
 
         const createTxResponse = await createBondTransaction(mintMeta, userPublicKey, connection, true);
@@ -153,7 +156,11 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
       try {
         setSolBondingTxHasFailedMsg(undefined);
 
-        const result = await executeTransaction({ transaction: solanaBondTransaction, customErrorMessage: "Failed to send the bonding transaction" });
+        const result = await executeTransaction({
+          txIs: "bondTx",
+          transaction: solanaBondTransaction,
+          customErrorMessage: "Failed to send the bonding transaction",
+        });
 
         if (result) {
           updateItheumBalance(itheumBalance - BigNumber(lockPeriod[0]?.amount).toNumber());
@@ -193,6 +200,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
 
                   if (createTxResponse) {
                     const vaultTxSig = await executeTransaction({
+                      txIs: "vaultTx",
                       transaction: createTxResponse.transaction,
                       customErrorMessage: "Failed to make the bond a Vault",
                     });
@@ -236,13 +244,27 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
     }
   };
 
-  async function executeTransaction({ transaction, customErrorMessage = "Transaction failed" }: { transaction: Transaction; customErrorMessage?: string }) {
+  async function executeTransaction({
+    txIs,
+    transaction,
+    customErrorMessage = "Transaction failed",
+  }: {
+    txIs: string;
+    transaction: Transaction;
+    customErrorMessage?: string;
+  }) {
     try {
       if (!userPublicKey) {
         throw new Error("Wallet not connected");
       }
 
-      const { confirmationPromise, txSignature } = await sendAndConfirmTransaction({ userPublicKey, connection, transaction, sendTransaction });
+      const { confirmationPromise, txSignature } = await sendAndConfirmTransaction({
+        txIs,
+        userPublicKey,
+        connection,
+        transaction,
+        sendTransaction,
+      });
 
       toast.promise(
         confirmationPromise.then((response) => {
@@ -324,11 +346,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
           position="relative"
           pb="1rem">
           <NftMediaComponent
-            imageUrls={[
-              solDataNft.content.links && solDataNft.content.links["image"]
-                ? replacePublicIPFSImgWithGatewayLink(solDataNft.content.links["image"] as string)
-                : DEFAULT_NFT_IMAGE,
-            ]}
+            getImgsFromNftMetadataContent={solDataNft.content}
             autoSlide
             imageHeight="236px"
             imageWidth="236px"
@@ -563,4 +581,4 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
   );
 };
 
-export default WalletUnBondedDataNfts;
+export default UnBondedDataNft;

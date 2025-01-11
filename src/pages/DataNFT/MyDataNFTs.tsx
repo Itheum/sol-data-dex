@@ -8,8 +8,8 @@ import { useNavigate } from "react-router-dom";
 import KeyActionSuccessCTAModel from "components/KeyActionSuccessCTAModel";
 import { NoDataHere } from "components/Sections/NoDataHere";
 import useThrottle from "components/UtilComps/UseThrottle";
-import WalletAllDataNfts from "components/WalletDataNFTs/WalletAllDataNfts";
-import WalletUnBondedDataNfts from "components/WalletDataNFTs/WalletUnBondedDataNfts";
+import NormalDataNft from "components/WalletDataNFTs/NormalDataNft";
+import UnBondedDataNft from "components/WalletDataNFTs/UnBondedDataNft";
 import { NFME_ID_COLLECTION_ID } from "libs/config";
 import { sortDataNftsByLeafIdDesc } from "libs/Solana/utils";
 import { useNftsStore } from "store/nfts";
@@ -117,7 +117,7 @@ export default function MyDataNFTs({ tabState }: { tabState: number }) {
                   mt="5 !important"
                   justifyItems={"center"}>
                   {allDataNftsWithBestOrdering.map((item, index) => (
-                    <WalletAllDataNfts key={index} index={index} solDataNft={item} />
+                    <NormalDataNft key={index} index={index} solDataNft={item} />
                   ))}
                 </SimpleGrid>
               ) : (
@@ -137,7 +137,7 @@ export default function MyDataNFTs({ tabState }: { tabState: number }) {
                   mt="5 !important"
                   justifyItems={"center"}>
                   {unBondedNfMeIds.map((item, index) => (
-                    <WalletUnBondedDataNfts key={index} index={index} solDataNft={item} onShowBondingSuccessModal={handleShowBondingSuccessModal} />
+                    <UnBondedDataNft key={index} index={index} solDataNft={item} onShowBondingSuccessModal={handleShowBondingSuccessModal} />
                   ))}
                 </SimpleGrid>
               ) : (

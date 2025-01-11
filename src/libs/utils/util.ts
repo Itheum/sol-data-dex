@@ -1,3 +1,5 @@
+import { DEFAULT_NFT_IMAGE } from "libs/mxConstants";
+
 export const qsParams = () => {
   const urlSearchParams = new URLSearchParams(window.location.search);
   const params = Object.fromEntries(urlSearchParams.entries());
@@ -153,6 +155,27 @@ export const computeRemainingCooldown = (startTime: number, cooldown: number) =>
   return _cooldown > 0 ? _cooldown + Date.now() : 0;
 };
 
+export async function getImageUrls(solDataNftContent: any): Promise<string[]> {
+  const _imageUrls: string[] = [];
+
+  if (solDataNftContent.links && solDataNftContent.links["image"]) {
+    _imageUrls.push(replacePublicIPFSImgWithGatewayLink(solDataNftContent.links["image"] as string));
+  } else if (solDataNftContent.json_uri) {
+    // the DAS API most likely did not index the image, so we need to parse the json uri to get the image
+    const getImgByParsingJsonUri = await getImageFromJsonUri(solDataNftContent.json_uri);
+
+    if (getImgByParsingJsonUri !== "") {
+      _imageUrls.push(getImgByParsingJsonUri);
+    } else {
+      _imageUrls.push(DEFAULT_NFT_IMAGE);
+    }
+  } else {
+    _imageUrls.push(DEFAULT_NFT_IMAGE);
+  }
+
+  return _imageUrls;
+}
+
 /*
   convert images like this:
   https://ipfs.io/ipfs/QmXvejPK55ds46fyek6jtNCHw1Pujx9iSzd3xjCjkvEvZc
@@ -167,3 +190,56 @@ export function replacePublicIPFSImgWithGatewayLink(ipfsImgLink: string) {
     return ipfsImgLink;
   }
 }
+
+// S: if the DAS API does not index the image, we need to parse the json uri to get the image
+// Add cache objects at the top level
+const imageUriCache: Record<string, string> = {};
+const throttleTimestamps: Record<string, number> = {};
+const THROTTLE_DELAY = 10000; // 10 seconds in milliseconds
+
+/**
+ * Fetches and processes image URL from a JSON URI, handling IPFS gateway conversion
+ * @param jsonUri The JSON URI containing metadata
+ * @returns Processed image URL or empty string if any step fails
+ */
+export async function getImageFromJsonUri(jsonUri: string): Promise<string> {
+  // Check cache first
+  if (imageUriCache[jsonUri]) {
+    console.log(`🎯 [getImageFromJsonUri] Cache hit for: ${jsonUri}`);
+    return imageUriCache[jsonUri];
+  }
+
+  // Check throttle
+  const now = Date.now();
+  const lastCall = throttleTimestamps[jsonUri] || 0;
+  if (now - lastCall < THROTTLE_DELAY) {
+    console.log(`⏳ [getImageFromJsonUri] Throttled call for: ${jsonUri}. Try again in ${((THROTTLE_DELAY - (now - lastCall)) / 1000).toFixed(1)}s`);
+    return imageUriCache[jsonUri] || "";
+  }
+
+  // Update throttle timestamp
+  throttleTimestamps[jsonUri] = now;
+
+  try {
+    const gatewayUri = replacePublicIPFSImgWithGatewayLink(jsonUri);
+    const response = await fetch(gatewayUri);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const metadata = await response.json();
+    if (!metadata.image) {
+      imageUriCache[jsonUri] = ""; // Cache empty result
+      return "";
+    }
+
+    const processedImageUrl = replacePublicIPFSImgWithGatewayLink(metadata.image);
+    imageUriCache[jsonUri] = processedImageUrl; // Cache successful result
+    return processedImageUrl;
+  } catch (error) {
+    console.error("Error processing JSON URI:", error);
+    imageUriCache[jsonUri] = ""; // Cache error result
+    return "";
+  }
+}
+// E: if the DAS API does not index the image, we need to parse the json uri to get the image

@@ -31,8 +31,8 @@ export const ITHEUM_SOL_TOKEN_ADDRESS = import.meta.env.VITE_ENV_ITHEUM_SOL_TOKE
 export const DIVISION_SAFETY_CONST = 10 ** 9;
 
 const priorityFeeConfig = {
-  enabled: process.env.SOL_PRIORITY_FEE_ENABLE,
-  rate: process.env.SOL_PRIORITY_FEE_RATE,
+  enabled: process.env.SOL_PRIORITY_FEE_ENABLE || "",
+  rate: process.env.SOL_PRIORITY_FEE_RATE || "",
 };
 
 const _SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_INITADDR = process.env.SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_INITADDR || "";
@@ -378,7 +378,12 @@ export async function wrapTransactionWithPriorityFee(
  * Helper function to validate priority fee configuration
  */
 function isPriorityFeeEnabled(enabled: number | string, rate: number | string, computeUnits: number | string): boolean {
-  return parseInt(enabled.toString(), 10) === 1 && !isNaN(parseInt(rate.toString(), 10)) && !isNaN(parseInt(computeUnits.toString(), 10));
+  return (
+    !isNaN(parseInt(enabled.toString(), 10)) &&
+    parseInt(enabled.toString(), 10) === 1 &&
+    !isNaN(parseInt(rate.toString(), 10)) &&
+    !isNaN(parseInt(computeUnits.toString(), 10))
+  );
 }
 
 export async function createAddBondAsVaultTransaction(

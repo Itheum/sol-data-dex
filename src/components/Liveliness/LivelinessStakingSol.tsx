@@ -378,7 +378,15 @@ export const LivelinessStakingSol: React.FC = () => {
     }
   }
 
-  async function executeTransaction({ transaction, customErrorMessage = "Transaction failed" }: { transaction: Transaction; customErrorMessage?: string }) {
+  async function executeTransaction({
+    txIs,
+    transaction,
+    customErrorMessage = "Transaction failed",
+  }: {
+    txIs: string;
+    transaction: Transaction;
+    customErrorMessage?: string;
+  }) {
     try {
       if (!userPublicKey) {
         throw new Error("Wallet not connected");
@@ -386,7 +394,13 @@ export const LivelinessStakingSol: React.FC = () => {
 
       setHasPendingTransaction(true);
 
-      const { confirmationPromise, txSignature } = await sendAndConfirmTransaction({ userPublicKey, connection, transaction, sendTransaction });
+      const { confirmationPromise, txSignature } = await sendAndConfirmTransaction({
+        txIs,
+        userPublicKey,
+        connection,
+        transaction,
+        sendTransaction,
+      });
 
       toast.promise(
         confirmationPromise.then((response) => {
@@ -472,6 +486,7 @@ export const LivelinessStakingSol: React.FC = () => {
         .transaction();
 
       await executeTransaction({
+        txIs: "renewBondTx",
         transaction,
         customErrorMessage: "Failed to renew bond",
       });
@@ -492,6 +507,7 @@ export const LivelinessStakingSol: React.FC = () => {
 
       if (createTxResponse) {
         await executeTransaction({
+          txIs: "updateVaultTx",
           transaction: createTxResponse.transaction,
           customErrorMessage: "Failed to update vault bond",
         });
@@ -537,6 +553,7 @@ export const LivelinessStakingSol: React.FC = () => {
         .transaction();
 
       const result = await executeTransaction({
+        txIs: "topUpTx",
         transaction,
         customErrorMessage: "Failed to top-up bond",
       });
@@ -586,12 +603,13 @@ export const LivelinessStakingSol: React.FC = () => {
         .transaction();
 
       const result = await executeTransaction({
+        txIs: "claimRewardsTx",
         transaction,
         customErrorMessage: "Failed to claim the rewards failed",
       });
       if (result) updateItheumBalance(itheumBalance + (vaultLiveliness >= 95 ? claimableAmount : (vaultLiveliness * claimableAmount) / 100));
     } catch (error) {
-      console.error("Transaction ClaimingRewards  failed:", error);
+      console.error("Transaction ClaimingRewards failed:", error);
     }
   }
 
@@ -617,6 +635,7 @@ export const LivelinessStakingSol: React.FC = () => {
         .transaction();
 
       await executeTransaction({
+        txIs: "reInvestTx",
         transaction,
         customErrorMessage: "Failed to re-invest the rewards",
       });
@@ -657,6 +676,7 @@ export const LivelinessStakingSol: React.FC = () => {
         .transaction();
 
       const result = await executeTransaction({
+        txIs: "withdrawTx",
         transaction,
         customErrorMessage: "Failed to withdraw the rewards",
       });

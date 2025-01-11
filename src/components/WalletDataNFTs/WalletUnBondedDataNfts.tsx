@@ -122,7 +122,11 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
         const initializeAddressTransaction = await getInitAddressBondsRewardsPdaTransaction(connection, userPublicKey);
 
         if (initializeAddressTransaction) {
-          await executeTransaction({ transaction: initializeAddressTransaction, customErrorMessage: "Bonding Program address initialization failed" });
+          await executeTransaction({
+            txIs: "addrInitTx",
+            transaction: initializeAddressTransaction,
+            customErrorMessage: "Bonding Program address initialization failed",
+          });
         }
 
         const createTxResponse = await createBondTransaction(mintMeta, userPublicKey, connection, true);
@@ -153,7 +157,11 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
       try {
         setSolBondingTxHasFailedMsg(undefined);
 
-        const result = await executeTransaction({ transaction: solanaBondTransaction, customErrorMessage: "Failed to send the bonding transaction" });
+        const result = await executeTransaction({
+          txIs: "bondTx",
+          transaction: solanaBondTransaction,
+          customErrorMessage: "Failed to send the bonding transaction",
+        });
 
         if (result) {
           updateItheumBalance(itheumBalance - BigNumber(lockPeriod[0]?.amount).toNumber());
@@ -193,6 +201,7 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
 
                   if (createTxResponse) {
                     const vaultTxSig = await executeTransaction({
+                      txIs: "vaultTx",
                       transaction: createTxResponse.transaction,
                       customErrorMessage: "Failed to make the bond a Vault",
                     });
@@ -236,13 +245,27 @@ const WalletUnBondedDataNfts: React.FC<WalletUnBondedDataNftsProps> = ({ index, 
     }
   };
 
-  async function executeTransaction({ transaction, customErrorMessage = "Transaction failed" }: { transaction: Transaction; customErrorMessage?: string }) {
+  async function executeTransaction({
+    txIs,
+    transaction,
+    customErrorMessage = "Transaction failed",
+  }: {
+    txIs: string;
+    transaction: Transaction;
+    customErrorMessage?: string;
+  }) {
     try {
       if (!userPublicKey) {
         throw new Error("Wallet not connected");
       }
 
-      const { confirmationPromise, txSignature } = await sendAndConfirmTransaction({ userPublicKey, connection, transaction, sendTransaction });
+      const { confirmationPromise, txSignature } = await sendAndConfirmTransaction({
+        txIs,
+        userPublicKey,
+        connection,
+        transaction,
+        sendTransaction,
+      });
 
       toast.promise(
         confirmationPromise.then((response) => {

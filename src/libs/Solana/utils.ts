@@ -612,34 +612,62 @@ export async function getOrCacheAccessNonceAndSignature({
 }
 
 export async function sendAndConfirmTransaction({
+  txIs,
   userPublicKey,
   connection,
   transaction,
   sendTransaction,
 }: {
+  txIs: string;
   userPublicKey: PublicKey;
   connection: Connection;
   transaction: Transaction;
   sendTransaction: any;
-}) {
-  const latestBlockhash = await connection.getLatestBlockhash();
-  transaction.recentBlockhash = latestBlockhash.blockhash;
-  transaction.feePayer = userPublicKey;
+}): Promise<{ confirmationPromise: Promise<any>; txSignature: string }> {
+  const maxRetries = 3;
+  let currentRetry = 0;
+  let lastError: any;
 
-  const txSignature = await sendTransaction(transaction, connection, {
-    skipPreflight: true,
-    preflightCommitment: "finalized",
-  });
+  while (currentRetry < maxRetries) {
+    try {
+      console.log(`sendAndConfirmTransaction ${txIs}: Transaction send attempt ${currentRetry} of ${maxRetries}.`);
 
-  const strategy: TransactionConfirmationStrategy = {
-    signature: txSignature,
-    blockhash: latestBlockhash.blockhash,
-    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      const latestBlockhash = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = latestBlockhash.blockhash;
+      transaction.feePayer = userPublicKey;
+
+      const txSignature = await sendTransaction(transaction, connection, {
+        skipPreflight: true,
+        preflightCommitment: "finalized",
+      });
+
+      const strategy: TransactionConfirmationStrategy = {
+        signature: txSignature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      };
+
+      const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
+
+      console.log(`sendAndConfirmTransaction ${txIs}: Transaction confirmed, attempt ${currentRetry} of ${maxRetries}.`);
+
+      return { confirmationPromise, txSignature };
+    } catch (error) {
+      lastError = error;
+      currentRetry++;
+      if (currentRetry < maxRetries) {
+        console.log(`sendAndConfirmTransaction ${txIs}: Transaction failed, attempt ${currentRetry} of ${maxRetries}. Retrying in 5 seconds...`);
+        await new Promise((resolve) => setTimeout(resolve, 10000)); // Sleep for 10 seconds
+      }
+    }
+  }
+
+  console.log(`sendAndConfirmTransaction ${txIs}: All retry attempts failed`);
+  // Return a promise that resolves to a format matching the expected response structure
+  return {
+    confirmationPromise: Promise.resolve({ value: { err: lastError } }),
+    txSignature: "",
   };
-
-  const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
-
-  return { confirmationPromise, txSignature };
 }
 
 export function sortDataNftsByLeafIdDesc(allDataNfts: DasApiAsset[]) {

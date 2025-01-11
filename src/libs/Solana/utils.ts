@@ -1,3 +1,9 @@
+declare global {
+  interface Window {
+    Jupiter: any;
+  }
+}
+
 import { BN, Program } from "@coral-xyz/anchor";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { CNftSolPostMintMetaType } from "@itheum/sdk-mx-data-nft/out";
@@ -6,13 +12,13 @@ import { SPL_ACCOUNT_COMPRESSION_PROGRAM_ID } from "@solana/spl-account-compress
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { NATIVE_MINT } from "@solana/spl-token";
-import { AccountMeta, Connection, PublicKey, Transaction, TransactionConfirmationStrategy, Commitment } from "@solana/web3.js";
+import { AccountMeta, Connection, PublicKey, Transaction, TransactionConfirmationStrategy, Commitment, ComputeBudgetProgram } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { SOL_ENV_ENUM } from "libs/config";
 import { backendApi, getApiDataDex, getApiDataMarshal } from "libs/utils";
 import { BOND_CONFIG_INDEX, BONDING_PROGRAM_ID } from "./config";
 import { CoreSolBondStakeSc, IDL } from "./CoreSolBondStakeSc";
-import { Bond } from "./types";
+import { Bond, PriorityFeeConfig } from "./types";
 
 enum RewardsState {
   Inactive = 0,
@@ -23,6 +29,14 @@ export const MAX_PERCENT = 10000;
 export const SLOTS_IN_YEAR = 78840000; // solana slots in a year; Approx. 0.4 seconds per  slot
 export const ITHEUM_SOL_TOKEN_ADDRESS = import.meta.env.VITE_ENV_ITHEUM_SOL_TOKEN_ADDRESS;
 export const DIVISION_SAFETY_CONST = 10 ** 9;
+
+const priorityFeeConfig = {
+  enabled: process.env.SOL_PRIORITY_FEE_ENABLE || "",
+  rate: process.env.SOL_PRIORITY_FEE_RATE || "",
+};
+
+const _SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_INITADDR = process.env.SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_INITADDR || "";
+const _SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_BOND = process.env.SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_BOND || "";
 
 export async function fetchSolNfts(solAddress: string | undefined) {
   if (!solAddress) {
@@ -238,7 +252,7 @@ export async function createBondTransaction(
     });
 
     // Create the transaction using bond method from program
-    const transaction = await program.methods
+    const baseTransactionBond: Transaction = await program.methods
       .bond(BOND_CONFIG_INDEX, bondId, bondConfigData.amount, new BN(nonce), proofRoot, _dataHash, _creatorHash)
       .accounts({
         addressBondsRewards: addressBondsRewardsPda,
@@ -259,8 +273,16 @@ export async function createBondTransaction(
       .remainingAccounts(proofPathAsAccounts)
       .transaction(); // Creates the unsigned transaction
 
+    const wrappedTransaction = await wrapTransactionWithPriorityFee(
+      "bondTx",
+      baseTransactionBond,
+      priorityFeeConfig as PriorityFeeConfig,
+      _SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_BOND,
+      connection
+    );
+
     return {
-      transaction,
+      transaction: wrappedTransaction,
       bondId,
       nonce,
       error: false,
@@ -272,6 +294,96 @@ export async function createBondTransaction(
       errorMsg: error.toString(),
     };
   }
+}
+
+/**
+ * Gets recommended priority fee from RPC
+ * @param connection - Solana connection
+ * @returns recommended fee in microLamports
+ */
+async function getRecommendedPriorityFee(connection: Connection): Promise<number> {
+  try {
+    // Get fees from last 20 slots
+    const priorityFees = await connection.getRecentPrioritizationFees();
+
+    if (priorityFees.length === 0) {
+      return 0;
+    }
+
+    // Calculate median fee from recent fees (Using the median helps avoid being influenced by outlier transactions (very high or very low fees)
+    const sortedFees = priorityFees.sort((a, b) => a.prioritizationFee - b.prioritizationFee);
+    const medianFee = sortedFees[Math.floor(sortedFees.length / 2)].prioritizationFee;
+
+    return medianFee;
+  } catch (error) {
+    console.error("Failed to get recommended priority fee:", error);
+    return 0;
+  }
+}
+
+/**
+ * Wraps a transaction with priority fees if enabled in environment configuration
+ * @param txIs - The tx identifier of the  transaction being wrapped
+ * @param baseTx - The base transaction to potentially wrap with priority fees
+ * @param config - Priority fee configuration
+ * @returns Transaction with or without priority fees
+ */
+export async function wrapTransactionWithPriorityFee(
+  txIs: string,
+  baseTx: Transaction,
+  config: PriorityFeeConfig,
+  computeUnits: number | string,
+  connection?: Connection
+): Promise<Transaction> {
+  const { enabled, rate, useDynamicFee } = config;
+
+  // Check if priority fees should be applied
+  if (!isPriorityFeeEnabled(enabled, rate, computeUnits)) {
+    console.log(`Priority fee ${txIs}: Priority fees are not enabled for this transaction`);
+    return baseTx;
+  }
+
+  // Determine priority fee rate
+  let priorityFeeRate = parseInt(rate.toString(), 10);
+
+  // If dynamic fees enabled and connection provided, get recommended fee
+  if (parseInt(useDynamicFee?.toString() || "0", 10) === 1 && connection) {
+    const recommendedFee = await getRecommendedPriorityFee(connection);
+    if (recommendedFee > 0) {
+      priorityFeeRate = recommendedFee;
+      console.log(`Priority fee ${txIs}: Using dynamic priority fee: ${recommendedFee} microLamports`);
+    } else {
+      console.log(`Priority fee ${txIs}: Failed to get dynamic fee, falling back to configured rate`);
+    }
+  }
+
+  // Create priority fee instructions
+  const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+    units: parseInt(computeUnits.toString(), 10),
+  });
+
+  const addPriorityFee = ComputeBudgetProgram.setComputeUnitPrice({
+    microLamports: priorityFeeRate,
+  });
+
+  // Wrap the transaction with priority fee instructions
+  const wrappedTx = new Transaction().add(modifyComputeUnits).add(addPriorityFee).add(baseTx);
+
+  console.log(`Priority fee ${txIs}: Priority fees applied - Compute Units: ${computeUnits}, Rate: ${priorityFeeRate}`);
+
+  return wrappedTx;
+}
+
+/**
+ * Helper function to validate priority fee configuration
+ */
+function isPriorityFeeEnabled(enabled: number | string, rate: number | string, computeUnits: number | string): boolean {
+  return (
+    !isNaN(parseInt(enabled.toString(), 10)) &&
+    parseInt(enabled.toString(), 10) === 1 &&
+    !isNaN(parseInt(rate.toString(), 10)) &&
+    !isNaN(parseInt(computeUnits.toString(), 10))
+  );
 }
 
 export async function createAddBondAsVaultTransaction(
@@ -505,34 +617,62 @@ export async function getOrCacheAccessNonceAndSignature({
 }
 
 export async function sendAndConfirmTransaction({
+  txIs,
   userPublicKey,
   connection,
   transaction,
   sendTransaction,
 }: {
+  txIs: string;
   userPublicKey: PublicKey;
   connection: Connection;
   transaction: Transaction;
   sendTransaction: any;
-}) {
-  const latestBlockhash = await connection.getLatestBlockhash();
-  transaction.recentBlockhash = latestBlockhash.blockhash;
-  transaction.feePayer = userPublicKey;
+}): Promise<{ confirmationPromise: Promise<any>; txSignature: string }> {
+  const maxRetries = 3;
+  let currentRetry = 0;
+  let lastError: any;
 
-  const txSignature = await sendTransaction(transaction, connection, {
-    skipPreflight: true,
-    preflightCommitment: "finalized",
-  });
+  while (currentRetry < maxRetries) {
+    try {
+      console.log(`sendAndConfirmTransaction ${txIs}: Transaction send attempt ${currentRetry} of ${maxRetries}.`);
 
-  const strategy: TransactionConfirmationStrategy = {
-    signature: txSignature,
-    blockhash: latestBlockhash.blockhash,
-    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      const latestBlockhash = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = latestBlockhash.blockhash;
+      transaction.feePayer = userPublicKey;
+
+      const txSignature = await sendTransaction(transaction, connection, {
+        skipPreflight: true,
+        preflightCommitment: "finalized",
+      });
+
+      const strategy: TransactionConfirmationStrategy = {
+        signature: txSignature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      };
+
+      const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
+
+      console.log(`sendAndConfirmTransaction ${txIs}: Transaction confirmed, attempt ${currentRetry} of ${maxRetries}.`);
+
+      return { confirmationPromise, txSignature };
+    } catch (error) {
+      lastError = error;
+      currentRetry++;
+      if (currentRetry < maxRetries) {
+        console.log(`sendAndConfirmTransaction ${txIs}: Transaction failed, attempt ${currentRetry} of ${maxRetries}. Retrying in 5 seconds...`);
+        await new Promise((resolve) => setTimeout(resolve, 10000)); // Sleep for 10 seconds
+      }
+    }
+  }
+
+  console.log(`sendAndConfirmTransaction ${txIs}: All retry attempts failed`);
+  // Return a promise that resolves to a format matching the expected response structure
+  return {
+    confirmationPromise: Promise.resolve({ value: { err: lastError } }),
+    txSignature: "",
   };
-
-  const confirmationPromise = connection.confirmTransaction(strategy, "finalized" as Commitment);
-
-  return { confirmationPromise, txSignature };
 }
 
 export function sortDataNftsByLeafIdDesc(allDataNfts: DasApiAsset[]) {
@@ -553,7 +693,7 @@ export async function getInitAddressBondsRewardsPdaTransaction(connection: Conne
   const accountInfo = await connection.getAccountInfo(addressBondsRewardsPda);
   const isExist = accountInfo !== null;
 
-  let transactionInitializeAddress = null;
+  let wrappedTransaction: Transaction | null = null;
 
   // if no addressBondsRewardsPda was found, this means the user has never minted and bonded on Solana NFMe contract before -- so we first need to "initializeAddress"
   // ... in this workflow, the user has to sign and submit 2 transactions (initializeAddress and then createBondTransaction)
@@ -564,7 +704,7 @@ export async function getInitAddressBondsRewardsPdaTransaction(connection: Conne
 
     const rewardsConfigPda = PublicKey.findProgramAddressSync([Buffer.from("rewards_config")], programId)[0];
 
-    transactionInitializeAddress = await program.methods
+    const baseTransactionInitializeAddress = await program.methods
       .initializeAddress()
       .accounts({
         addressBondsRewards: addressBondsRewardsPda,
@@ -572,9 +712,17 @@ export async function getInitAddressBondsRewardsPdaTransaction(connection: Conne
         authority: userPublicKey,
       })
       .transaction();
+
+    wrappedTransaction = await wrapTransactionWithPriorityFee(
+      "initializeAddressTx",
+      baseTransactionInitializeAddress,
+      priorityFeeConfig as PriorityFeeConfig,
+      _SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_INITADDR,
+      connection
+    );
   }
 
-  return transactionInitializeAddress;
+  return wrappedTransaction;
 }
 
 export const getItheumBalanceOnSolana = async (connection: Connection, userPublicKey: PublicKey) => {
@@ -593,7 +741,7 @@ export const swapForItheumTokensOnJupiter = (wallet: any, onSuccessCallback: any
   if (!wallet) return;
 
   window.Jupiter.init({
-    onSuccess: ({ txid, swapResult }) => {
+    onSuccess: ({ txid, swapResult }: any) => {
       console.log({ txid });
 
       onSuccessCallback();

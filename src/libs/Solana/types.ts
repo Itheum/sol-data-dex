@@ -33,3 +33,10 @@ const bondConfig: BondConfig = {
   withdrawPenalty: BigInt(50000000), // penalty of 50 million lamports
   padding: new Uint8Array(128), // 128-byte padding
 };
+
+export type PriorityFeeConfig = {
+  enabled: number | string;
+  rate: number | string;
+  computeUnits: number | string;
+  useDynamicFee?: number | string; // New option from ENV
+};

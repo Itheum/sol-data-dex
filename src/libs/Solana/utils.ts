@@ -301,23 +301,37 @@ export async function createBondTransaction(
  * @param connection - Solana connection
  * @returns recommended fee in microLamports
  */
-async function getRecommendedPriorityFee(connection: Connection): Promise<number> {
+export async function getRecommendedPriorityFee(connection: Connection): Promise<{ medianFee: number; lowFee: number; highFee: number }> {
   try {
     // Get fees from last 20 slots
     const priorityFees = await connection.getRecentPrioritizationFees();
 
     if (priorityFees.length === 0) {
-      return 0;
+      return {
+        medianFee: 0,
+        lowFee: 0,
+        highFee: 0,
+      };
     }
+
+    console.log("priorityFees", priorityFees);
 
     // Calculate median fee from recent fees (Using the median helps avoid being influenced by outlier transactions (very high or very low fees)
     const sortedFees = priorityFees.sort((a, b) => a.prioritizationFee - b.prioritizationFee);
     const medianFee = sortedFees[Math.floor(sortedFees.length / 2)].prioritizationFee;
 
-    return medianFee;
+    return {
+      lowFee: sortedFees[0].prioritizationFee,
+      highFee: sortedFees[sortedFees.length - 1].prioritizationFee,
+      medianFee,
+    };
   } catch (error) {
     console.error("Failed to get recommended priority fee:", error);
-    return 0;
+    return {
+      medianFee: 0,
+      lowFee: 0,
+      highFee: 0,
+    };
   }
 }
 
@@ -348,7 +362,7 @@ export async function wrapTransactionWithPriorityFee(
 
   // If dynamic fees enabled and connection provided, get recommended fee
   if (parseInt(useDynamicFee?.toString() || "0", 10) === 1 && connection) {
-    const recommendedFee = await getRecommendedPriorityFee(connection);
+    const { medianFee: recommendedFee } = await getRecommendedPriorityFee(connection);
     if (recommendedFee > 0) {
       priorityFeeRate = recommendedFee;
       console.log(`Priority fee ${txIs}: Using dynamic priority fee: ${recommendedFee} microLamports`);

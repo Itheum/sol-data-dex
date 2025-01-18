@@ -1,11 +1,41 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Text, Flex, Heading, Stack } from "@chakra-ui/react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useConnection } from "@solana/wallet-adapter-react";
+import { getRecommendedPriorityFee } from "libs/Solana/utils";
 import { getSentryProfile } from "libs/utils";
 
 const dataDexVersion = import.meta.env.VITE_APP_VERSION ? `v${import.meta.env.VITE_APP_VERSION}` : "version number unknown";
 const nonProdEnv = `${getSentryProfile()}`;
 
 export default function () {
+  const { publicKey: userPublicKey } = useWallet();
+  const { connection } = useConnection();
+  const [priorityFeeRate, setPriorityFeeRate] = useState<string>("Login to see recommended priority fee");
+  const [priorityFeeRateLow, setPriorityFeeRateLow] = useState<string>("Login to see recommended low priority fee");
+  const [priorityFeeRateHigh, setPriorityFeeRateHigh] = useState<string>("Login to see recommended high priority fee");
+
+  useEffect(() => {
+    if (userPublicKey) {
+      showRecommendedPriorityFee();
+    }
+  }, [userPublicKey]);
+
+  async function showRecommendedPriorityFee() {
+    const { medianFee: recommendedFee, lowFee, highFee } = await getRecommendedPriorityFee(connection);
+    if (recommendedFee > 0) {
+      setPriorityFeeRate(recommendedFee.toString());
+      setPriorityFeeRateLow(lowFee.toString());
+      setPriorityFeeRateHigh(highFee.toString());
+      console.log(`Priority fee $: Using dynamic priority fee: ${recommendedFee} microLamports`);
+    } else {
+      setPriorityFeeRate("Failed to get usable dynamic fee");
+      setPriorityFeeRateLow(lowFee.toString());
+      setPriorityFeeRateHigh(highFee.toString());
+      console.log(`Priority fee Failed to get usable dynamic fee ${recommendedFee}`);
+    }
+  }
+
   return (
     <Stack spacing={5}>
       <Flex align="top" gap={10}>
@@ -43,14 +73,19 @@ export default function () {
                 <Text>VITE_ENV_BONDING_PROGRAM_ID : {import.meta.env.VITE_ENV_BONDING_PROGRAM_ID}</Text>
                 <br />
                 <Text>VITE_PRINT_UI_DEBUG_PANELS : {import.meta.env.VITE_PRINT_UI_DEBUG_PANELS}</Text>
+                <br />
+                <Text fontWeight="bold" mb="2">
+                  Priority Fee Settings
+                </Text>
+                <Text>SOL_PRIORITY_FEE_USE_DYNAMIC : {import.meta.env.SOL_PRIORITY_FEE_USE_DYNAMIC}</Text>
+                <Text>SOL_PRIORITY_FEE_ENABLE : {import.meta.env.SOL_PRIORITY_FEE_ENABLE}</Text>
+                <Text>SOL_PRIORITY_FEE_RATE : {import.meta.env.SOL_PRIORITY_FEE_RATE}</Text>
+                <Text>SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_INITADDR : {import.meta.env.SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_INITADDR}</Text>
+                <Text>SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_BOND : {import.meta.env.SOL_PRIORITY_FEE_COMPUTE_UNITS_TX_BOND}</Text>
+                <Text>Recommended Priority Fee : {priorityFeeRate}</Text>
+                <Text>Recommended Low Priority Fee : {priorityFeeRateLow}</Text>
+                <Text>Recommended High Priority Fee : {priorityFeeRateHigh}</Text>
               </Box>
-            </Box>
-
-            <Box mt="10">
-              <Heading size="md" mb="3">
-                Dynamic Settings
-              </Heading>
-              <Box fontSize="sm"></Box>
             </Box>
           </Box>
         }

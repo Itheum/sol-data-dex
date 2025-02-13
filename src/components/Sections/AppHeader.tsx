@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { WarningTwoIcon, SunIcon } from "@chakra-ui/icons";
 import {
   Accordion,
@@ -47,10 +47,11 @@ import { LuFlaskRound } from "react-icons/lu";
 import { MdAccountBalanceWallet, MdDarkMode, MdMenu, MdSpaceDashboard, MdOutlineDownloading, MdCheckCircle } from "react-icons/md";
 import { RiExchangeFill } from "react-icons/ri";
 import { TiArrowSortedDown } from "react-icons/ti";
-import { Link as ReactRouterLink, useLocation } from "react-router-dom";
+import { Link as ReactRouterLink, useLocation, useNavigate } from "react-router-dom";
 import logoSmlL from "assets/img/logo-icon-b.png";
 import logoSmlD from "assets/img/logo-sml-d.png";
 import Countdown from "components/CountDown";
+import NftMediaComponent from "components/NftMediaComponent";
 import ShortAddress from "components/UtilComps/ShortAddress";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { CHAIN_TOKEN_SYMBOL, CHAINS, MENU, EXPLORER_APP_FOR_TOKEN } from "libs/config";
@@ -59,7 +60,95 @@ import { swapForItheumTokensOnJupiter, getItheumBalanceOnSolana } from "libs/Sol
 import { sleep } from "libs/utils";
 import { formatNumberRoundFloor } from "libs/utils";
 import { PlayBitzModal } from "pages/GetBitz/PlayBitzModal";
-import { useAccountStore } from "store";
+import { useAccountStore, useMintStore, useNftsStore } from "store";
+
+const NFMeIDPanel = ({ nfmeIdDataNft }: { nfmeIdDataNft: any }) => {
+  const navigate = useNavigate();
+  const [isVisible, setIsVisible] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  const { colorMode } = useColorMode();
+
+  // Initial auto-hide after 5 seconds
+  useEffect(() => {
+    timeoutRef.current = setTimeout(() => {
+      setIsVisible(false);
+    }, 5000);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle hover state
+  useEffect(() => {
+    if (isHovered) {
+      setIsVisible(true);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    } else {
+      timeoutRef.current = setTimeout(() => {
+        setIsVisible(false);
+      }, 3000);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isHovered]);
+
+  const backgroundColor = colorMode === "light" ? "bgWhite" : "bgDark";
+
+  return (
+    <Box
+      position="fixed"
+      top="6.2rem"
+      left={isVisible ? "20px" : "-160px"}
+      transition="left 0.3s ease-in-out"
+      zIndex={1000}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => {
+        setIsVisible(!isVisible);
+        setIsHovered(false);
+      }}>
+      <Flex alignItems="center">
+        <Box
+          borderRadius="10px"
+          boxShadow="lg"
+          p="2"
+          border="1px solid"
+          borderColor="teal.200"
+          bg={backgroundColor}
+          cursor="pointer"
+          pt="5"
+          onClick={() => {
+            navigate("/liveliness");
+          }}>
+          <NftMediaComponent getImgsFromNftMetadataContent={nfmeIdDataNft.content} imageHeight="160px" imageWidth="160px" borderRadius="10px" />
+        </Box>
+        <Box
+          color="black"
+          bg="teal.200"
+          p="2"
+          borderRadius="0 10px 10px 0"
+          cursor="pointer"
+          _hover={{ bg: "teal.300" }}
+          sx={{
+            writingMode: "vertical-rl",
+            textOrientation: "mixed",
+          }}>
+          Your NFMe ID
+        </Box>
+      </Flex>
+    </Box>
+  );
+};
 
 const AppHeader = ({
   onShowConnectWalletModal,
@@ -143,12 +232,29 @@ const AppHeader = ({
   const updateItheumBalance = useAccountStore((state) => state.updateItheumBalance);
   const { connection } = useConnection();
 
+  const { usersNfMeIdVaultBondId, userBonds, nfmeIdDataNft, updateNfmeIdDataNft } = useMintStore();
+  const { allDataNfts } = useNftsStore();
+
   // load mini bitz game
   useEffect(() => {
     if (!showPlayBitzModal && triggerBiTzPlayModel) {
       setShowPlayBitzModal(true);
     }
   }, [triggerBiTzPlayModel]);
+
+  useEffect(() => {
+    if (!nfmeIdDataNft) {
+      if (usersNfMeIdVaultBondId > 0 && allDataNfts.length > 0 && userBonds.length > 0) {
+        const nfMeIdBond = userBonds.find((_userBond) => _userBond.bondId === usersNfMeIdVaultBondId);
+        if (nfMeIdBond) {
+          const nfmeIdDataNft = allDataNfts?.find((_dataNft) => nfMeIdBond.assetId.toString() === _dataNft.id);
+          if (nfmeIdDataNft) {
+            updateNfmeIdDataNft(nfmeIdDataNft);
+          }
+        }
+      }
+    }
+  }, [nfmeIdDataNft, allDataNfts, usersNfMeIdVaultBondId, userBonds]);
 
   const navigateToDiscover = (menuEnum: number) => {
     setMenuItem(menuEnum);
@@ -589,6 +695,8 @@ const AppHeader = ({
           }}
         />
       )}
+
+      {nfmeIdDataNft && <NFMeIDPanel nfmeIdDataNft={nfmeIdDataNft} />}
     </>
   );
 };

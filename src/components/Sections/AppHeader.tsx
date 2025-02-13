@@ -108,7 +108,7 @@ const NFMeIDPanel = ({ nfmeIdDataNft }: { nfmeIdDataNft: any }) => {
     <Box
       position="fixed"
       top="6.2rem"
-      left={isVisible ? "20px" : "-160px"}
+      left={isVisible ? { base: "5px", md: "20px" } : { base: "-180px", md: "-160px" }}
       transition="left 0.3s ease-in-out"
       zIndex={1000}
       onMouseEnter={() => setIsHovered(true)}

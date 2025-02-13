@@ -1,3 +1,4 @@
+import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import BigNumber from "bignumber.js";
 import { create } from "zustand";
 import { UserDataType } from "libs/Bespoke/types";
@@ -14,6 +15,7 @@ type State = {
   usersNfMeIdVaultBondId: number;
   currentMaxApr: number;
   freeNfMeIdClaimed: boolean;
+  nfmeIdDataNft: DasApiAsset | undefined;
 };
 
 type Action = {
@@ -23,6 +25,7 @@ type Action = {
   updateUsersNfMeIdVaultBondId: (usersNfMeIdVaultBondId: State["usersNfMeIdVaultBondId"]) => void;
   updateCurrentMaxApr: (currentMaxApr: State["currentMaxApr"]) => void;
   updateFreeNfMeIdClaimed: (freeNfMeIdClaimed: State["freeNfMeIdClaimed"]) => void;
+  updateNfmeIdDataNft: (nfmeIdDataNft: State["nfmeIdDataNft"]) => void;
 };
 
 export const useMintStore = create<State & Action>((set) => ({
@@ -32,10 +35,12 @@ export const useMintStore = create<State & Action>((set) => ({
   usersNfMeIdVaultBondId: 0,
   currentMaxApr: -1,
   freeNfMeIdClaimed: false,
+  nfmeIdDataNft: undefined,
   updateUserData: (value: UserDataType | undefined) => set(() => ({ userData: value })),
   updateLockPeriodForBond: (value: Array<{ lockPeriod: number; amount: BigNumber.Value }>) => set(() => ({ lockPeriodForBond: value })),
   updateUserBonds: (value: Bond[]) => set(() => ({ userBonds: value })),
   updateUsersNfMeIdVaultBondId: (value: number) => set(() => ({ usersNfMeIdVaultBondId: value })),
   updateCurrentMaxApr: (value: number) => set(() => ({ currentMaxApr: value })),
   updateFreeNfMeIdClaimed: (value: boolean) => set(() => ({ freeNfMeIdClaimed: value })),
+  updateNfmeIdDataNft: (value: DasApiAsset | undefined) => set(() => ({ nfmeIdDataNft: value })),
 }));

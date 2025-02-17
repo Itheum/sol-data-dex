@@ -16,20 +16,20 @@ import { useNftsStore } from "store/nfts";
 import "../common/GetBitz.css";
 
 const rouletteData = [
-  { option: "Rugged", bitz: "0", style: { backgroundColor: "#FF0000", textColor: "white" } }, // green
+  { option: "Rugged", bitz: "0", style: { backgroundColor: "#FF0000", textColor: "white" } }, // red
   { option: "2", bitz: "2", style: { backgroundColor: "#000000", textColor: "white" } }, // black
-  { option: "4", bitz: "4", style: { backgroundColor: "#FF0000", textColor: "white" } }, // red
+  { option: "4", bitz: "4", style: { backgroundColor: "#D35400", textColor: "white" } }, // dark orange
   { option: "5", bitz: "5", style: { backgroundColor: "#000000", textColor: "white" } }, // black
-  { option: "6", bitz: "6", style: { backgroundColor: "#FF0000", textColor: "white" } }, // red
+  { option: "6", bitz: "6", style: { backgroundColor: "#D35400", textColor: "white" } }, // dark orange
   { option: "8", bitz: "8", style: { backgroundColor: "#000000", textColor: "white" } }, // black
-  { option: "10", bitz: "10", style: { backgroundColor: "#FF0000", textColor: "white" } }, // red
+  { option: "10", bitz: "10", style: { backgroundColor: "#D35400", textColor: "white" } }, // dark orange
   { option: "12", bitz: "12", style: { backgroundColor: "#000000", textColor: "white" } }, // black
-  { option: "15", bitz: "15", style: { backgroundColor: "#FF0000", textColor: "white" } }, // red
+  { option: "15", bitz: "15", style: { backgroundColor: "#D35400", textColor: "white" } }, // dark orange
   { option: "16", bitz: "16", style: { backgroundColor: "#000000", textColor: "white" } }, // black
-  { option: "18", bitz: "18", style: { backgroundColor: "#FF0000", textColor: "white" } }, // red
-  { option: "20", bitz: "20", style: { backgroundColor: "#000000", textColor: "white" } }, // black
+  { option: "18", bitz: "18", style: { backgroundColor: "#D35400", textColor: "white" } }, // dark orange
+  { option: "Gifted (20)", bitz: "20", style: { backgroundColor: "#006D6D", textColor: "white" } }, // dark teal
   { option: "Heroic (25)", bitz: "25", style: { backgroundColor: "#008000", textColor: "white" } }, // green
-  { option: "Legendary (50)", bitz: "50", style: { backgroundColor: "#FFD700", textColor: "black" } }, // gold
+  { option: "Legend (50)", bitz: "50", style: { backgroundColor: "#FFD700", textColor: "black" } }, // gold
 ];
 
 const GetBitzSol = (props: any) => {

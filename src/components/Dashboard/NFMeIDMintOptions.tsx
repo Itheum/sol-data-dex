@@ -52,6 +52,7 @@ export const NFMeIDMintOptions = ({ onFreeMint, onMintAndBond, skipFreeMintCheck
         <Box flex={1} textAlign="center" border="1px solid" rounded="lg" borderColor="teal.200" w="320px" h="260px">
           <Flex flexDirection="column" alignItems="center" justifyContent={"space-between"} px={{ base: 0, "2xl": 1.5 }} pb="2">
             <Image
+              onClick={onFreeMint}
               src={colorMode === "light" ? liteNFMeOnly : darkNFMeOnly}
               alt="Mint Free NFMe ID with Bond + Staking Rewards LATER"
               rounded="lg"
@@ -74,6 +75,7 @@ export const NFMeIDMintOptions = ({ onFreeMint, onMintAndBond, skipFreeMintCheck
       <Box flex={1} textAlign="center" border="1px solid" rounded="lg" borderColor="teal.200" w="320px" h="260px">
         <Flex flexDirection="column" alignItems="center" justifyContent={"space-between"} px={{ base: 0, "2xl": 1.5 }} pb="2">
           <Image
+            onClick={onMintAndBond}
             src={colorMode === "light" ? liteNFMeWithBond : darkNFMeWithBond}
             alt="Mint Free NFMe ID with Bond + Staking Rewards LATER"
             rounded="lg"

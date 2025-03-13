@@ -1,6 +1,6 @@
 {
   "name": "sol-data-dex",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Web3 tools to tokenize your data, identity and reputation on the Solana blockchain.",
   "dependencies": {
     "@chakra-ui/icons": "2.1.1",

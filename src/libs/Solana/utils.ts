@@ -42,8 +42,8 @@ export async function fetchSolNfts(solAddress: string | undefined) {
   if (!solAddress) {
     return [];
   } else {
-    // const resp = await fetch(`${getApiDataDex()}/bespoke/sol/getDataNFTsByOwner?publicKeyb58=${solAddress}`);
-    const resp = await fetch(`${backendApi()}/solana/getDataNFTsByOwner?owner=${solAddress}`);
+    const resp = await fetch(`${getApiDataDex()}/bespoke/sol/getDataNFTsByOwner?publicKeyb58=${solAddress}`);
+    // const resp = await fetch(`${backendApi()}/solana/getDataNFTsByOwner?owner=${solAddress}`); // DOES NOT SUPPORT PAGING
     const data = await resp.json();
 
     return data.nfts;

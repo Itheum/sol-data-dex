@@ -55,7 +55,7 @@ import { ConfirmationDialog } from "components/UtilComps/ConfirmationDialog";
 import { PopoverTooltip } from "components/UtilComps/PopoverTooltip";
 import { useNetworkConfiguration } from "contexts/sol/SolNetworkConfigurationProvider";
 import { UserDataType } from "libs/Bespoke/types";
-import { IS_DEVNET, PRINT_UI_DEBUG_PANELS } from "libs/config";
+import { DISABLE_POST_AITHRA_SUNSET_FEATURES, IS_DEVNET, PRINT_UI_DEBUG_PANELS } from "libs/config";
 import { labels } from "libs/language";
 import { BONDING_PROGRAM_ID, SOLANA_EXPLORER_URL, BOND_CONFIG_INDEX } from "libs/Solana/config";
 import { CoreSolBondStakeSc } from "libs/Solana/CoreSolBondStakeSc";
@@ -75,6 +75,7 @@ import { getApiDataMarshal, isValidNumericCharacter, sleep, timeUntil } from "li
 import { useAccountStore, useMintStore } from "store";
 import { useNftsStore } from "store/nfts";
 import { MintingModal } from "./MintingModal";
+import { DisabledFeaturedNote } from "components/DisabledFeaturedNote";
 
 type TradeDataFormType = {
   dataStreamUrlForm: string;
@@ -395,6 +396,10 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   }, [bondTransaction]);
 
   function shouldMintYourDataNftBeDisabled(): boolean | undefined {
+    if (DISABLE_POST_AITHRA_SUNSET_FEATURES) {
+      return true;
+    }
+
     if (!isFreeMint) {
       return !isValid || !readTermsChecked || !readLivelinessBonding || solBondingConfigObtainedFromChainErr || itheumBalance < bondingAmount;
     } else {
@@ -468,6 +473,11 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
   }
 
   const dataNFTSellSubmit = async () => {
+    if (DISABLE_POST_AITHRA_SUNSET_FEATURES) {
+      alert("This feature is disabled due to the EOS upgrade. See banner on top of the page for more details.");
+      return;
+    }
+
     if (!userPublicKey) {
       toast({
         title: labels.ERR_MINT_FORM_NO_WALLET_CONN,
@@ -1536,6 +1546,8 @@ export const TradeForm: React.FC<TradeFormProps> = (props) => {
                 {isNFMeIDMint ? "Mint Your NFMe ID" : "Mint Your Data NFT Collection"}
               </Button>
             </Flex>
+
+            <DisabledFeaturedNote />
 
             <MintingModal
               isOpen={isMintingModalOpen}

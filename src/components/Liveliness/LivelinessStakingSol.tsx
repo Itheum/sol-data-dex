@@ -1115,16 +1115,17 @@ export const LivelinessStakingSol: React.FC = () => {
                               <>
                                 {deepLinkHlSection === "makevault" && <FocusOnThisEffect top="-10px" />}
                                 <Button
-                                  colorScheme="blue"
+                                  colorScheme={DISABLE_POST_AITHRA_SUNSET_FEATURES ? "gray" : "blue"}
                                   variant="outline"
                                   mt={2}
                                   w="100%"
-                                  isDisabled={currentBond.state === 0 || hasPendingTransaction}
+                                  isDisabled={DISABLE_POST_AITHRA_SUNSET_FEATURES || currentBond.state === 0 || hasPendingTransaction}
                                   onClick={() => {
                                     updateVaultBond(currentBond.bondId, dataNft.compression.leaf_id);
                                   }}>
                                   Set as NFMe ID Vault
                                 </Button>
+                                <DisabledFeaturedNote />
                               </>
                             ) : (
                               <Box fontSize="lg" w="80%" m="auto" mt="2">

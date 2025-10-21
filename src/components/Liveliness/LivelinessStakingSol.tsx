@@ -55,6 +55,8 @@ import { useAccountStore } from "store";
 import { useMintStore } from "store/mint";
 import { useNftsStore } from "store/nfts";
 import { LivelinessScore } from "./LivelinessScore";
+import { DISABLE_POST_AITHRA_SUNSET_FEATURES } from "libs/config";
+import { DisabledFeaturedNote } from "components/DisabledFeaturedNote";
 
 const BN10_9 = new BN(10 ** 9);
 
@@ -742,10 +744,10 @@ export const LivelinessStakingSol: React.FC = () => {
             <Box textAlign={{ base: "right", md: "initial" }} ml="10px" position="relative">
               {deepLinkHlSection === "topup" && <FocusOnThisEffect top="-10px" />}
               <Button
-                colorScheme="teal"
+                colorScheme={DISABLE_POST_AITHRA_SUNSET_FEATURES ? "gray" : "teal"}
                 px={6}
                 size="sm"
-                isDisabled={!userPublicKey || topUpItheumValue < 1 || hasPendingTransaction}
+                isDisabled={DISABLE_POST_AITHRA_SUNSET_FEATURES || !userPublicKey || topUpItheumValue < 1 || hasPendingTransaction}
                 onClick={() => {
                   topUpBondSol(bond?.bondId ?? 0, topUpItheumValue); // top up works only with the vault bond
                 }}>
@@ -754,6 +756,7 @@ export const LivelinessStakingSol: React.FC = () => {
               <Text mt={2} fontSize="sm" color="grey">
                 Top-up will also renew bond
               </Text>
+              <DisabledFeaturedNote />
             </Box>
           </Flex>
           {currentBondEstAnnualRewards && (
@@ -895,10 +898,17 @@ export const LivelinessStakingSol: React.FC = () => {
                             }>
                             <Button
                               fontSize="lg"
-                              colorScheme="teal"
+                              colorScheme={DISABLE_POST_AITHRA_SUNSET_FEATURES ? "gray" : "teal"}
                               px={6}
                               width="180px"
-                              isDisabled={!userPublicKey || claimableAmount < 1 || vaultLiveliness === 0 || hasPendingTransaction || vaultBondId === 0}
+                              isDisabled={
+                                DISABLE_POST_AITHRA_SUNSET_FEATURES ||
+                                !userPublicKey ||
+                                claimableAmount < 1 ||
+                                vaultLiveliness === 0 ||
+                                hasPendingTransaction ||
+                                vaultBondId === 0
+                              }
                               onClick={() => {
                                 setReinvestRewardsConfirmationWorkflow(true);
                               }}>
@@ -908,6 +918,7 @@ export const LivelinessStakingSol: React.FC = () => {
                           <Text fontSize="sm" color="grey" ml={{ md: "55px" }}>
                             Reinvesting rewards will also renew bond
                           </Text>
+                          <DisabledFeaturedNote />
                         </VStack>
                       </Flex>{" "}
                     </HStack>{" "}
@@ -1045,14 +1056,15 @@ export const LivelinessStakingSol: React.FC = () => {
                       <Flex pt={3} flexDirection={"column"} alignItems="center" w="100%">
                         <Button
                           w={"100%"}
-                          colorScheme="teal"
+                          colorScheme={DISABLE_POST_AITHRA_SUNSET_FEATURES ? "gray" : "teal"}
                           px={6}
-                          isDisabled={currentBond.state == 0 || !userPublicKey || hasPendingTransaction}
+                          isDisabled={DISABLE_POST_AITHRA_SUNSET_FEATURES || currentBond.state == 0 || !userPublicKey || hasPendingTransaction}
                           onClick={() => {
                             renewBondSol(currentBond?.bondId ?? 0);
                           }}>
                           Renew Bond
                         </Button>
+                        <DisabledFeaturedNote />
                         <Text
                           mt={1}
                           fontSize=".75rem">{`Your new expiry will be ${calculateNewPeriodAfterNewBond(bondConfigData?.lockPeriod.toNumber())}`}</Text>

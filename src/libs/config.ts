@@ -130,3 +130,5 @@ export enum SOL_ENV_ENUM {
 }
 
 export const NFME_ID_COLLECTION_ID = import.meta.env.VITE_ENV_NFME_ID_COLLECTION_ID || "";
+
+export const DISABLE_POST_AITHRA_SUNSET_FEATURES = true;

@@ -1056,15 +1056,14 @@ export const LivelinessStakingSol: React.FC = () => {
                       <Flex pt={3} flexDirection={"column"} alignItems="center" w="100%">
                         <Button
                           w={"100%"}
-                          colorScheme={DISABLE_POST_AITHRA_SUNSET_FEATURES ? "gray" : "teal"}
+                          colorScheme={"teal"}
                           px={6}
-                          isDisabled={DISABLE_POST_AITHRA_SUNSET_FEATURES || currentBond.state == 0 || !userPublicKey || hasPendingTransaction}
+                          isDisabled={currentBond.state == 0 || !userPublicKey || hasPendingTransaction}
                           onClick={() => {
                             renewBondSol(currentBond?.bondId ?? 0);
                           }}>
                           Renew Bond
                         </Button>
-                        <DisabledFeaturedNote />
                         <Text
                           mt={1}
                           fontSize=".75rem">{`Your new expiry will be ${calculateNewPeriodAfterNewBond(bondConfigData?.lockPeriod.toNumber())}`}</Text>

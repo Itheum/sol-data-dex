@@ -98,7 +98,8 @@ export const BadgeSummary: React.FC<BadgeSummaryProps> = ({
                       <Box position="relative">
                         <Circle
                           size="30px"
-                          bgGradient={`linear(135deg, ${categoryStyle.gradient[0]}, ${categoryStyle.gradient[1]})`}
+                          // bgGradient={`linear(135deg, ${categoryStyle.gradient[0]}, ${categoryStyle.gradient[1]})`}
+                          bg="gray"
                           color="white"
                           fontSize="16px"
                           display="flex"

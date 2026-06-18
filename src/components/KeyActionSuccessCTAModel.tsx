@@ -42,7 +42,7 @@ export default function KeyActionSuccessCTAModel({ isOpen, onClose, congratsActi
               </Button>
 
               <Text textAlign="center" my="2">
-                Or, head back to your dashboard for next steps to join the AI Workforce.
+                Or, head back to your dashboard for next steps to boost your trustworthiness with tokenized & staked identity.
               </Text>
               <Button
                 colorScheme="teal"

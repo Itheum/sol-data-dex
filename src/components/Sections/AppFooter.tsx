@@ -20,14 +20,14 @@ export default function () {
       pb={10}
       pt={10}
       flexDirection={{ base: "column", md: "row" }}>
-      <Flex flex="1" flexDir="column" alignItems="center" justifyContent="center" height="100%" mt={5} pr={5}>
+      <Flex flex="1" flexDir="column" justifyContent="center" height="100%" mt={5} pr={5}>
         <Box>
           <Heading size={"lg"} fontFamily="Clash-Medium" color={"teal.200"}>
-            Itheum Itheum AI Workforce
+            Itheum Staked Identity
           </Heading>
           <Text fontSize="md" mt={3}>
             {" "}
-            Join the AI Data Workforce, prove your reputation, co-create new data with AI Agents and get rewarded!
+            Boost your trustworthiness with tokenized & staked identity
           </Text>
         </Box>
 
@@ -66,6 +66,12 @@ export default function () {
             <ul className="text-xs md:text-sm flex flex-col gap-1">
               <li>
                 {"> "}
+                <a href="https://itheum.io" target="_blank" className="hover:underline" rel="noreferrer">
+                  Website
+                </a>
+              </li>
+              <li>
+                {"> "}
                 <a href="https://x.com/itheum" target="_blank" className="hover:underline" rel="noreferrer">
                   X
                 </a>
@@ -88,12 +94,7 @@ export default function () {
                   Instagram
                 </a>
               </li>
-              <li>
-                {"> "}
-                <a href="https://drip.haus/itheum" target="_blank" className="hover:underline" rel="noreferrer">
-                  DRiP Haus
-                </a>
-              </li>
+
               <li>
                 {"> "}
                 <a href="https://itheum.medium.com" target="_blank" className="hover:underline" rel="noreferrer">
@@ -104,18 +105,6 @@ export default function () {
                 {"> "}
                 <a href="https://www.youtube.com/itheum" target="_blank" className="hover:underline" rel="noreferrer">
                   YouTube
-                </a>
-              </li>
-              <li>
-                {"> "}
-                <a href="https://github.com/Itheum" target="_blank" className="hover:underline" rel="noreferrer">
-                  Github
-                </a>
-              </li>
-              <li>
-                {"> "}
-                <a href="itheum.io" target="_blank" className="hover:underline" rel="noreferrer">
-                  Website
                 </a>
               </li>
             </ul>
@@ -130,37 +119,26 @@ export default function () {
             <ul className="text-xs md:text-sm flex flex-col gap-1">
               <li>
                 {"> "}
-                <a href="/NFMeID" className="hover:underline" rel="noreferrer">
-                  Claim your NFMe ID
-                </a>
-              </li>
-              <li>
-                {"> "}
                 <a href={`${isSolLoggedIn ? "/liveliness" : "/NFMeID#liveliness"}`} className="hover:underline" rel="noreferrer">
-                  Liveliness Staking
+                  Itheum Staked Indentity
                 </a>
               </li>
               <li>
                 {"> "}
-                <a href="https://explorer.itheum.com/nftunes" target="_blank" className="hover:underline" rel="noreferrer">
-                  NF-Tunes : Stream Web3 Music
+                <a href="https://sigma.fans" target="_blank" className="hover:underline" rel="noreferrer">
+                  Sigma.FANS (Tokenized Music)
                 </a>
               </li>
               <li>
                 {"> "}
-                <a href="https://drip.haus/itheum" target="_blank" className="hover:underline" rel="noreferrer">
-                  Free Music Data NFTs on {`Solana's`} DRiP Haus
+                <a href="https://drip.haus/itheum/collectibles/all" target="_blank" className="hover:underline" rel="noreferrer">
+                  Free Tokenized Music on {`Solana's`} DRiP Haus
                 </a>
               </li>
+
               <li>
                 {"> "}
-                <a href="https://datadex.itheum.com" target="_blank" className="hover:underline" rel="noreferrer">
-                  MultiversX Data DEX
-                </a>
-              </li>
-              <li>
-                {"> "}
-                <a href="https://portal.itheum.com" target="_blank" className="hover:underline" rel="noreferrer">
+                <a href="https://portal.itheum.io" target="_blank" className="hover:underline" rel="noreferrer">
                   {`Solana <> MultiversX `}Token Bridge
                 </a>
               </li>

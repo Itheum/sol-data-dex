@@ -368,11 +368,17 @@ const Dashboard = ({
     <Flex mt={{ base: "10", md: "0" }} flexDirection="column" alignItems="center" justifyContent="center">
       <Box width={"100%"} padding={{ base: "2", md: "5" }} textAlign="center">
         <Box>
-          <Heading ref={helloHeadingRef} as="h1" size="2xl" fontFamily="Satoshi-Regular" my={{ base: "0", md: "5" }}>
-            Hello Human,
+          <Heading as="h2" fontSize={{ base: "20px", md: "20px" }} fontFamily="Satoshi-Regular" w="70%" margin="auto" my={{ base: "2", md: "5" }}>
+            In a AI-dominated world how can you trust anyone?
           </Heading>
-          <Heading as="h1" size={{ base: "lg", md: "xl" }} fontFamily="Satoshi-Regular" w="70%" textAlign="center" margin="auto" my={{ base: "2", md: "5" }}>
-            Join the AI Workforce, prove your reputation, co-create new data with AI Agents and get rewarded
+          <Heading
+            ref={helloHeadingRef}
+            as="h1"
+            fontSize={{ base: "25px", md: "35px" }}
+            fontFamily="Satoshi-Regular"
+            my={{ base: "5", md: "5" }}
+            color="teal.200">
+            Itheum Staked Identity is <br />A Solution to This Problem of Trust
           </Heading>
         </Box>
 

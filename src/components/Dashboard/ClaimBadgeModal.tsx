@@ -93,7 +93,7 @@ export const ClaimBadgeModal: React.FC<ClaimBadgeModalProps> = ({
         </ModalHeader>
         <ModalBody pb={6}>
           <Flex flexDirection="column" alignItems="center">
-            <Circle size="100px" bgGradient={`linear(135deg, ${categoryStyle.gradient[0]}, ${categoryStyle.gradient[1]})`} color="white" fontSize="48px" mb={4}>
+            <Circle size="100px" bg="gray" color="white" fontSize="48px" mb={4}>
               {categoryStyle.icon}
             </Circle>
 

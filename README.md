@@ -1,4 +1,4 @@
-# Itheum Solana AI Workforce DApp
+# Itheum Solana Staked Identity (prev AI Workforce) DApp
 
 Web3 tools to tokenize your data, identity and reputation on the Solana blockchain.
 

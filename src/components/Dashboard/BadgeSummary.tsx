@@ -54,6 +54,8 @@ export const BadgeSummary: React.FC<BadgeSummaryProps> = ({
     { claimed: 0, unclaimed: 0 }
   );
 
+  console.log("badgeCategoryMapWithCatNameAsKey", badgeCategoryMapWithCatNameAsKey);
+
   return (
     <>
       <Box p={badgeSummaryHeaderMode ? 1 : 4} borderWidth="1px" borderRadius="lg" mb={4} boxShadow="sm">
@@ -98,7 +100,8 @@ export const BadgeSummary: React.FC<BadgeSummaryProps> = ({
                       <Box position="relative">
                         <Circle
                           size="30px"
-                          bgGradient={`linear(135deg, ${categoryStyle.gradient[0]}, ${categoryStyle.gradient[1]})`}
+                          // bgGradient={`linear(135deg, ${categoryStyle.gradient[0]}, ${categoryStyle.gradient[1]})`}
+                          bg="gray"
                           color="white"
                           fontSize="16px"
                           display="flex"

@@ -87,7 +87,8 @@ export const BadgeCard: React.FC<BadgeGroupProps> = ({ badgeCategoryMapWithCatNa
                 <Circle
                   cursor="pointer"
                   size="50px"
-                  bgGradient={`linear(135deg, ${categoryStyle.gradient[0]}, ${categoryStyle.gradient[1]})`}
+                  // bgGradient={`linear(135deg, ${categoryStyle.gradient[0]}, ${categoryStyle.gradient[1]})`}
+                  bg="gray"
                   color="white"
                   fontSize="24px"
                   display="flex"

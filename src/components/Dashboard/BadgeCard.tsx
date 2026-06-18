@@ -124,7 +124,8 @@ export const BadgeCard: React.FC<BadgeGroupProps> = ({ badgeCategoryMapWithCatNa
                   <Box position="relative">
                     <Circle
                       size="30px"
-                      bgGradient={`linear(135deg, ${categoryStyle.gradient[1]}, ${categoryStyle.gradient[0]})`}
+                      // bgGradient={`linear(135deg, ${categoryStyle.gradient[1]}, ${categoryStyle.gradient[0]})`}
+                      bg="gray"
                       opacity={badge.claimedOn === -1 ? 0.3 : 0.8} // Dim placeholder badges
                       display="flex"
                       alignItems="center"

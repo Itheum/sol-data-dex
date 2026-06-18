@@ -54,8 +54,6 @@ export const BadgeSummary: React.FC<BadgeSummaryProps> = ({
     { claimed: 0, unclaimed: 0 }
   );
 
-  console.log("badgeCategoryMapWithCatNameAsKey", badgeCategoryMapWithCatNameAsKey);
-
   return (
     <>
       <Box p={badgeSummaryHeaderMode ? 1 : 4} borderWidth="1px" borderRadius="lg" mb={4} boxShadow="sm">

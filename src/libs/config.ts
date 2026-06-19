@@ -131,4 +131,6 @@ export enum SOL_ENV_ENUM {
 
 export const NFME_ID_COLLECTION_ID = import.meta.env.VITE_ENV_NFME_ID_COLLECTION_ID || "";
 
-export const DISABLE_POST_AITHRA_SUNSET_FEATURES = true;
+// if there is a localstorage items called "itm-force-enable-post-aithra-sunset-features" set to truu, the DISABLE_POST_AITHRA_SUNSET_FEATURES needs to be false
+// otherwise, it needs to be true
+export const DISABLE_POST_AITHRA_SUNSET_FEATURES = localStorage.getItem("itm-force-enable-post-aithra-sunset-features") === "true" ? false : true;
